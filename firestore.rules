@@ -24,12 +24,23 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    function validShelfName() {
+      return request.resource.data.libraryName is string
+             && request.resource.data.libraryName.matches('^[A-Za-z0-9]{3,32}$')
+             && request.resource.data.shelfKey is string;
+    }
+
     // Library profiles. Any signed-in reader can look one up: friend names,
     // borrow-request cards and the friend directory all resolve display names
     // this way. Only the owner may write their own profile.
     match /profiles/{userId} {
       allow read: if signedIn();
-      allow create, update: if signedIn() && request.auth.uid == userId;
+      // Rules validate the shelf-name shape. Uniqueness is checked in the app
+      // before save because Firestore rules cannot query every profile for a
+      // duplicate value.
+      allow create, update: if signedIn()
+                            && request.auth.uid == userId
+                            && validShelfName();
       allow delete: if signedIn() && request.auth.uid == userId;
     }
 
@@ -62,11 +73,12 @@ service cloud.firestore {
                     && request.resource.data.status == 'pending'
                     && request.resource.data.user2 != request.auth.uid;
 
-      // Only the recipient accepts, and accepting is the only permitted change.
+      // Only the recipient accepts or declines; the document stays as inbox
+      // history instead of disappearing after the action.
       allow update: if signedIn()
                     && request.auth.uid == resource.data.user2
                     && resource.data.status == 'pending'
-                    && request.resource.data.status == 'accepted'
+                    && request.resource.data.status in ['accepted', 'declined']
                     && request.resource.data.user1 == resource.data.user1
                     && request.resource.data.user2 == resource.data.user2;
 
@@ -84,16 +96,36 @@ service cloud.firestore {
                       || request.auth.uid == resource.data.requesterId);
 
       allow create: if signedIn()
-                    && request.resource.data.requesterId == request.auth.uid
                     && request.resource.data.status == 'pending'
-                    && request.resource.data.ownerId != request.auth.uid;
+                    && (
+                      (
+                        request.resource.data.type == 'borrow'
+                        && request.resource.data.requesterId == request.auth.uid
+                        && request.resource.data.ownerId != request.auth.uid
+                      )
+                      ||
+                      (
+                        request.resource.data.type == 'return-reminder'
+                        && request.resource.data.ownerId == request.auth.uid
+                        && request.resource.data.requesterId != request.auth.uid
+                      )
+                    );
 
-      // The owner approves or declines; nothing else about the request changes.
+      // The owner approves, denies, or marks returned. The borrower may only
+      // mark a return-reminder notification completed.
       allow update: if signedIn()
-                    && request.auth.uid == resource.data.ownerId
                     && request.resource.data.ownerId == resource.data.ownerId
                     && request.resource.data.requesterId == resource.data.requesterId
-                    && request.resource.data.bookId == resource.data.bookId;
+                    && request.resource.data.bookId == resource.data.bookId
+                    && (
+                      request.auth.uid == resource.data.ownerId
+                      ||
+                      (
+                        request.auth.uid == resource.data.requesterId
+                        && resource.data.type == 'return-reminder'
+                        && request.resource.data.status == 'completed'
+                      )
+                    );
 
       allow delete: if signedIn()
                     && (request.auth.uid == resource.data.ownerId
