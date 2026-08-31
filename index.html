@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
 <title>CloudLibrary — a library between friends</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -43,12 +43,13 @@
       linear-gradient(135deg, rgba(246,239,224,.96), rgba(234,223,198,.9)),
       radial-gradient(circle at 20% 0%, rgba(193,101,63,.12), transparent 28%),
       radial-gradient(circle at 100% 15%, rgba(74,116,96,.12), transparent 32%);
+    -webkit-tap-highlight-color: transparent;
   }
   .font-display { font-family: 'Fraunces', serif; }
   .font-mono { font-family: 'IBM Plex Mono', monospace; }
 
   @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-  .animate-fade-up { animation: fadeUp .6s cubic-bezier(.16,1,.3,1) both; }
+  .animate-fade-up { animation: fadeUp .5s cubic-bezier(.16,1,.3,1) both; }
 
   .grain-overlay {
     background-image: radial-gradient(circle at 1px 1px, rgba(246,239,224,0.06) 1px, transparent 0);
@@ -56,13 +57,16 @@
   }
 
   .book-card { transition: transform .18s ease, box-shadow .18s ease; }
-  .book-card:hover { transform: translateY(-3px) rotate(-0.2deg); }
+  .book-card:hover { transform: translateY(-2px); }
 
-  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
   ::-webkit-scrollbar-thumb { background: #b9cdbf; border-radius: 4px; }
 
   .tab-btn.active { background: #152420; color: #f6efe0; }
-  .app-panel { background: rgba(255,255,255,.86); backdrop-filter: blur(12px); }
+  .app-panel { background: rgba(255,255,255,.88); backdrop-filter: blur(12px); }
   .loan-note { background: linear-gradient(135deg, rgba(244,227,218,.8), rgba(247,236,201,.55)); }
 
   @keyframes toastIn { from { opacity: 0; transform: translateY(12px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
@@ -70,10 +74,10 @@
   .toast-item.toast-out { opacity: 0; transform: translateY(6px); transition: opacity .25s ease, transform .25s ease; }
 </style>
 </head>
-<body class="bg-paper text-ink-950 min-h-screen">
+<body class="bg-paper text-ink-950 min-h-screen pb-12">
 
 <!-- AUTH / LOGIN OVERLAY -->
-<div id="login-screen" class="fixed inset-0 z-50 grid md:grid-cols-[1.15fr_1fr] bg-paper">
+<div id="login-screen" class="fixed inset-0 z-50 grid md:grid-cols-[1.15fr_1fr] bg-paper overflow-y-auto">
   <div class="relative hidden md:flex flex-col justify-between bg-ink-950 text-paper p-10 lg:p-16 overflow-hidden">
     <div class="absolute inset-0 grain-overlay pointer-events-none"></div>
     <div class="absolute -right-16 top-24 flex gap-3 rotate-[8deg] opacity-90 pointer-events-none">
@@ -93,12 +97,12 @@
     <p id="login-stats-fallback" class="hidden relative z-10 font-display italic text-ink-300 text-lg mt-12 border-t border-ink-700 pt-8">Every book on this network is on loan from someone who loves it.</p>
   </div>
 
-  <div class="relative flex items-center justify-center p-6 md:p-10">
-    <div class="w-full max-w-sm bg-white/70 md:-ml-10 md:bg-white p-8 rounded-2xl border border-ink-200 shadow-2xl shadow-ink-950/10 animate-fade-up">
+  <div class="relative flex items-center justify-center p-6 md:p-10 my-auto">
+    <div class="w-full max-w-sm bg-white/80 md:bg-white p-6 sm:p-8 rounded-2xl border border-ink-200 shadow-2xl shadow-ink-950/10 animate-fade-up">
       <p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-2">CloudLibrary</p>
-      <h2 class="font-display text-3xl text-ink-950 mb-2">Find your way back in.</h2>
-      <p class="text-ink-500 text-sm mb-8 leading-relaxed">Sign in to open your shelf and see what your friends are lending.</p>
-      <button onclick="signIn()" class="w-full flex items-center justify-center gap-3 bg-ink-950 hover:bg-ink-900 text-paper font-semibold py-3.5 px-4 rounded-xl transition-colors">
+      <h2 class="font-display text-2xl sm:text-3xl text-ink-950 mb-2">Find your way back in.</h2>
+      <p class="text-ink-500 text-sm mb-6 leading-relaxed">Sign in to open your shelf and see what your friends are lending.</p>
+      <button onclick="signIn()" class="w-full flex items-center justify-center gap-3 bg-ink-950 hover:bg-ink-900 text-paper font-semibold py-3.5 px-4 rounded-xl transition-all shadow-md active:scale-[0.99]">
         <svg viewBox="0 0 48 48" class="w-5 h-5"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59A14.5 14.5 0 0 1 9.5 24c0-1.59.27-3.13.76-4.59l-7.98-6.19A23.94 23.94 0 0 0 0 24c0 3.87.92 7.53 2.56 10.78z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.46-9.9l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
         Continue with Google
       </button>
@@ -109,78 +113,87 @@
 
 <!-- PROFILE SETUP MODAL (First Login) -->
 <div id="profile-modal" class="hidden fixed inset-0 bg-ink-950/80 z-50 flex flex-col justify-center items-center p-4">
-  <div class="bg-paper p-8 rounded-2xl w-full max-w-md border border-ink-200 shadow-2xl">
+  <div class="bg-paper p-6 sm:p-8 rounded-2xl w-full max-w-md border border-ink-200 shadow-2xl">
     <p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-2">One last thing</p>
     <h3 class="font-display text-2xl text-ink-950 mb-2">What should we call your shelf?</h3>
     <p class="text-sm text-ink-500 mb-5 leading-relaxed">This is the name your friends will see when they browse your library.</p>
-    <input type="text" id="profile-name-input" placeholder="e.g. SarahReads" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-ink-950 mb-2 focus:outline-none focus:ring-2 focus:ring-ink-700">
-    <p id="profile-name-help" class="text-xs text-ink-500 mb-4">Use only letters and numbers. No spaces or special characters.</p>
-    <button onclick="saveProfileName()" class="w-full bg-ink-950 hover:bg-ink-900 text-paper font-semibold py-3 rounded-lg transition-colors">Open my shelf</button>
+    <input type="text" id="profile-name-input" placeholder="e.g. SarahReads" class="w-full bg-white border border-ink-200 rounded-xl p-3 text-ink-950 mb-2 focus:outline-none focus:ring-2 focus:ring-ink-700">
+    <p id="profile-name-help" class="text-xs text-ink-500 mb-5">Use only letters and numbers. No spaces or special characters.</p>
+    <button onclick="saveProfileName()" class="w-full bg-ink-950 hover:bg-ink-900 text-paper font-semibold py-3.5 rounded-xl transition-colors">Open my shelf</button>
   </div>
 </div>
 
-<div id="app-content" class="max-w-6xl mx-auto space-y-8 hidden p-4 md:p-8">
+<div id="app-content" class="max-w-6xl mx-auto space-y-6 hidden p-3 sm:p-6 lg:p-8">
 
   <!-- Navigation Bar -->
-  <nav class="flex flex-col md:flex-row justify-between items-center bg-white p-4 rounded-xl border border-ink-200 shadow-sm gap-4">
-    <div class="flex gap-4 items-center">
-      <span class="font-display text-lg text-ink-950">CloudLibrary</span>
-      <div id="nav-tabs" class="flex gap-1 ml-2 border-l border-ink-200 pl-4">
-        <button onclick="switchTab('library')" id="tab-library" class="tab-btn active flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg font-semibold transition-colors"></button>
-        <button onclick="switchTab('friends')" id="tab-friends" class="tab-btn flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg text-ink-500 hover:text-ink-950 transition-colors"></button>
-        <button onclick="switchTab('search')" id="tab-search" class="tab-btn flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg text-ink-500 hover:text-ink-950 transition-colors"></button>
-        <button onclick="switchTab('inbox')" id="tab-inbox" class="tab-btn flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg text-ink-500 hover:text-ink-950 transition-colors"></button>
-      </div>
+  <nav class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center bg-white p-3 sm:p-4 rounded-2xl border border-ink-200 shadow-sm gap-3">
+    <div class="flex items-center justify-between sm:justify-start gap-3">
+      <span class="font-display text-lg font-bold text-ink-950 tracking-tight">CloudLibrary</span>
+      <div class="sm:hidden text-xs font-semibold text-ink-700 truncate max-w-[140px]" id="user-info-mobile"></div>
     </div>
-    <div class="flex items-center gap-4">
-      <div id="user-info" class="text-sm font-semibold border-r border-ink-200 pr-4 text-ink-700"></div>
-      <button onclick="signOut()" class="text-xs text-ink-400 hover:text-ink-950 transition-colors">Sign Out</button>
+    
+    <!-- Horizontally scrollable tabs on small screens -->
+    <div id="nav-tabs" class="flex gap-1 overflow-x-auto no-scrollbar py-0.5 sm:border-l sm:border-ink-200 sm:pl-3">
+      <button onclick="switchTab('library')" id="tab-library" class="tab-btn active shrink-0 flex items-center gap-1.5 text-xs sm:text-sm px-3 py-2 rounded-xl font-semibold transition-colors"></button>
+      <button onclick="switchTab('friends')" id="tab-friends" class="tab-btn shrink-0 flex items-center gap-1.5 text-xs sm:text-sm px-3 py-2 rounded-xl text-ink-500 hover:text-ink-950 transition-colors"></button>
+      <button onclick="switchTab('search')" id="tab-search" class="tab-btn shrink-0 flex items-center gap-1.5 text-xs sm:text-sm px-3 py-2 rounded-xl text-ink-500 hover:text-ink-950 transition-colors"></button>
+      <button onclick="switchTab('inbox')" id="tab-inbox" class="tab-btn shrink-0 flex items-center gap-1.5 text-xs sm:text-sm px-3 py-2 rounded-xl text-ink-500 hover:text-ink-950 transition-colors"></button>
+    </div>
+
+    <div class="hidden sm:flex items-center gap-4">
+      <div id="user-info" class="text-sm font-semibold border-r border-ink-200 pr-4 text-ink-700 truncate max-w-[160px]"></div>
+      <button onclick="signOut()" class="text-xs font-semibold text-ink-400 hover:text-rust-600 transition-colors shrink-0">Sign Out</button>
     </div>
   </nav>
 
   <!-- Header -->
-  <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-ink-950 text-paper p-7 rounded-2xl relative overflow-hidden">
+  <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-ink-950 text-paper p-5 sm:p-7 rounded-2xl relative overflow-hidden shadow-md">
     <div class="absolute inset-0 grain-overlay pointer-events-none"></div>
-    <div class="relative z-10">
-      <h1 id="header-title" class="font-display text-3xl">My Library</h1>
-      <div id="owner-controls" class="mt-3 flex gap-2">
-        <button onclick="copyShareLink()" class="flex items-center gap-2 bg-paper/10 hover:bg-paper/20 text-paper text-xs font-semibold py-1.5 px-3 rounded-lg border border-paper/20 transition-colors"></button>
+    <div class="relative z-10 w-full flex justify-between items-center sm:block">
+      <div>
+        <h1 id="header-title" class="font-display text-2xl sm:text-3xl font-bold tracking-tight">My Library</h1>
+        <p class="text-xs text-ink-300 font-mono mt-0.5">Manage your personal collection &amp; borrow requests</p>
+      </div>
+      <div id="owner-controls" class="mt-0 sm:mt-3 flex gap-2">
+        <button onclick="copyShareLink()" class="flex items-center gap-2 bg-paper/10 hover:bg-paper/20 text-paper text-xs font-semibold py-2 px-3 rounded-xl border border-paper/20 transition-colors"></button>
       </div>
     </div>
   </header>
 
   <!-- TAB 1: MY LIBRARY -->
-  <div id="view-library" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-    <div id="admin-panel" class="app-panel p-6 rounded-xl border border-ink-200 shadow-sm h-fit">
+  <div id="view-library" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    
+    <!-- Left Column: Add Book Form -->
+    <div id="admin-panel" class="app-panel p-5 sm:p-6 rounded-2xl border border-ink-200 shadow-sm h-fit">
       <div class="flex justify-between items-center mb-1">
         <p class="font-mono text-[11px] uppercase tracking-widest text-rust-600">New acquisition</p>
-        <button type="button" id="start-scan-btn" class="flex items-center gap-1.5 bg-ink-800/5 text-ink-700 border border-ink-200 text-xs font-semibold py-1.5 px-3 rounded-lg hover:bg-ink-800/10 transition-colors"></button>
+        <button type="button" id="start-scan-btn" class="flex items-center gap-1.5 bg-ink-800/5 text-ink-700 border border-ink-200 text-xs font-semibold py-1.5 px-3 rounded-xl hover:bg-ink-800/10 transition-colors"></button>
       </div>
-      <h2 class="font-display text-xl text-ink-950 mb-4">Add a book</h2>
+      <h2 class="font-display text-xl text-ink-950 mb-4 font-bold">Add a book</h2>
       <form id="book-form" class="space-y-3">
-        <input type="text" id="title" required placeholder="Book title" class="w-full bg-paper border border-ink-200 rounded-lg p-3 text-ink-950 focus:outline-none focus:ring-2 focus:ring-ink-700">
-        <input type="text" id="author" required placeholder="Author" class="w-full bg-paper border border-ink-200 rounded-lg p-3 text-ink-950 focus:outline-none focus:ring-2 focus:ring-ink-700">
-        <div class="grid grid-cols-2 gap-3">
-          <select id="genre" class="w-full bg-paper border border-ink-200 rounded-lg p-3 text-ink-950 text-sm focus:outline-none focus:ring-2 focus:ring-ink-700">
+        <input type="text" id="title" required placeholder="Book title" class="w-full bg-paper border border-ink-200 rounded-xl p-3 text-sm text-ink-950 focus:outline-none focus:ring-2 focus:ring-ink-700">
+        <input type="text" id="author" required placeholder="Author" class="w-full bg-paper border border-ink-200 rounded-xl p-3 text-sm text-ink-950 focus:outline-none focus:ring-2 focus:ring-ink-700">
+        <div class="grid grid-cols-2 gap-2 sm:gap-3">
+          <select id="genre" class="w-full bg-paper border border-ink-200 rounded-xl p-3 text-ink-950 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-ink-700">
             <option value="" selected>Genre…</option>
           </select>
-          <select id="condition" class="w-full bg-paper border border-ink-200 rounded-lg p-3 text-ink-950 text-sm focus:outline-none focus:ring-2 focus:ring-ink-700">
+          <select id="condition" class="w-full bg-paper border border-ink-200 rounded-xl p-3 text-ink-950 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-ink-700">
             <option value="" selected>Condition…</option>
           </select>
         </div>
-        <div class="grid grid-cols-2 gap-3">
-          <input type="text" id="isbn" placeholder="ISBN (optional)" class="w-full bg-paper border border-ink-200 rounded-lg p-3 text-ink-950 text-sm focus:outline-none focus:ring-2 focus:ring-ink-700">
-          <input type="number" id="publishedYear" placeholder="Year" class="w-full bg-paper border border-ink-200 rounded-lg p-3 text-ink-950 text-sm focus:outline-none focus:ring-2 focus:ring-ink-700">
+        <div class="grid grid-cols-2 gap-2 sm:gap-3">
+          <input type="text" id="isbn" placeholder="ISBN (optional)" class="w-full bg-paper border border-ink-200 rounded-xl p-3 text-ink-950 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-ink-700">
+          <input type="number" id="publishedYear" placeholder="Year" class="w-full bg-paper border border-ink-200 rounded-xl p-3 text-ink-950 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-ink-700">
         </div>
-        <input type="url" id="coverUrl" placeholder="Cover image URL (optional)" class="w-full bg-paper border border-ink-200 rounded-lg p-3 text-ink-950 text-sm focus:outline-none focus:ring-2 focus:ring-ink-700">
+        <input type="url" id="coverUrl" placeholder="Cover image URL (optional)" class="w-full bg-paper border border-ink-200 rounded-xl p-3 text-ink-950 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-ink-700">
         <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2 items-center">
-          <label for="coverFile" class="flex items-center justify-center gap-2 bg-ink-800/5 text-ink-700 border border-ink-200 text-xs font-semibold py-2.5 px-3 rounded-lg hover:bg-ink-800/10 transition-colors cursor-pointer">
+          <label for="coverFile" class="flex items-center justify-center gap-2 bg-ink-800/5 text-ink-700 border border-ink-200 text-xs font-semibold py-2.5 px-3 rounded-xl hover:bg-ink-800/10 transition-colors cursor-pointer">
             <span id="cover-file-label">Add cover photo</span>
           </label>
-          <button type="button" id="clear-cover-photo" class="hidden text-xs font-semibold text-rust-600 bg-rust-600/10 hover:bg-rust-600/20 rounded-lg px-3 py-2.5">Clear</button>
+          <button type="button" id="clear-cover-photo" class="hidden text-xs font-semibold text-rust-600 bg-rust-600/10 hover:bg-rust-600/20 rounded-xl px-3 py-2.5">Clear</button>
           <input type="file" id="coverFile" accept="image/*" capture="environment" class="hidden">
         </div>
-        <textarea id="description" placeholder="A note about this copy — why you love it, its quirks…" rows="2" class="w-full bg-paper border border-ink-200 rounded-lg p-3 text-ink-950 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ink-700"></textarea>
+        <textarea id="description" placeholder="A note about this copy — why you love it, its quirks…" rows="2" class="w-full bg-paper border border-ink-200 rounded-xl p-3 text-ink-950 text-xs sm:text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ink-700"></textarea>
 
         <div class="flex items-center justify-between pt-1">
           <div>
@@ -188,67 +201,94 @@
             <div class="flex gap-0.5" id="rating-picker-add"></div>
             <input type="hidden" id="rating-add" value="0">
           </div>
-          <select id="status" class="bg-paper border border-ink-200 rounded-lg p-2.5 text-ink-950 text-sm focus:outline-none focus:ring-2 focus:ring-ink-700">
+          <select id="status" class="bg-paper border border-ink-200 rounded-xl p-2.5 text-ink-950 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-ink-700">
             <option value="Available">Available</option>
             <option value="Reading">Reading</option>
             <option value="Lent Out">Lent Out</option>
           </select>
         </div>
 
-        <button type="submit" class="w-full bg-rust-600 hover:bg-rust-700 text-paper font-semibold py-3 px-4 rounded-lg transition-colors">Add to shelf</button>
+        <button type="submit" class="w-full bg-rust-600 hover:bg-rust-700 text-paper font-semibold py-3.5 px-4 rounded-xl transition-colors shadow-sm">Add to shelf</button>
       </form>
     </div>
 
+    <!-- Right Column: Spotlight, Borrowed Books & My Shelf -->
     <div id="library-panel" class="lg:col-span-2 space-y-6">
-      <div id="borrowed-panel" class="app-panel p-5 rounded-xl border border-ink-200 shadow-sm">
+      
+      <!-- NEW: Dynamic Cloud Spotlight & Stats Widget -->
+      <div id="cloud-spotlight-card" class="app-panel p-4 sm:p-5 rounded-2xl border border-ink-200 shadow-sm relative overflow-hidden bg-gradient-to-r from-paper-dark/60 via-white to-gold-100/40 transition-all">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <span class="inline-flex items-center justify-center w-2 h-2 rounded-full bg-rust-500 animate-pulse"></span>
+            <p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 font-bold">Cloud Spotlight &amp; Network Pulse</p>
+          </div>
+          <div class="flex items-center gap-1">
+            <button onclick="prevSpotlight()" class="p-1.5 rounded-lg text-ink-500 hover:bg-ink-100 transition-colors" title="Previous highlight">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 19l-7-7 7-7"/></svg>
+            </button>
+            <button onclick="nextSpotlight()" class="p-1.5 rounded-lg text-ink-500 hover:bg-ink-100 transition-colors" title="Next highlight">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+        </div>
+        <div id="spotlight-content" class="min-h-[76px] flex items-center">
+          <p class="text-xs text-ink-400 font-mono">Loading community highlights…</p>
+        </div>
+      </div>
+
+      <!-- Books I borrowed -->
+      <div id="borrowed-panel" class="app-panel p-5 rounded-2xl border border-ink-200 shadow-sm">
         <div class="flex items-center justify-between mb-3">
           <div>
-            <p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-1">Borrower dashboard</p>
-            <h2 class="font-display text-xl text-ink-950">Books I borrowed</h2>
+            <p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-0.5">Borrower dashboard</p>
+            <h2 class="font-display text-xl text-ink-950 font-bold">Books I borrowed</h2>
           </div>
         </div>
         <div id="borrowed-books-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
         <p id="borrowed-empty-state" class="text-sm text-ink-400">No borrowed books yet.</p>
       </div>
+
+      <!-- My Shelf Grid -->
       <div>
         <div class="flex items-center justify-between mb-3">
           <div>
-            <p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-1">Owner dashboard</p>
-            <h2 class="font-display text-xl text-ink-950">My shelf</h2>
+            <p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-0.5">Owner dashboard</p>
+            <h2 class="font-display text-xl text-ink-950 font-bold">My shelf</h2>
           </div>
         </div>
-      <div id="books-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
-      <div id="empty-state" class="hidden text-center p-12 rounded-2xl border border-dashed border-ink-300 bg-white/50">
-        <p class="font-display text-xl text-ink-700">Your shelves are empty.</p>
-        <p class="text-sm text-ink-400 mt-1">Add your first book, or scan a barcode to get started.</p>
+        <div id="books-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+        <div id="empty-state" class="hidden text-center p-8 sm:p-12 rounded-2xl border border-dashed border-ink-300 bg-white/50">
+          <p class="font-display text-xl text-ink-700 font-semibold">Your shelves are empty.</p>
+          <p class="text-sm text-ink-400 mt-1">Add your first book above, or scan a barcode to get started.</p>
+        </div>
       </div>
-      </div>
+
     </div>
   </div>
 
   <!-- TAB 2: FRIENDS -->
   <div id="view-friends" class="hidden space-y-6">
-    <div class="app-panel p-6 rounded-xl border border-ink-200 shadow-sm">
+    <div class="app-panel p-5 sm:p-6 rounded-2xl border border-ink-200 shadow-sm">
       <p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-1">Connections</p>
-      <h2 class="font-display text-xl text-ink-950 mb-4">My friends' shelves</h2>
+      <h2 class="font-display text-xl text-ink-950 mb-4 font-bold">My friends' shelves</h2>
       <div id="friends-list-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
     </div>
 
-    <div id="pending-sent-card" class="hidden app-panel p-6 rounded-xl border border-ink-200 shadow-sm">
+    <div id="pending-sent-card" class="hidden app-panel p-5 sm:p-6 rounded-2xl border border-ink-200 shadow-sm">
       <p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-1">Awaiting reply</p>
-      <h2 class="font-display text-xl text-ink-950 mb-4">Requests you've sent</h2>
+      <h2 class="font-display text-xl text-ink-950 mb-4 font-bold">Requests you've sent</h2>
       <div id="pending-sent-container" class="space-y-3"></div>
     </div>
   </div>
 
   <!-- TAB 3: GLOBAL SEARCH -->
   <div id="view-search" class="hidden space-y-4">
-    <div class="app-panel p-6 rounded-xl border border-ink-200 shadow-sm">
+    <div class="app-panel p-5 sm:p-6 rounded-2xl border border-ink-200 shadow-sm">
       <p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-1">Discover</p>
-      <h2 class="font-display text-xl text-ink-950 mb-4">Search libraries &amp; books</h2>
-      <div class="flex gap-2">
-        <input type="text" id="global-search-input" placeholder="Search by book, author, user name, email, or shelf name…" class="flex-1 bg-paper border border-ink-200 rounded-lg p-3 text-ink-950 focus:outline-none focus:ring-2 focus:ring-ink-700">
-        <button onclick="performGlobalSearch()" class="bg-ink-950 hover:bg-ink-900 text-paper font-semibold py-3 px-6 rounded-lg transition-colors">Search</button>
+      <h2 class="font-display text-xl text-ink-950 mb-4 font-bold">Search libraries &amp; books</h2>
+      <div class="flex flex-col sm:flex-row gap-2">
+        <input type="text" id="global-search-input" placeholder="Search by book, author, user name, email, or shelf name…" class="flex-1 bg-paper border border-ink-200 rounded-xl p-3 text-sm text-ink-950 focus:outline-none focus:ring-2 focus:ring-ink-700">
+        <button onclick="performGlobalSearch()" class="bg-ink-950 hover:bg-ink-900 text-paper font-semibold py-3 px-6 rounded-xl transition-colors shrink-0">Search</button>
       </div>
     </div>
     <div id="search-results-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
@@ -256,9 +296,9 @@
 
   <!-- TAB 4: INBOX -->
   <div id="view-inbox" class="hidden space-y-6">
-    <div class="app-panel p-6 rounded-xl border border-ink-200 shadow-sm">
+    <div class="app-panel p-5 sm:p-6 rounded-2xl border border-ink-200 shadow-sm">
       <p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-1">Notifications</p>
-      <h2 class="font-display text-xl text-ink-950 mb-1">Inbox</h2>
+      <h2 class="font-display text-xl text-ink-950 mb-1 font-bold">Inbox</h2>
       <p class="text-sm text-ink-500 mb-4">Completed requests stay here with their final status.</p>
       <div id="inbox-body" class="space-y-3">
         <p class="text-ink-400 text-sm">No pending notifications.</p>
@@ -268,66 +308,67 @@
 
 </div>
 
-<div id="toast-stack" class="fixed bottom-5 right-5 z-[60] flex flex-col gap-2 items-end pointer-events-none"></div>
+<!-- Toast Container -->
+<div id="toast-stack" class="fixed bottom-5 right-5 z-[60] flex flex-col gap-2 items-end pointer-events-none max-w-[90vw]"></div>
 
 <!-- Scanner Modal -->
 <div id="scanner-modal" class="hidden fixed inset-0 bg-ink-950/90 z-50 flex flex-col justify-center items-center p-4">
-  <div class="bg-paper p-4 rounded-2xl w-full max-w-md border border-ink-200 relative">
-    <h3 class="font-display text-lg text-ink-950 mb-2 text-center">Scan ISBN barcode</h3>
-    <div id="reader" class="w-full bg-ink-950 rounded-lg overflow-hidden border-2 border-rust-500"></div>
+  <div class="bg-paper p-4 sm:p-6 rounded-2xl w-full max-w-md border border-ink-200 relative shadow-2xl">
+    <h3 class="font-display text-lg text-ink-950 mb-2 text-center font-bold">Scan ISBN barcode</h3>
+    <div id="reader" class="w-full bg-ink-950 rounded-xl overflow-hidden border-2 border-rust-500"></div>
     <p id="scan-status" class="text-ink-600 text-center text-sm font-semibold mt-4 h-5"></p>
-    <button id="close-scan-btn" class="mt-4 w-full bg-ink-100 text-ink-800 py-2 rounded-lg font-semibold">Cancel</button>
+    <button id="close-scan-btn" class="mt-4 w-full bg-ink-100 text-ink-800 py-3 rounded-xl font-semibold hover:bg-ink-200 transition-colors">Cancel</button>
   </div>
 </div>
 
 <!-- Edit Book Modal -->
 <div id="edit-book-modal" class="hidden fixed inset-0 bg-ink-950/80 z-50 flex flex-col justify-center items-center p-4">
-  <div class="bg-paper p-6 rounded-2xl w-full max-w-md border border-ink-200 shadow-2xl max-h-[90vh] overflow-y-auto">
+  <div class="bg-paper p-5 sm:p-6 rounded-2xl w-full max-w-md border border-ink-200 shadow-2xl max-h-[90vh] overflow-y-auto">
     <p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-1">Edit entry</p>
-    <h3 class="font-display text-2xl text-ink-950 mb-4">Update this book</h3>
+    <h3 class="font-display text-2xl text-ink-950 mb-4 font-bold">Update this book</h3>
     <form id="edit-book-form" class="space-y-3">
       <input type="hidden" id="edit-id">
-      <input type="text" id="edit-title" required placeholder="Book title" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-ink-950 focus:outline-none focus:ring-2 focus:ring-ink-700">
-      <input type="text" id="edit-author" required placeholder="Author" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-ink-950 focus:outline-none focus:ring-2 focus:ring-ink-700">
+      <input type="text" id="edit-title" required placeholder="Book title" class="w-full bg-white border border-ink-200 rounded-xl p-3 text-sm text-ink-950 focus:outline-none focus:ring-2 focus:ring-ink-700">
+      <input type="text" id="edit-author" required placeholder="Author" class="w-full bg-white border border-ink-200 rounded-xl p-3 text-sm text-ink-950 focus:outline-none focus:ring-2 focus:ring-ink-700">
       <div class="grid grid-cols-2 gap-3">
-        <select id="edit-genre" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-ink-950 text-sm focus:outline-none focus:ring-2 focus:ring-ink-700"></select>
-        <select id="edit-condition" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-ink-950 text-sm focus:outline-none focus:ring-2 focus:ring-ink-700"></select>
+        <select id="edit-genre" class="w-full bg-white border border-ink-200 rounded-xl p-3 text-ink-950 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-ink-700"></select>
+        <select id="edit-condition" class="w-full bg-white border border-ink-200 rounded-xl p-3 text-ink-950 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-ink-700"></select>
       </div>
       <div class="grid grid-cols-2 gap-3">
-        <input type="text" id="edit-isbn" placeholder="ISBN" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-ink-950 text-sm focus:outline-none focus:ring-2 focus:ring-ink-700">
-        <input type="number" id="edit-publishedYear" placeholder="Year" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-ink-950 text-sm focus:outline-none focus:ring-2 focus:ring-ink-700">
+        <input type="text" id="edit-isbn" placeholder="ISBN" class="w-full bg-white border border-ink-200 rounded-xl p-3 text-ink-950 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-ink-700">
+        <input type="number" id="edit-publishedYear" placeholder="Year" class="w-full bg-white border border-ink-200 rounded-xl p-3 text-ink-950 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-ink-700">
       </div>
-      <input type="url" id="edit-coverUrl" placeholder="Cover image URL" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-ink-950 text-sm focus:outline-none focus:ring-2 focus:ring-ink-700">
+      <input type="url" id="edit-coverUrl" placeholder="Cover image URL" class="w-full bg-white border border-ink-200 rounded-xl p-3 text-ink-950 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-ink-700">
       <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2 items-center">
-        <label for="edit-coverFile" class="flex items-center justify-center gap-2 bg-white text-ink-700 border border-ink-200 text-xs font-semibold py-2.5 px-3 rounded-lg hover:bg-ink-50 transition-colors cursor-pointer">
+        <label for="edit-coverFile" class="flex items-center justify-center gap-2 bg-white text-ink-700 border border-ink-200 text-xs font-semibold py-2.5 px-3 rounded-xl hover:bg-ink-50 transition-colors cursor-pointer">
           <span id="edit-cover-file-label">Replace cover photo</span>
         </label>
-        <button type="button" id="edit-clear-cover-photo" class="hidden text-xs font-semibold text-rust-600 bg-rust-600/10 hover:bg-rust-600/20 rounded-lg px-3 py-2.5">Clear</button>
+        <button type="button" id="edit-clear-cover-photo" class="hidden text-xs font-semibold text-rust-600 bg-rust-600/10 hover:bg-rust-600/20 rounded-xl px-3 py-2.5">Clear</button>
         <input type="file" id="edit-coverFile" accept="image/*" capture="environment" class="hidden">
       </div>
-      <textarea id="edit-description" rows="2" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-ink-950 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ink-700"></textarea>
+      <textarea id="edit-description" rows="2" class="w-full bg-white border border-ink-200 rounded-xl p-3 text-ink-950 text-xs sm:text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ink-700"></textarea>
       <div class="flex items-center justify-between pt-1">
         <div>
           <p class="font-mono text-[10px] uppercase tracking-wider text-ink-400 mb-1">Your rating</p>
           <div class="flex gap-0.5" id="rating-picker-edit"></div>
           <input type="hidden" id="rating-edit" value="0">
         </div>
-        <select id="edit-status" class="bg-white border border-ink-200 rounded-lg p-2.5 text-ink-950 text-sm focus:outline-none focus:ring-2 focus:ring-ink-700">
+        <select id="edit-status" class="bg-white border border-ink-200 rounded-xl p-2.5 text-ink-950 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-ink-700">
           <option value="Available">Available</option>
           <option value="Reading">Reading</option>
           <option value="Lent Out">Lent Out</option>
         </select>
       </div>
       <div class="flex gap-2 pt-2">
-        <button type="button" onclick="closeEditModal()" class="flex-1 bg-ink-100 text-ink-800 font-semibold py-3 rounded-lg">Cancel</button>
-        <button type="submit" class="flex-1 bg-ink-950 hover:bg-ink-900 text-paper font-semibold py-3 rounded-lg transition-colors">Save changes</button>
+        <button type="button" onclick="closeEditModal()" class="flex-1 bg-ink-100 text-ink-800 font-semibold py-3 rounded-xl hover:bg-ink-200 transition-colors">Cancel</button>
+        <button type="submit" class="flex-1 bg-ink-950 hover:bg-ink-900 text-paper font-semibold py-3 rounded-xl transition-colors">Save changes</button>
       </div>
     </form>
   </div>
 </div>
 
 <script>
-  // --- ICONS (inline SVG, no emoji) ---
+  // --- ICONS (inline SVG, no external dependencies) ---
   const ICON_PATHS = {
     book: '<path d="M4 5.2A2.3 2.3 0 0 1 6.3 3H19v16H6.3A2.3 2.3 0 0 1 4 16.7z"/><path d="M4 5.2v11.5A2.3 2.3 0 0 0 6.3 19H19"/>',
     users: '<circle cx="8.5" cy="8" r="3"/><circle cx="16.5" cy="10" r="2.3"/><path d="M2.8 20c0-3 2.5-5.2 5.7-5.2s5.7 2.2 5.7 5.2"/><path d="M14.8 15.2c2.3.3 3.9 2 3.9 4.3"/>',
@@ -342,7 +383,8 @@
     clock: '<circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 2"/>',
     mail: '<path d="M4 6.5h16v11H4z"/><path d="M4.5 7l7.5 6 7.5-6"/>',
     check: '<path d="M5 13l4 4L19 7"/>',
-    x: '<path d="M6 6l12 12M18 6L6 18"/>'
+    x: '<path d="M6 6l12 12M18 6L6 18"/>',
+    sparkles: '<path d="M12 3v3m0 12v3M3 12h3m12 0h3m-3.5-6.5l-2 2m-7 7l-2 2m0-11l2 2m7 7l2 2"/>'
   };
   function icon(name, cls) {
     return `<svg class="${cls||'w-4 h-4'}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${ICON_PATHS[name]||''}</svg>`;
@@ -354,9 +396,9 @@
   document.getElementById('tab-search').innerHTML = icon('search') + '<span>Search</span>';
   document.getElementById('tab-inbox').innerHTML = icon('bell') + '<span>Inbox</span><span id="inbox-badge" class="hidden bg-rust-500 text-paper rounded-full px-1.5 py-0.5 text-[10px] font-mono">0</span>';
   document.getElementById('start-scan-btn').innerHTML = icon('camera') + '<span>Scan</span>';
-  document.getElementById('owner-controls').querySelector('button').innerHTML = icon('link') + '<span>Copy share link</span>';
+  document.getElementById('owner-controls').querySelector('button').innerHTML = icon('link') + '<span class="hidden sm:inline">Copy share link</span>';
 
-  // --- TEXT ESCAPING (prevents stored XSS from user-supplied titles/names/etc.) ---
+  // --- TEXT ESCAPING (XSS Prevention) ---
   function esc(str) {
     return String(str ?? '')
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -399,7 +441,7 @@
   });
 
   function starPickerHtml(prefix) {
-    return [1,2,3,4,5].map(n => `<button type="button" onclick="setRating('${prefix}', ${n})" data-n="${n}" class="rating-btn text-ink-300 hover:text-gold-500 transition-colors"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="${STAR_PATH}"/></svg></button>`).join('');
+    return [1,2,3,4,5].map(n => `<button type="button" onclick="setRating('${prefix}', ${n})" data-n="${n}" class="rating-btn text-ink-300 hover:text-gold-500 transition-colors p-0.5"><svg viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4 sm:w-5 sm:h-5"><path d="${STAR_PATH}"/></svg></button>`).join('');
   }
   document.getElementById('rating-picker-add').innerHTML = starPickerHtml('add');
   document.getElementById('rating-picker-edit').innerHTML = starPickerHtml('edit');
@@ -497,9 +539,6 @@
   });
 
   // --- TOASTS & ERROR HANDLING ---
-  // Firestore rejections (most often a security-rule denial) used to fail
-  // silently into the console. Every read/write now runs through guard() so
-  // the user actually finds out when something didn't save.
   function toast(message, kind) {
     const stack = document.getElementById('toast-stack');
     if (!stack) return;
@@ -511,7 +550,7 @@
     const el = document.createElement('div');
     el.className = `toast-item pointer-events-auto max-w-xs text-sm font-medium px-4 py-3 rounded-xl border shadow-xl ${tones[kind] || tones.info}`;
     el.setAttribute('role', kind === 'error' ? 'alert' : 'status');
-    el.textContent = message; // textContent, never innerHTML — message text can't inject markup
+    el.textContent = message;
     stack.appendChild(el);
     setTimeout(() => {
       el.classList.add('toast-out');
@@ -538,7 +577,6 @@
     }
   }
 
-  // Surfaces listener failures too — onSnapshot swallows errors without this.
   function listenerError(context) {
     return (err) => {
       console.error(context, err);
@@ -564,8 +602,8 @@
   let currentUser = null;
   let userProfile = null;
   let confirmedFriends = [];
-  let friendshipDocs = {};        // friendUid -> friendship document id (needed to unfriend)
-  let pendingSentRequests = [];   // outgoing requests the user can still cancel
+  let friendshipDocs = {};
+  let pendingSentRequests = [];
   let myBooksCache = {};
   let borrowedBooksCache = [];
   let inlineCoverData = '';
@@ -573,8 +611,27 @@
   let inboxState = { friends: [], ownerRequests: [], requesterRequests: [] };
   let inboxUnsubscribers = [];
 
+  // Spotlight carousel state
+  let spotlightItems = [];
+  let spotlightIndex = 0;
+  let spotlightTimer = null;
+
   // --- 2. AUTHENTICATION & PROFILE CHECK ---
-  function signIn() { auth.signInWithPopup(googleProvider); }
+  function signIn() {
+  auth.signInWithPopup(googleProvider)
+    .catch((error) => {
+      console.error("Google Sign-In Error:", error);
+      
+      if (error.code === 'auth/popup-blocked') {
+        toast("Popup blocked by browser. Redirecting...", "info");
+        auth.signInWithRedirect(googleProvider);
+      } else if (error.code === 'auth/unauthorized-domain') {
+        toast("This domain is not authorized in Firebase Console.", "error");
+      } else {
+        toast(`Sign-in failed: ${error.message}`, "error");
+      }
+    });
+  }
   function signOut() { auth.signOut(); }
 
   auth.onAuthStateChanged(async (user) => {
@@ -624,11 +681,15 @@
 
   async function initApp() {
     document.getElementById('user-info').textContent = userProfile.libraryName;
+    if (document.getElementById('user-info-mobile')) {
+      document.getElementById('user-info-mobile').textContent = userProfile.libraryName;
+    }
     document.getElementById('app-content').classList.remove('hidden');
     await loadFriendsList();
     fetchMyBooks();
     fetchBorrowedBooks();
     listenToInbox();
+    initCloudSpotlight();
   }
 
   // --- 3. TABS NAVIGATION ---
@@ -647,13 +708,13 @@
     if (tabName === 'friends') renderFriendsView();
   }
 
-  // --- 4. BOOK CARD RENDERING (shared across my-library / friend-library / search) ---
+  // --- 4. BOOK CARD RENDERING ---
   function bookCoverHtml(book) {
     const url = safeUrl(book.coverUrl);
     const initial = (book.title || '?').trim().charAt(0).toUpperCase();
     const colorClass = GENRE_COLORS[book.genre] || 'bg-ink-400';
-    const placeholder = `<div class="w-16 h-20 rounded-md ${colorClass} flex items-center justify-center font-display text-2xl text-paper shrink-0 ${url ? 'hidden' : ''}">${esc(initial)}</div>`;
-    const img = url ? `<img src="${esc(url)}" loading="lazy" onerror="bookImgFallback(this)" class="w-16 h-20 rounded-md object-cover shrink-0 border border-ink-200">` : '';
+    const placeholder = `<div class="w-14 h-18 sm:w-16 sm:h-20 rounded-lg ${colorClass} flex items-center justify-center font-display text-xl sm:text-2xl text-paper shrink-0 ${url ? 'hidden' : ''}">${esc(initial)}</div>`;
+    const img = url ? `<img src="${esc(url)}" loading="lazy" onerror="bookImgFallback(this)" class="w-14 h-18 sm:w-16 sm:h-20 rounded-lg object-cover shrink-0 border border-ink-200">` : '';
     return img + placeholder;
   }
 
@@ -667,19 +728,19 @@
 
   function statusBadge(status) {
     const map = { 'Available': 'bg-ink-600', 'Reading': 'bg-gold-600', 'Lent Out': 'bg-rust-600' };
-    return `<span class="text-[10px] font-mono uppercase tracking-wide px-2 py-1 rounded-md ${map[status] || 'bg-ink-400'} text-paper">${esc(status || 'Unknown')}</span>`;
+    return `<span class="text-[10px] font-mono uppercase tracking-wide px-2 py-0.5 rounded-md ${map[status] || 'bg-ink-400'} text-paper shrink-0">${esc(status || 'Unknown')}</span>`;
   }
 
   function loanDetailsHtml(book, mode) {
     if (book.status !== 'Lent Out') return '';
     const lentDate = formatDate(book.lentAt);
     if (mode === 'borrower') {
-      return `<div class="loan-note mt-3 rounded-lg border border-rust-200 px-3 py-2 text-xs text-ink-700">
+      return `<div class="loan-note mt-2.5 rounded-xl border border-rust-200 px-3 py-2 text-xs text-ink-700">
         Borrowed from <span class="font-semibold text-ink-950">${esc(book.ownerName || 'a friend')}</span>${lentDate ? ` on ${esc(lentDate)}` : ''}.
       </div>`;
     }
     if (book.borrowerName || book.lentAt) {
-      return `<div class="loan-note mt-3 rounded-lg border border-rust-200 px-3 py-2 text-xs text-ink-700">
+      return `<div class="loan-note mt-2.5 rounded-xl border border-rust-200 px-3 py-2 text-xs text-ink-700">
         Lent to <span class="font-semibold text-ink-950">${esc(book.borrowerName || 'Borrower')}</span>${lentDate ? ` on ${esc(lentDate)}` : ''}.
       </div>`;
     }
@@ -688,27 +749,160 @@
 
   function renderBookCard(book, actionsHtml, ownerLabel, mode) {
     return `
-      <div class="book-card app-panel rounded-xl border border-ink-200 shadow-sm p-4 flex gap-4">
+      <div class="book-card app-panel rounded-2xl border border-ink-200 shadow-sm p-3.5 sm:p-4 flex gap-3 sm:gap-4">
         ${bookCoverHtml(book)}
         <div class="flex-1 min-w-0">
-          <div class="flex items-start justify-between gap-2">
+          <div class="flex items-start justify-between gap-1.5">
             <div class="min-w-0">
-              <h3 class="font-display text-lg text-ink-950 leading-snug truncate">${esc(book.title)}</h3>
-              <p class="text-xs text-ink-500 font-mono">${esc(book.author)}</p>
+              <h3 class="font-display text-base sm:text-lg text-ink-950 leading-snug truncate font-bold">${esc(book.title)}</h3>
+              <p class="text-xs text-ink-500 font-mono truncate">${esc(book.author)}</p>
             </div>
             ${statusBadge(book.status)}
           </div>
-          ${ownerLabel ? `<p class="text-xs text-rust-600 font-semibold mt-1">${ownerLabel}</p>` : ''}
-          <div class="flex flex-wrap gap-1.5 mt-2">${bookMetaChips(book)}</div>
+          ${ownerLabel ? `<p class="text-xs text-rust-600 font-semibold mt-1 truncate">${ownerLabel}</p>` : ''}
+          <div class="flex flex-wrap gap-1 mt-2">${bookMetaChips(book)}</div>
           ${starsRow(book.rating)}
           ${book.description ? `<p class="text-xs text-ink-500 mt-2 line-clamp-2">${esc(book.description)}</p>` : ''}
           ${loanDetailsHtml(book, mode)}
-          <div class="flex items-center gap-2 mt-3">${actionsHtml}</div>
+          <div class="flex flex-wrap items-center gap-1.5 mt-3">${actionsHtml}</div>
         </div>
       </div>`;
   }
 
-  // --- 5. MY LIBRARY & BOOKS ---
+  // --- 5. SPOTLIGHT & NETWORK PULSE (Dynamic Community Ticker) ---
+  async function initCloudSpotlight() {
+    const content = document.getElementById('spotlight-content');
+    if (!content) return;
+
+    try {
+      const [booksSnap, profilesSnap] = await Promise.all([
+        db.collection("books").get(),
+        db.collection("profiles").get()
+      ]);
+
+      const allBooks = [];
+      const genreCounts = {};
+      let availableCount = 0;
+
+      booksSnap.forEach(doc => {
+        const data = doc.data();
+        allBooks.push({ id: doc.id, ...data });
+        if (data.status === 'Available') availableCount++;
+        if (data.genre) {
+          genreCounts[data.genre] = (genreCounts[data.genre] || 0) + 1;
+        }
+      });
+
+      // Find top genre
+      let topGenre = 'Fiction';
+      let maxCount = 0;
+      Object.entries(genreCounts).forEach(([g, count]) => {
+        if (count > maxCount) { topGenre = g; maxCount = count; }
+      });
+
+      // Filter available books from OTHER users to spotlight
+      const communityAvailable = allBooks.filter(b => b.ownerId !== currentUser.uid && b.status === 'Available');
+
+      spotlightItems = [];
+
+      // Item 1: General Stats Highlight
+      spotlightItems.push(`
+        <div class="flex items-center gap-3 w-full">
+          <div class="w-10 h-10 rounded-xl bg-ink-800 text-paper flex items-center justify-center shrink-0">
+            ${icon('book','w-5 h-5')}
+          </div>
+          <div class="min-w-0">
+            <h4 class="text-sm font-bold text-ink-950 font-display">Network Shelf Overview</h4>
+            <p class="text-xs text-ink-600 mt-0.5">
+              <span class="font-semibold text-rust-600">${availableCount}</span> books ready to borrow across <span class="font-semibold text-ink-950">${profilesSnap.size}</span> active libraries.
+            </p>
+          </div>
+        </div>
+      `);
+
+      // Item 2: Community Available Book Highlight (if any exists)
+      if (communityAvailable.length > 0) {
+        const spotBook = communityAvailable[Math.floor(Math.random() * communityAvailable.length)];
+        const isFriend = confirmedFriends.includes(spotBook.ownerId);
+        const actionBtn = isFriend
+          ? `<button data-action="borrow" data-id="${esc(spotBook.id)}" data-title="${esc(spotBook.title)}" data-owner="${esc(spotBook.ownerId)}" class="bg-rust-600 text-paper hover:bg-rust-700 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors shrink-0">Borrow</button>`
+          : `<button data-action="add-friend" data-owner="${esc(spotBook.ownerId)}" data-name="${esc(spotBook.ownerName || 'that library')}" class="bg-ink-800 text-paper hover:bg-ink-900 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors shrink-0">Connect</button>`;
+
+        spotlightItems.push(`
+          <div class="flex items-center justify-between gap-3 w-full">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="w-10 h-10 rounded-xl bg-gold-500 text-paper flex items-center justify-center font-display text-lg font-bold shrink-0">
+                ${esc((spotBook.title || '?').charAt(0))}
+              </div>
+              <div class="min-w-0">
+                <span class="text-[10px] font-mono uppercase tracking-wider text-rust-600">Spotlight Available Copy</span>
+                <h4 class="text-sm font-bold text-ink-950 font-display truncate">${esc(spotBook.title)}</h4>
+                <p class="text-xs text-ink-500 truncate">by ${esc(spotBook.author)} • <span class="font-semibold">${esc(spotBook.ownerName || 'Friend')}</span></p>
+              </div>
+            </div>
+            ${actionBtn}
+          </div>
+        `);
+      }
+
+      // Item 3: Popular Genre Insight
+      spotlightItems.push(`
+        <div class="flex items-center gap-3 w-full">
+          <div class="w-10 h-10 rounded-xl bg-rust-500 text-paper flex items-center justify-center shrink-0">
+            ${icon('sparkles','w-5 h-5')}
+          </div>
+          <div class="min-w-0">
+            <h4 class="text-sm font-bold text-ink-950 font-display">Community Trend</h4>
+            <p class="text-xs text-ink-600 mt-0.5">
+              <span class="font-semibold text-rust-600">${esc(topGenre)}</span> is currently the most shared genre in the CloudLibrary network.
+            </p>
+          </div>
+        </div>
+      `);
+
+      spotlightIndex = 0;
+      renderSpotlightItem();
+      startSpotlightTimer();
+    } catch (e) {
+      console.error('Spotlight load failed', e);
+    }
+  }
+
+  function renderSpotlightItem() {
+    const content = document.getElementById('spotlight-content');
+    if (!content || !spotlightItems.length) return;
+    content.innerHTML = spotlightItems[spotlightIndex];
+  }
+
+  function nextSpotlight() {
+    if (!spotlightItems.length) return;
+    spotlightIndex = (spotlightIndex + 1) % spotlightItems.length;
+    renderSpotlightItem();
+    restartSpotlightTimer();
+  }
+
+  function prevSpotlight() {
+    if (!spotlightItems.length) return;
+    spotlightIndex = (spotlightIndex - 1 + spotlightItems.length) % spotlightItems.length;
+    renderSpotlightItem();
+    restartSpotlightTimer();
+  }
+
+  function startSpotlightTimer() {
+    clearInterval(spotlightTimer);
+    spotlightTimer = setInterval(() => {
+      if (spotlightItems.length > 1) {
+        spotlightIndex = (spotlightIndex + 1) % spotlightItems.length;
+        renderSpotlightItem();
+      }
+    }, 6500);
+  }
+
+  function restartSpotlightTimer() {
+    startSpotlightTimer();
+  }
+
+  // --- 6. MY LIBRARY & BOOKS ---
   function fetchMyBooks() {
     db.collection("books").where("ownerId", "==", currentUser.uid).onSnapshot((snapshot) => {
       const grid = document.getElementById('books-grid');
@@ -786,11 +980,13 @@
     document.getElementById('cover-file-label').textContent = 'Add cover photo';
     document.getElementById('clear-cover-photo').classList.add('hidden');
     setRating('add', 0);
+    initCloudSpotlight(); // Refresh spotlight data
   });
 
   window.deleteBook = async function (id) {
     if (!confirm("Delete this book?")) return;
     await guard(() => db.collection("books").doc(id).delete(), { context: 'Deleting a book', success: 'Book removed from your shelf.' });
+    initCloudSpotlight();
   };
 
   window.markReturned = async function (id) {
@@ -814,6 +1010,7 @@
         }).catch(err => console.error('Return history update failed', err));
       }
     });
+    initCloudSpotlight();
   };
 
   window.sendReturnReminder = async function (id) {
@@ -866,9 +1063,10 @@
     if (res === FAILED) return;
     editCoverData = '';
     closeEditModal();
+    initCloudSpotlight();
   });
 
-  // --- 6. FRIENDS SYSTEM ---
+  // --- 7. FRIENDS SYSTEM ---
   async function loadFriendsList() {
     const snap = await guard(() => db.collection("friendships").where("status", "==", "accepted").get(), { context: 'Loading your friends' });
     if (snap === FAILED) return;
@@ -881,7 +1079,7 @@
       else if (data.user2 === currentUser.uid) other = data.user1;
       if (other) {
         confirmedFriends.push(other);
-        friendshipDocs[other] = doc.id; // keep the doc id so the pair can be unfriended
+        friendshipDocs[other] = doc.id;
       }
     });
   }
@@ -894,9 +1092,6 @@
     pendingSentRequests = snap.docs.map(d => ({ id: d.id, name: d.data().user2Name || 'Unnamed library' }));
   }
 
-  // Checks both directions of the relationship — a prior version only checked
-  // documents where the target happened to be user1, which produced false
-  // "already friends" positives whenever the target had any unrelated friendship.
   async function friendshipExists(uidA, uidB) {
     const [q1, q2] = await Promise.all([
       db.collection("friendships").where("user1", "==", uidA).where("user2", "==", uidB).limit(1).get(),
@@ -929,18 +1124,17 @@
 
   async function renderFriendsView() {
     const container = document.getElementById('friends-list-container');
-    container.innerHTML = '<p class="text-ink-400 col-span-2">Loading your connections…</p>';
+    container.innerHTML = '<p class="text-ink-400 col-span-2 text-sm p-2 font-mono">Loading your connections…</p>';
 
     await Promise.all([loadFriendsList(), loadPendingSent()]);
     renderPendingSent();
     container.innerHTML = '';
 
     if (confirmedFriends.length === 0) {
-      container.innerHTML = '<p class="text-ink-400 col-span-2">No friends yet. Use Search to find libraries worth borrowing from.</p>';
+      container.innerHTML = '<p class="text-ink-400 col-span-2 text-sm p-2">No friends yet. Use Search to find libraries worth borrowing from.</p>';
       return;
     }
 
-    // Profiles are fetched in parallel — this used to await one at a time.
     const profiles = await Promise.all(confirmedFriends.map(uid =>
       db.collection("profiles").doc(uid).get()
         .then(doc => ({ uid, data: doc.exists ? doc.data() : null }))
@@ -952,17 +1146,17 @@
       const name = data.libraryName || 'Unnamed library';
       const initial = esc(name.trim().charAt(0).toUpperCase() || '?');
       container.insertAdjacentHTML('beforeend', `
-        <div class="bg-paper p-4 rounded-xl border border-ink-200 flex justify-between items-center gap-3">
+        <div class="bg-paper p-4 rounded-2xl border border-ink-200 flex justify-between items-center gap-3">
           <div class="flex items-center gap-3 min-w-0">
-            <div class="w-10 h-10 rounded-full bg-ink-800 text-paper font-display flex items-center justify-center text-sm shrink-0">${initial}</div>
+            <div class="w-10 h-10 rounded-full bg-ink-800 text-paper font-display flex items-center justify-center text-sm font-bold shrink-0">${initial}</div>
             <div class="min-w-0">
-              <h3 class="font-display text-base text-ink-950 truncate">${esc(name)}</h3>
+              <h3 class="font-display text-base text-ink-950 truncate font-bold">${esc(name)}</h3>
               <p class="text-xs text-ink-400">Connected friend</p>
             </div>
           </div>
           <div class="flex gap-2 shrink-0">
-            <button data-action="view-shelf" data-uid="${esc(uid)}" data-name="${esc(name)}" class="bg-ink-800/10 text-ink-800 hover:bg-ink-800/20 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">View shelf</button>
-            <button data-action="unfriend" data-uid="${esc(uid)}" data-name="${esc(name)}" title="Remove friend" class="bg-rust-600/10 text-rust-600 hover:bg-rust-600/20 p-2 rounded-lg transition-colors">${icon('x','w-3.5 h-3.5')}</button>
+            <button data-action="view-shelf" data-uid="${esc(uid)}" data-name="${esc(name)}" class="bg-ink-800/10 text-ink-800 hover:bg-ink-800/20 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors">View shelf</button>
+            <button data-action="unfriend" data-uid="${esc(uid)}" data-name="${esc(name)}" title="Remove friend" class="bg-rust-600/10 text-rust-600 hover:bg-rust-600/20 p-2 rounded-xl transition-colors">${icon('x','w-3.5 h-3.5')}</button>
           </div>
         </div>`);
     });
@@ -978,9 +1172,9 @@
     }
     card.classList.remove('hidden');
     list.innerHTML = pendingSentRequests.map(req => `
-      <div class="bg-paper p-4 rounded-xl border border-ink-200 flex justify-between items-center gap-3">
+      <div class="bg-paper p-4 rounded-2xl border border-ink-200 flex justify-between items-center gap-3">
         <p class="text-sm text-ink-700 min-w-0 truncate">Waiting on <span class="font-semibold text-ink-950">${esc(req.name)}</span> to accept.</p>
-        <button data-action="cancel-request" data-id="${esc(req.id)}" data-name="${esc(req.name)}" class="bg-rust-600/10 text-rust-600 hover:bg-rust-600/20 px-3 py-1.5 rounded-lg text-xs font-semibold shrink-0 transition-colors">Cancel</button>
+        <button data-action="cancel-request" data-id="${esc(req.id)}" data-name="${esc(req.name)}" class="bg-rust-600/10 text-rust-600 hover:bg-rust-600/20 px-3 py-1.5 rounded-xl text-xs font-semibold shrink-0 transition-colors">Cancel</button>
       </div>`).join('');
   }
 
@@ -1004,42 +1198,42 @@
     document.getElementById('header-title').textContent = `${friendName}'s Library`;
 
     const grid = document.getElementById('search-results-grid');
-    grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4">Loading library…</p>';
+    grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4 text-sm font-mono">Loading library…</p>';
 
     const snap = await guard(() => db.collection("books").where("ownerId", "==", friendUid).get(), { context: "Loading that library" });
-    if (snap === FAILED) { grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4">Could not load this library.</p>'; return; }
+    if (snap === FAILED) { grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4 text-sm">Could not load this library.</p>'; return; }
     grid.innerHTML = '';
 
     if (snap.empty) {
-      grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4">This friend has no books listed.</p>';
+      grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4 text-sm">This friend has no books listed.</p>';
       return;
     }
 
     snap.forEach(doc => {
       const book = { id: doc.id, ...doc.data() };
       const actions = book.status === 'Available'
-        ? `<button data-action="borrow" data-id="${esc(doc.id)}" data-title="${esc(book.title)}" data-owner="${esc(friendUid)}" class="text-ink-800 bg-ink-800/10 hover:bg-ink-800/20 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">Request to borrow</button>`
-        : `<span class="text-xs text-ink-400">Unavailable</span>`;
+        ? `<button data-action="borrow" data-id="${esc(doc.id)}" data-title="${esc(book.title)}" data-owner="${esc(friendUid)}" class="text-ink-800 bg-ink-800/10 hover:bg-ink-800/20 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors">Request to borrow</button>`
+        : `<span class="text-xs text-ink-400 font-mono">Unavailable</span>`;
       grid.insertAdjacentHTML('beforeend', renderBookCard(book, actions));
     });
   }
   window.viewFriendLibrary = viewFriendLibrary;
 
-  // --- 7. GLOBAL SEARCH ---
+  // --- 8. GLOBAL SEARCH ---
   async function performGlobalSearch() {
     const query = document.getElementById('global-search-input').value.trim().toLowerCase();
     const grid = document.getElementById('search-results-grid');
     if (!query) {
-      grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4">Type a book, author, user name, email, or shelf name to search.</p>';
+      grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4 text-sm">Type a book, author, user name, email, or shelf name to search.</p>';
       return;
     }
-    grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4">Searching network…</p>';
+    grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4 text-sm font-mono">Searching network…</p>';
 
     const [bookSnap, profileSnap] = await Promise.all([
       guard(() => db.collection("books").get(), { context: 'Searching books' }),
       guard(() => db.collection("profiles").get(), { context: 'Searching profiles' })
     ]);
-    if (bookSnap === FAILED || profileSnap === FAILED) { grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4">Search failed. Please try again.</p>'; return; }
+    if (bookSnap === FAILED || profileSnap === FAILED) { grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4 text-sm">Search failed. Please try again.</p>'; return; }
     grid.innerHTML = '';
     let found = false;
     const matchingOwners = new Set();
@@ -1054,15 +1248,15 @@
       matchingOwners.add(doc.id);
       const isFriend = confirmedFriends.includes(doc.id);
       const name = profile.libraryName || 'Unnamed library';
-      const email = profile.ownerEmail ? `<p class="text-xs text-ink-400 mt-1">${esc(profile.ownerEmail)}</p>` : '';
+      const email = profile.ownerEmail ? `<p class="text-xs text-ink-400 mt-1 truncate">${esc(profile.ownerEmail)}</p>` : '';
       const actions = isFriend
-        ? `<button data-action="view-shelf" data-uid="${esc(doc.id)}" data-name="${esc(name)}" class="bg-ink-800/10 text-ink-800 hover:bg-ink-800/20 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">View shelf</button>`
-        : `<button data-action="add-friend" data-owner="${esc(doc.id)}" data-name="${esc(name)}" class="text-rust-600 bg-rust-600/10 hover:bg-rust-600/20 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">Add friend</button>`;
+        ? `<button data-action="view-shelf" data-uid="${esc(doc.id)}" data-name="${esc(name)}" class="bg-ink-800/10 text-ink-800 hover:bg-ink-800/20 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors">View shelf</button>`
+        : `<button data-action="add-friend" data-owner="${esc(doc.id)}" data-name="${esc(name)}" class="text-rust-600 bg-rust-600/10 hover:bg-rust-600/20 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors">Add friend</button>`;
       grid.insertAdjacentHTML('beforeend', `
-        <div class="app-panel rounded-xl border border-ink-200 shadow-sm p-4 flex justify-between items-center gap-3">
+        <div class="app-panel rounded-2xl border border-ink-200 shadow-sm p-4 flex justify-between items-center gap-3">
           <div class="min-w-0">
             <p class="font-mono text-[10px] uppercase tracking-wider text-rust-600">${isFriend ? 'Friend shelf' : 'Library shelf'}</p>
-            <h3 class="font-display text-lg text-ink-950 truncate">${esc(name)}</h3>
+            <h3 class="font-display text-lg text-ink-950 truncate font-bold">${esc(name)}</h3>
             ${email}
           </div>
           <div class="shrink-0">${actions}</div>
@@ -1080,23 +1274,23 @@
         let actions;
         if (isFriend) {
           actions = book.status === 'Available'
-            ? `<button data-action="borrow" data-id="${esc(doc.id)}" data-title="${esc(book.title)}" data-owner="${esc(book.ownerId)}" class="text-ink-800 bg-ink-800/10 hover:bg-ink-800/20 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">Request to borrow</button>`
-            : `<span class="text-xs text-ink-400">Unavailable</span>`;
+            ? `<button data-action="borrow" data-id="${esc(doc.id)}" data-title="${esc(book.title)}" data-owner="${esc(book.ownerId)}" class="text-ink-800 bg-ink-800/10 hover:bg-ink-800/20 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors">Request to borrow</button>`
+            : `<span class="text-xs text-ink-400 font-mono">Unavailable</span>`;
         } else {
-          actions = `<button data-action="add-friend" data-owner="${esc(book.ownerId)}" data-name="${esc(book.ownerName || 'that library')}" class="text-rust-600 bg-rust-600/10 hover:bg-rust-600/20 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">Add friend</button>`;
+          actions = `<button data-action="add-friend" data-owner="${esc(book.ownerId)}" data-name="${esc(book.ownerName || 'that library')}" class="text-rust-600 bg-rust-600/10 hover:bg-rust-600/20 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors">Add friend</button>`;
         }
         const ownerLabel = `${esc(book.ownerName)}${isFriend ? ' · Friend' : ''}`;
         grid.insertAdjacentHTML('beforeend', renderBookCard(book, actions, ownerLabel));
       }
     });
-    if (!found) grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4">No matching books or libraries found.</p>';
+    if (!found) grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4 text-sm">No matching books or libraries found.</p>';
   }
   window.performGlobalSearch = performGlobalSearch;
   document.getElementById('global-search-input').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') performGlobalSearch();
   });
 
-  // --- 8. BORROW & FRIEND REQUEST INBOX ---
+  // --- 9. BORROW & FRIEND REQUEST INBOX ---
   async function sendBorrowRequest(bookId, title, ownerId) {
     await guard(() => db.collection("requests").add({
       type: 'borrow',
@@ -1128,19 +1322,19 @@
   function inboxCard(iconName, title, bodyHtml, actionsHtml, status, dateValue) {
     const date = formatDate(dateValue);
     return `
-      <div class="bg-paper/80 p-4 rounded-xl border border-ink-200 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+      <div class="bg-paper/80 p-4 rounded-2xl border border-ink-200 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
         <div class="flex gap-3 items-start">
-          <div class="w-9 h-9 rounded-full bg-ink-800/10 text-ink-800 flex items-center justify-center shrink-0">${icon(iconName, 'w-4 h-4')}</div>
+          <div class="w-9 h-9 rounded-full bg-ink-800/10 text-ink-800 flex items-center justify-center shrink-0 mt-0.5">${icon(iconName, 'w-4 h-4')}</div>
           <div>
             <div class="flex flex-wrap items-center gap-2">
-              <h4 class="font-semibold text-ink-950 text-sm">${title}</h4>
+              <h4 class="font-semibold text-ink-950 text-sm font-display">${title}</h4>
               ${requestStatusPill(status)}
             </div>
             <p class="text-xs text-ink-500 mt-1">${bodyHtml}</p>
-            ${date ? `<p class="text-[11px] text-ink-400 mt-1">${esc(date)}</p>` : ''}
+            ${date ? `<p class="text-[11px] text-ink-400 font-mono mt-1">${esc(date)}</p>` : ''}
           </div>
         </div>
-        <div class="flex gap-2 shrink-0">${actionsHtml || ''}</div>
+        <div class="flex gap-2 shrink-0 self-end sm:self-center">${actionsHtml || ''}</div>
       </div>`;
   }
 
@@ -1195,15 +1389,15 @@
     items.forEach(req => {
       if (req.kind === 'friend') {
         const actions = req.status === 'pending' ? `
-          <button data-action="accept-friend" data-id="${esc(req.id)}" class="bg-ink-600/10 text-ink-700 hover:bg-ink-600/20 p-2 rounded-lg" title="Accept">${icon('check','w-4 h-4')}</button>
-          <button data-action="decline-friend" data-id="${esc(req.id)}" class="bg-rust-600/10 text-rust-600 hover:bg-rust-600/20 p-2 rounded-lg" title="Decline">${icon('x','w-4 h-4')}</button>` : '';
+          <button data-action="accept-friend" data-id="${esc(req.id)}" class="bg-ink-600/10 text-ink-700 hover:bg-ink-600/20 p-2 rounded-xl" title="Accept">${icon('check','w-4 h-4')}</button>
+          <button data-action="decline-friend" data-id="${esc(req.id)}" class="bg-rust-600/10 text-rust-600 hover:bg-rust-600/20 p-2 rounded-xl" title="Decline">${icon('x','w-4 h-4')}</button>` : '';
         inboxBody.insertAdjacentHTML('beforeend', inboxCard('users', 'Friend request', `<span class="text-rust-600 font-semibold">${esc(req.user1Name)}</span> wants to connect libraries with you.`, actions, req.status, req.createdAt));
         return;
       }
 
       if (req.type === 'return-reminder') {
         const actions = req.status === 'pending' && req.requesterId === currentUser.uid
-          ? `<button data-action="complete-reminder" data-id="${esc(req.id)}" class="bg-ink-600/10 text-ink-700 hover:bg-ink-600/20 px-3 py-1.5 rounded-lg text-xs font-semibold">Mark completed</button>`
+          ? `<button data-action="complete-reminder" data-id="${esc(req.id)}" class="bg-ink-600/10 text-ink-700 hover:bg-ink-600/20 px-3 py-1.5 rounded-xl text-xs font-semibold">Mark completed</button>`
           : '';
         const body = req.requesterId === currentUser.uid
           ? `<span class="text-rust-600 font-semibold">${esc(req.ownerName || 'The owner')}</span> reminded you to return "${esc(req.title)}".`
@@ -1214,8 +1408,8 @@
 
       if (req.audience === 'owner') {
         const actions = req.status === 'pending' ? `
-          <button data-action="approve-borrow" data-id="${esc(req.id)}" data-book="${esc(req.bookId || '')}" class="bg-ink-600/10 text-ink-700 hover:bg-ink-600/20 p-2 rounded-lg" title="Approve">${icon('check','w-4 h-4')}</button>
-          <button data-action="deny-borrow" data-id="${esc(req.id)}" class="bg-rust-600/10 text-rust-600 hover:bg-rust-600/20 p-2 rounded-lg" title="Deny">${icon('x','w-4 h-4')}</button>` : '';
+          <button data-action="approve-borrow" data-id="${esc(req.id)}" data-book="${esc(req.bookId || '')}" class="bg-ink-600/10 text-ink-700 hover:bg-ink-600/20 p-2 rounded-xl" title="Approve">${icon('check','w-4 h-4')}</button>
+          <button data-action="deny-borrow" data-id="${esc(req.id)}" class="bg-rust-600/10 text-rust-600 hover:bg-rust-600/20 p-2 rounded-xl" title="Deny">${icon('x','w-4 h-4')}</button>` : '';
         inboxBody.insertAdjacentHTML('beforeend', inboxCard('book', 'Borrow request', `<span class="text-rust-600 font-semibold">${esc(req.requesterName)}</span> requested to borrow "${esc(req.title)}".`, actions, req.status, req.createdAt));
       } else {
         const owner = req.ownerName || 'The owner';
@@ -1260,6 +1454,7 @@
     } else {
       toast('Request denied.', 'success');
     }
+    initCloudSpotlight();
   }
   window.respondBorrowRequest = respondBorrowRequest;
 
@@ -1272,11 +1467,6 @@
   window.completeReminder = completeReminder;
 
   // --- DELEGATED ACTIONS ---
-  // Dynamic buttons carry data-action attributes instead of inline onclick handlers.
-  // The old approach interpolated escaped text into a JS string inside an HTML
-  // attribute, so any title or library name containing an apostrophe (e.g.
-  // "Philosopher's Stone") produced a SyntaxError when clicked. dataset values
-  // are decoded by the parser and never re-parsed as code.
   document.addEventListener('click', (e) => {
     const btn = e.target.closest('[data-action]');
     if (!btn) return;
@@ -1299,7 +1489,6 @@
     }
   });
 
-  // Dismiss the edit modal on backdrop click or Escape.
   document.getElementById('edit-book-modal').addEventListener('click', (e) => {
     if (e.target.id === 'edit-book-modal') closeEditModal();
   });
@@ -1314,12 +1503,12 @@
       .catch(() => toast('Could not copy automatically. Link: ' + shareUrl, 'info'));
   };
 
-  // --- 9. BARCODE SCANNER (autofills title, author, ISBN, year, cover, description) ---
+  // --- 10. BARCODE SCANNER ---
   let html5QrcodeScanner = null;
   document.getElementById('start-scan-btn').addEventListener('click', () => {
     document.getElementById('scanner-modal').classList.remove('hidden');
     html5QrcodeScanner = new Html5Qrcode("reader");
-    html5QrcodeScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 100 } }, async (decodedText) => {
+    html5QrcodeScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 240, height: 100 } }, async (decodedText) => {
       html5QrcodeScanner.stop();
       document.getElementById('scan-status').textContent = 'Looking up book…';
       try {
@@ -1345,7 +1534,7 @@
     document.getElementById('scanner-modal').classList.add('hidden');
   });
 
-  // --- 10. PUBLIC LOGIN-SCREEN STATS ---
+  // --- 11. PUBLIC LOGIN-SCREEN STATS ---
   function animateCount(el, target) {
     const start = performance.now();
     const duration = 1100;
@@ -1384,7 +1573,7 @@
       const wrap = document.createElement('div');
       wrap.className = 'animate-fade-up';
       wrap.style.animationDelay = `${i * 0.12 + 0.2}s`;
-      wrap.innerHTML = `<div class="font-display text-4xl text-paper" data-target="${r.value}">0</div><div class="font-mono text-[10px] uppercase tracking-wider text-ink-300 mt-1">${tiles[i].label}</div>`;
+      wrap.innerHTML = `<div class="font-display text-3xl lg:text-4xl text-paper font-bold" data-target="${r.value}">0</div><div class="font-mono text-[10px] uppercase tracking-wider text-ink-300 mt-1">${tiles[i].label}</div>`;
       container.appendChild(wrap);
     });
 
