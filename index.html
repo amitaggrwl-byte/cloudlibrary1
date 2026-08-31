@@ -37,7 +37,13 @@
 </script>
 
 <style>
-  body { font-family: 'Archivo', sans-serif; }
+  body {
+    font-family: 'Archivo', sans-serif;
+    background:
+      linear-gradient(135deg, rgba(246,239,224,.96), rgba(234,223,198,.9)),
+      radial-gradient(circle at 20% 0%, rgba(193,101,63,.12), transparent 28%),
+      radial-gradient(circle at 100% 15%, rgba(74,116,96,.12), transparent 32%);
+  }
   .font-display { font-family: 'Fraunces', serif; }
   .font-mono { font-family: 'IBM Plex Mono', monospace; }
 
@@ -56,6 +62,8 @@
   ::-webkit-scrollbar-thumb { background: #b9cdbf; border-radius: 4px; }
 
   .tab-btn.active { background: #152420; color: #f6efe0; }
+  .app-panel { background: rgba(255,255,255,.86); backdrop-filter: blur(12px); }
+  .loan-note { background: linear-gradient(135deg, rgba(244,227,218,.8), rgba(247,236,201,.55)); }
 
   @keyframes toastIn { from { opacity: 0; transform: translateY(12px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
   .toast-item { animation: toastIn .28s cubic-bezier(.16,1,.3,1) both; }
@@ -105,7 +113,8 @@
     <p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-2">One last thing</p>
     <h3 class="font-display text-2xl text-ink-950 mb-2">What should we call your shelf?</h3>
     <p class="text-sm text-ink-500 mb-5 leading-relaxed">This is the name your friends will see when they browse your library.</p>
-    <input type="text" id="profile-name-input" placeholder="e.g. Sarah's Book Nook" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-ink-950 mb-4 focus:outline-none focus:ring-2 focus:ring-ink-700">
+    <input type="text" id="profile-name-input" placeholder="e.g. SarahReads" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-ink-950 mb-2 focus:outline-none focus:ring-2 focus:ring-ink-700">
+    <p id="profile-name-help" class="text-xs text-ink-500 mb-4">Use only letters and numbers. No spaces or special characters.</p>
     <button onclick="saveProfileName()" class="w-full bg-ink-950 hover:bg-ink-900 text-paper font-semibold py-3 rounded-lg transition-colors">Open my shelf</button>
   </div>
 </div>
@@ -142,7 +151,7 @@
 
   <!-- TAB 1: MY LIBRARY -->
   <div id="view-library" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-    <div id="admin-panel" class="bg-white p-6 rounded-2xl border border-ink-200 shadow-sm h-fit">
+    <div id="admin-panel" class="app-panel p-6 rounded-xl border border-ink-200 shadow-sm h-fit">
       <div class="flex justify-between items-center mb-1">
         <p class="font-mono text-[11px] uppercase tracking-widest text-rust-600">New acquisition</p>
         <button type="button" id="start-scan-btn" class="flex items-center gap-1.5 bg-ink-800/5 text-ink-700 border border-ink-200 text-xs font-semibold py-1.5 px-3 rounded-lg hover:bg-ink-800/10 transition-colors"></button>
@@ -164,6 +173,13 @@
           <input type="number" id="publishedYear" placeholder="Year" class="w-full bg-paper border border-ink-200 rounded-lg p-3 text-ink-950 text-sm focus:outline-none focus:ring-2 focus:ring-ink-700">
         </div>
         <input type="url" id="coverUrl" placeholder="Cover image URL (optional)" class="w-full bg-paper border border-ink-200 rounded-lg p-3 text-ink-950 text-sm focus:outline-none focus:ring-2 focus:ring-ink-700">
+        <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2 items-center">
+          <label for="coverFile" class="flex items-center justify-center gap-2 bg-ink-800/5 text-ink-700 border border-ink-200 text-xs font-semibold py-2.5 px-3 rounded-lg hover:bg-ink-800/10 transition-colors cursor-pointer">
+            <span id="cover-file-label">Add cover photo</span>
+          </label>
+          <button type="button" id="clear-cover-photo" class="hidden text-xs font-semibold text-rust-600 bg-rust-600/10 hover:bg-rust-600/20 rounded-lg px-3 py-2.5">Clear</button>
+          <input type="file" id="coverFile" accept="image/*" capture="environment" class="hidden">
+        </div>
         <textarea id="description" placeholder="A note about this copy — why you love it, its quirks…" rows="2" class="w-full bg-paper border border-ink-200 rounded-lg p-3 text-ink-950 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ink-700"></textarea>
 
         <div class="flex items-center justify-between pt-1">
@@ -183,24 +199,42 @@
       </form>
     </div>
 
-    <div id="library-panel" class="lg:col-span-2 space-y-4">
+    <div id="library-panel" class="lg:col-span-2 space-y-6">
+      <div id="borrowed-panel" class="app-panel p-5 rounded-xl border border-ink-200 shadow-sm">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-1">Borrower dashboard</p>
+            <h2 class="font-display text-xl text-ink-950">Books I borrowed</h2>
+          </div>
+        </div>
+        <div id="borrowed-books-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+        <p id="borrowed-empty-state" class="text-sm text-ink-400">No borrowed books yet.</p>
+      </div>
+      <div>
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-1">Owner dashboard</p>
+            <h2 class="font-display text-xl text-ink-950">My shelf</h2>
+          </div>
+        </div>
       <div id="books-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
       <div id="empty-state" class="hidden text-center p-12 rounded-2xl border border-dashed border-ink-300 bg-white/50">
         <p class="font-display text-xl text-ink-700">Your shelves are empty.</p>
         <p class="text-sm text-ink-400 mt-1">Add your first book, or scan a barcode to get started.</p>
+      </div>
       </div>
     </div>
   </div>
 
   <!-- TAB 2: FRIENDS -->
   <div id="view-friends" class="hidden space-y-6">
-    <div class="bg-white p-6 rounded-2xl border border-ink-200 shadow-sm">
+    <div class="app-panel p-6 rounded-xl border border-ink-200 shadow-sm">
       <p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-1">Connections</p>
       <h2 class="font-display text-xl text-ink-950 mb-4">My friends' shelves</h2>
       <div id="friends-list-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
     </div>
 
-    <div id="pending-sent-card" class="hidden bg-white p-6 rounded-2xl border border-ink-200 shadow-sm">
+    <div id="pending-sent-card" class="hidden app-panel p-6 rounded-xl border border-ink-200 shadow-sm">
       <p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-1">Awaiting reply</p>
       <h2 class="font-display text-xl text-ink-950 mb-4">Requests you've sent</h2>
       <div id="pending-sent-container" class="space-y-3"></div>
@@ -209,11 +243,11 @@
 
   <!-- TAB 3: GLOBAL SEARCH -->
   <div id="view-search" class="hidden space-y-4">
-    <div class="bg-white p-6 rounded-2xl border border-ink-200 shadow-sm">
+    <div class="app-panel p-6 rounded-xl border border-ink-200 shadow-sm">
       <p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-1">Discover</p>
       <h2 class="font-display text-xl text-ink-950 mb-4">Search libraries &amp; books</h2>
       <div class="flex gap-2">
-        <input type="text" id="global-search-input" placeholder="Search by book title, author, or library name…" class="flex-1 bg-paper border border-ink-200 rounded-lg p-3 text-ink-950 focus:outline-none focus:ring-2 focus:ring-ink-700">
+        <input type="text" id="global-search-input" placeholder="Search by book, author, user name, email, or shelf name…" class="flex-1 bg-paper border border-ink-200 rounded-lg p-3 text-ink-950 focus:outline-none focus:ring-2 focus:ring-ink-700">
         <button onclick="performGlobalSearch()" class="bg-ink-950 hover:bg-ink-900 text-paper font-semibold py-3 px-6 rounded-lg transition-colors">Search</button>
       </div>
     </div>
@@ -222,9 +256,10 @@
 
   <!-- TAB 4: INBOX -->
   <div id="view-inbox" class="hidden space-y-6">
-    <div class="bg-white p-6 rounded-2xl border border-ink-200 shadow-sm">
+    <div class="app-panel p-6 rounded-xl border border-ink-200 shadow-sm">
       <p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-1">Notifications</p>
-      <h2 class="font-display text-xl text-ink-950 mb-4">Requests</h2>
+      <h2 class="font-display text-xl text-ink-950 mb-1">Inbox</h2>
+      <p class="text-sm text-ink-500 mb-4">Completed requests stay here with their final status.</p>
       <div id="inbox-body" class="space-y-3">
         <p class="text-ink-400 text-sm">No pending notifications.</p>
       </div>
@@ -263,6 +298,13 @@
         <input type="number" id="edit-publishedYear" placeholder="Year" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-ink-950 text-sm focus:outline-none focus:ring-2 focus:ring-ink-700">
       </div>
       <input type="url" id="edit-coverUrl" placeholder="Cover image URL" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-ink-950 text-sm focus:outline-none focus:ring-2 focus:ring-ink-700">
+      <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2 items-center">
+        <label for="edit-coverFile" class="flex items-center justify-center gap-2 bg-white text-ink-700 border border-ink-200 text-xs font-semibold py-2.5 px-3 rounded-lg hover:bg-ink-50 transition-colors cursor-pointer">
+          <span id="edit-cover-file-label">Replace cover photo</span>
+        </label>
+        <button type="button" id="edit-clear-cover-photo" class="hidden text-xs font-semibold text-rust-600 bg-rust-600/10 hover:bg-rust-600/20 rounded-lg px-3 py-2.5">Clear</button>
+        <input type="file" id="edit-coverFile" accept="image/*" capture="environment" class="hidden">
+      </div>
       <textarea id="edit-description" rows="2" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-ink-950 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ink-700"></textarea>
       <div class="flex items-center justify-between pt-1">
         <div>
@@ -297,6 +339,8 @@
     trash: '<path d="M4.5 7h15"/><path d="M9.5 7V4.9A1 1 0 0 1 10.5 4h3a1 1 0 0 1 1 .9V7"/><path d="M6.5 7l1 12.1A1 1 0 0 0 8.5 20h7a1 1 0 0 0 1-.9L17.5 7"/>',
     pencil: '<path d="M4.5 19.5l.9-3.6L15.8 5.6l2.6 2.6L8.1 18.5z"/><path d="M14.3 7.1l2.6 2.6"/>',
     undo: '<path d="M4 9.5h9a5 5 0 1 1 0 10h-2"/><path d="M8 5.5l-4 4 4 4"/>',
+    clock: '<circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 2"/>',
+    mail: '<path d="M4 6.5h16v11H4z"/><path d="M4.5 7l7.5 6 7.5-6"/>',
     check: '<path d="M5 13l4 4L19 7"/>',
     x: '<path d="M6 6l12 12M18 6L6 18"/>'
   };
@@ -321,7 +365,22 @@
   function safeUrl(url) {
     if (!url) return '';
     const trimmed = String(url).trim();
-    return /^https?:\/\//i.test(trimmed) ? trimmed : '';
+    return /^(https?:\/\/|data:image\/)/i.test(trimmed) ? trimmed : '';
+  }
+
+  function formatDate(value) {
+    if (!value) return '';
+    const date = typeof value.toDate === 'function' ? value.toDate() : new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  function shelfKeyFromName(name) {
+    return String(name || '').trim().toLowerCase();
+  }
+
+  function isValidShelfName(name) {
+    return /^[A-Za-z0-9]{3,32}$/.test(String(name || '').trim());
   }
 
   // --- BOOK METADATA OPTIONS ---
@@ -369,6 +428,73 @@
     const fallback = imgEl.nextElementSibling;
     if (fallback) fallback.classList.remove('hidden');
   }
+
+  function resizeImageFile(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          const maxSide = 720;
+          const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+          const canvas = document.createElement('canvas');
+          canvas.width = Math.max(1, Math.round(img.width * scale));
+          canvas.height = Math.max(1, Math.round(img.height * scale));
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL('image/jpeg', 0.76));
+        };
+        img.onerror = reject;
+        img.src = reader.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  document.getElementById('coverFile').addEventListener('change', async (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    try {
+      inlineCoverData = await resizeImageFile(file);
+      document.getElementById('coverUrl').value = '';
+      document.getElementById('cover-file-label').textContent = 'Cover photo ready';
+      document.getElementById('clear-cover-photo').classList.remove('hidden');
+      toast('Cover photo added.', 'success');
+    } catch (err) {
+      console.error('Image resize failed', err);
+      toast('Could not use that photo. Try a smaller image.', 'error');
+    }
+  });
+
+  document.getElementById('clear-cover-photo').addEventListener('click', () => {
+    inlineCoverData = '';
+    document.getElementById('coverFile').value = '';
+    document.getElementById('cover-file-label').textContent = 'Add cover photo';
+    document.getElementById('clear-cover-photo').classList.add('hidden');
+  });
+
+  document.getElementById('edit-coverFile').addEventListener('change', async (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    try {
+      editCoverData = await resizeImageFile(file);
+      document.getElementById('edit-coverUrl').value = '';
+      document.getElementById('edit-cover-file-label').textContent = 'New cover photo ready';
+      document.getElementById('edit-clear-cover-photo').classList.remove('hidden');
+      toast('Replacement cover photo added.', 'success');
+    } catch (err) {
+      console.error('Image resize failed', err);
+      toast('Could not use that photo. Try a smaller image.', 'error');
+    }
+  });
+
+  document.getElementById('edit-clear-cover-photo').addEventListener('click', () => {
+    editCoverData = '';
+    document.getElementById('edit-coverFile').value = '';
+    document.getElementById('edit-cover-file-label').textContent = 'Replace cover photo';
+    document.getElementById('edit-clear-cover-photo').classList.add('hidden');
+  });
 
   // --- TOASTS & ERROR HANDLING ---
   // Firestore rejections (most often a security-rule denial) used to fail
@@ -441,6 +567,11 @@
   let friendshipDocs = {};        // friendUid -> friendship document id (needed to unfriend)
   let pendingSentRequests = [];   // outgoing requests the user can still cancel
   let myBooksCache = {};
+  let borrowedBooksCache = [];
+  let inlineCoverData = '';
+  let editCoverData = '';
+  let inboxState = { friends: [], ownerRequests: [], requesterRequests: [] };
+  let inboxUnsubscribers = [];
 
   // --- 2. AUTHENTICATION & PROFILE CHECK ---
   function signIn() { auth.signInWithPopup(googleProvider); }
@@ -468,8 +599,22 @@
   async function saveProfileName() {
     const name = document.getElementById('profile-name-input').value.trim();
     if (!name) return toast("Please enter a library name.", 'error');
+    if (!isValidShelfName(name)) {
+      return toast('Shelf names can use only letters and numbers, with no spaces or special characters.', 'error');
+    }
 
-    const draft = { libraryName: name, ownerEmail: currentUser.email };
+    const shelfKey = shelfKeyFromName(name);
+    const dupe = await guard(() => db.collection("profiles").where("shelfKey", "==", shelfKey).limit(1).get(), { context: 'Checking shelf name availability' });
+    if (dupe === FAILED) return;
+    if (!dupe.empty && dupe.docs[0].id !== currentUser.uid) return toast('That shelf name is already taken.', 'error');
+
+    const draft = {
+      libraryName: name,
+      shelfKey,
+      ownerEmail: currentUser.email,
+      ownerName: currentUser.displayName || '',
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
     const res = await guard(() => db.collection("profiles").doc(currentUser.uid).set(draft), { context: 'Saving your profile' });
     if (res === FAILED) return;
     userProfile = draft;
@@ -482,6 +627,7 @@
     document.getElementById('app-content').classList.remove('hidden');
     await loadFriendsList();
     fetchMyBooks();
+    fetchBorrowedBooks();
     listenToInbox();
   }
 
@@ -496,6 +642,8 @@
     document.getElementById(`tab-${tabName}`).classList.add('active');
     document.getElementById(`tab-${tabName}`).classList.remove('text-ink-500');
 
+    const titles = { library: 'My Library', friends: 'Friends', search: 'Search Libraries', inbox: 'Inbox' };
+    document.getElementById('header-title').textContent = titles[tabName] || 'CloudLibrary';
     if (tabName === 'friends') renderFriendsView();
   }
 
@@ -522,9 +670,25 @@
     return `<span class="text-[10px] font-mono uppercase tracking-wide px-2 py-1 rounded-md ${map[status] || 'bg-ink-400'} text-paper">${esc(status || 'Unknown')}</span>`;
   }
 
-  function renderBookCard(book, actionsHtml, ownerLabel) {
+  function loanDetailsHtml(book, mode) {
+    if (book.status !== 'Lent Out') return '';
+    const lentDate = formatDate(book.lentAt);
+    if (mode === 'borrower') {
+      return `<div class="loan-note mt-3 rounded-lg border border-rust-200 px-3 py-2 text-xs text-ink-700">
+        Borrowed from <span class="font-semibold text-ink-950">${esc(book.ownerName || 'a friend')}</span>${lentDate ? ` on ${esc(lentDate)}` : ''}.
+      </div>`;
+    }
+    if (book.borrowerName || book.lentAt) {
+      return `<div class="loan-note mt-3 rounded-lg border border-rust-200 px-3 py-2 text-xs text-ink-700">
+        Lent to <span class="font-semibold text-ink-950">${esc(book.borrowerName || 'Borrower')}</span>${lentDate ? ` on ${esc(lentDate)}` : ''}.
+      </div>`;
+    }
+    return '';
+  }
+
+  function renderBookCard(book, actionsHtml, ownerLabel, mode) {
     return `
-      <div class="book-card bg-white rounded-2xl border border-ink-200 shadow-sm p-4 flex gap-4">
+      <div class="book-card app-panel rounded-xl border border-ink-200 shadow-sm p-4 flex gap-4">
         ${bookCoverHtml(book)}
         <div class="flex-1 min-w-0">
           <div class="flex items-start justify-between gap-2">
@@ -538,6 +702,7 @@
           <div class="flex flex-wrap gap-1.5 mt-2">${bookMetaChips(book)}</div>
           ${starsRow(book.rating)}
           ${book.description ? `<p class="text-xs text-ink-500 mt-2 line-clamp-2">${esc(book.description)}</p>` : ''}
+          ${loanDetailsHtml(book, mode)}
           <div class="flex items-center gap-2 mt-3">${actionsHtml}</div>
         </div>
       </div>`;
@@ -559,14 +724,35 @@
           const returnBtn = book.status === 'Lent Out'
             ? `<button data-action="mark-returned" data-id="${esc(doc.id)}" class="flex items-center gap-1 text-ink-600 bg-ink-600/10 hover:bg-ink-600/20 px-2.5 py-1 text-xs font-semibold rounded-lg transition-colors">${icon('undo','w-3.5 h-3.5')}Mark returned</button>`
             : '';
+          const reminderBtn = book.status === 'Lent Out' && book.borrowerId
+            ? `<button data-action="send-reminder" data-id="${esc(doc.id)}" class="flex items-center gap-1 text-rust-600 bg-rust-600/10 hover:bg-rust-600/20 px-2.5 py-1 text-xs font-semibold rounded-lg transition-colors">${icon('mail','w-3.5 h-3.5')}Reminder</button>`
+            : '';
           const actions = `
             ${returnBtn}
+            ${reminderBtn}
             <button data-action="edit-book" data-id="${esc(doc.id)}" class="flex items-center gap-1 text-ink-600 bg-ink-600/10 hover:bg-ink-600/20 px-2.5 py-1 text-xs font-semibold rounded-lg transition-colors">${icon('pencil','w-3.5 h-3.5')}Edit</button>
             <button data-action="delete-book" data-id="${esc(doc.id)}" class="flex items-center gap-1 text-rust-600 bg-rust-600/10 hover:bg-rust-600/20 px-2.5 py-1 text-xs font-semibold rounded-lg transition-colors">${icon('trash','w-3.5 h-3.5')}Delete</button>`;
           grid.insertAdjacentHTML('beforeend', renderBookCard(book, actions));
         });
       }
     }, listenerError('your library'));
+  }
+
+  function fetchBorrowedBooks() {
+    db.collection("books").where("borrowerId", "==", currentUser.uid).onSnapshot((snapshot) => {
+      const grid = document.getElementById('borrowed-books-grid');
+      const empty = document.getElementById('borrowed-empty-state');
+      grid.innerHTML = '';
+      borrowedBooksCache = [];
+      snapshot.forEach(doc => {
+        const book = { id: doc.id, ...doc.data() };
+        if (book.status !== 'Lent Out') return;
+        borrowedBooksCache.push(book);
+        const actions = `<span class="flex items-center gap-1 text-xs font-semibold text-ink-500">${icon('clock','w-3.5 h-3.5')}Awaiting return</span>`;
+        grid.insertAdjacentHTML('beforeend', renderBookCard(book, actions, null, 'borrower'));
+      });
+      empty.classList.toggle('hidden', borrowedBooksCache.length > 0);
+    }, listenerError('borrowed books'));
   }
 
   function collectBookFields(prefix) {
@@ -578,7 +764,7 @@
       isbn: val('isbn'),
       publishedYear: val('publishedYear') ? parseInt(val('publishedYear'), 10) : null,
       condition: val('condition'),
-      coverUrl: val('coverUrl'),
+      coverUrl: prefix ? (val('coverUrl') || editCoverData) : (val('coverUrl') || inlineCoverData),
       description: val('description'),
       rating: parseInt(document.getElementById(prefix ? `rating-${prefix}` : 'rating-add').value, 10) || 0,
       status: document.getElementById(prefix ? `${prefix}-status` : 'status').value
@@ -596,6 +782,9 @@
     }), { context: 'Adding a book', success: `"${fields.title}" added to your shelf.` });
     if (res === FAILED) return;
     e.target.reset();
+    inlineCoverData = '';
+    document.getElementById('cover-file-label').textContent = 'Add cover photo';
+    document.getElementById('clear-cover-photo').classList.add('hidden');
     setRating('add', 0);
   });
 
@@ -605,10 +794,42 @@
   };
 
   window.markReturned = async function (id) {
-    await guard(() => db.collection("books").doc(id).update({
+    const res = await guard(() => db.collection("books").doc(id).update({
       status: 'Available',
+      borrowerId: firebase.firestore.FieldValue.delete(),
+      borrowerName: firebase.firestore.FieldValue.delete(),
+      borrowerEmail: firebase.firestore.FieldValue.delete(),
+      lentAt: firebase.firestore.FieldValue.delete(),
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }), { context: 'Marking a book returned', success: 'Welcome home — marked available again.' });
+    if (res === FAILED) return;
+    const reqSnap = await guard(() => db.collection("requests").where("ownerId", "==", currentUser.uid).where("bookId", "==", id).get(), { context: 'Updating return history' });
+    if (reqSnap === FAILED) return;
+    reqSnap.forEach(doc => {
+      const req = doc.data();
+      if (req.type === 'borrow' && req.status === 'approved') {
+        db.collection("requests").doc(doc.id).update({
+          status: 'returned',
+          returnedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }).catch(err => console.error('Return history update failed', err));
+      }
+    });
+  };
+
+  window.sendReturnReminder = async function (id) {
+    const book = myBooksCache[id];
+    if (!book || !book.borrowerId) return toast('No borrower is recorded for this book.', 'error');
+    await guard(() => db.collection("requests").add({
+      type: 'return-reminder',
+      bookId: id,
+      title: book.title || 'Untitled book',
+      ownerId: currentUser.uid,
+      ownerName: userProfile.libraryName,
+      requesterId: book.borrowerId,
+      requesterName: book.borrowerName || 'Borrower',
+      status: 'pending',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }), { context: 'Sending a return reminder', success: `Reminder sent to ${book.borrowerName || 'the borrower'}.` });
   };
 
   function openEditModal(id) {
@@ -622,6 +843,10 @@
     document.getElementById('edit-isbn').value = book.isbn || '';
     document.getElementById('edit-publishedYear').value = book.publishedYear || '';
     document.getElementById('edit-coverUrl').value = book.coverUrl || '';
+    editCoverData = '';
+    document.getElementById('edit-coverFile').value = '';
+    document.getElementById('edit-cover-file-label').textContent = 'Replace cover photo';
+    document.getElementById('edit-clear-cover-photo').classList.add('hidden');
     document.getElementById('edit-description').value = book.description || '';
     document.getElementById('edit-status').value = book.status || 'Available';
     setRating('edit', book.rating || 0);
@@ -639,6 +864,7 @@
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     }), { context: 'Updating a book', success: 'Changes saved.' });
     if (res === FAILED) return;
+    editCoverData = '';
     closeEditModal();
   });
 
@@ -801,20 +1027,53 @@
 
   // --- 7. GLOBAL SEARCH ---
   async function performGlobalSearch() {
-    const query = document.getElementById('global-search-input').value.toLowerCase();
+    const query = document.getElementById('global-search-input').value.trim().toLowerCase();
     const grid = document.getElementById('search-results-grid');
+    if (!query) {
+      grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4">Type a book, author, user name, email, or shelf name to search.</p>';
+      return;
+    }
     grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4">Searching network…</p>';
 
-    const snap = await guard(() => db.collection("books").get(), { context: 'Searching the network' });
-    if (snap === FAILED) { grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4">Search failed. Please try again.</p>'; return; }
+    const [bookSnap, profileSnap] = await Promise.all([
+      guard(() => db.collection("books").get(), { context: 'Searching books' }),
+      guard(() => db.collection("profiles").get(), { context: 'Searching profiles' })
+    ]);
+    if (bookSnap === FAILED || profileSnap === FAILED) { grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4">Search failed. Please try again.</p>'; return; }
     grid.innerHTML = '';
     let found = false;
+    const matchingOwners = new Set();
 
-    snap.forEach(doc => {
+    profileSnap.forEach(doc => {
+      if (doc.id === currentUser.uid) return;
+      const profile = doc.data();
+      const fields = [profile.libraryName, profile.ownerName, profile.ownerEmail, profile.shelfKey].map(v => String(v || '').toLowerCase());
+      const profileMatches = fields.some(v => v.includes(query));
+      if (!profileMatches) return;
+      found = true;
+      matchingOwners.add(doc.id);
+      const isFriend = confirmedFriends.includes(doc.id);
+      const name = profile.libraryName || 'Unnamed library';
+      const email = profile.ownerEmail ? `<p class="text-xs text-ink-400 mt-1">${esc(profile.ownerEmail)}</p>` : '';
+      const actions = isFriend
+        ? `<button data-action="view-shelf" data-uid="${esc(doc.id)}" data-name="${esc(name)}" class="bg-ink-800/10 text-ink-800 hover:bg-ink-800/20 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">View shelf</button>`
+        : `<button data-action="add-friend" data-owner="${esc(doc.id)}" data-name="${esc(name)}" class="text-rust-600 bg-rust-600/10 hover:bg-rust-600/20 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">Add friend</button>`;
+      grid.insertAdjacentHTML('beforeend', `
+        <div class="app-panel rounded-xl border border-ink-200 shadow-sm p-4 flex justify-between items-center gap-3">
+          <div class="min-w-0">
+            <p class="font-mono text-[10px] uppercase tracking-wider text-rust-600">${isFriend ? 'Friend shelf' : 'Library shelf'}</p>
+            <h3 class="font-display text-lg text-ink-950 truncate">${esc(name)}</h3>
+            ${email}
+          </div>
+          <div class="shrink-0">${actions}</div>
+        </div>`);
+    });
+
+    bookSnap.forEach(doc => {
       const book = { id: doc.id, ...doc.data() };
       if (book.ownerId === currentUser.uid) return;
 
-      if ((book.title || '').toLowerCase().includes(query) || (book.author || '').toLowerCase().includes(query) || (book.ownerName && book.ownerName.toLowerCase().includes(query))) {
+      if (matchingOwners.has(book.ownerId) || (book.title || '').toLowerCase().includes(query) || (book.author || '').toLowerCase().includes(query) || (book.ownerName && book.ownerName.toLowerCase().includes(query))) {
         found = true;
         const isFriend = confirmedFriends.includes(book.ownerId);
 
@@ -833,6 +1092,9 @@
     if (!found) grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4">No matching books or libraries found.</p>';
   }
   window.performGlobalSearch = performGlobalSearch;
+  document.getElementById('global-search-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') performGlobalSearch();
+  });
 
   // --- 8. BORROW & FRIEND REQUEST INBOX ---
   async function sendBorrowRequest(bookId, title, ownerId) {
@@ -841,6 +1103,7 @@
       bookId, title, ownerId,
       requesterId: currentUser.uid,
       requesterName: userProfile.libraryName,
+      requesterEmail: currentUser.email,
       status: 'pending',
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     }), { context: 'Sending a borrow request', success: `Borrow request sent for "${title}".` });
@@ -848,66 +1111,127 @@
   window.sendBorrowRequest = sendBorrowRequest;
   window.sendFriendRequest = sendFriendRequest;
 
-  function inboxCard(iconName, title, bodyHtml, actionsHtml) {
+  function requestStatusPill(status) {
+    const tones = {
+      pending: 'bg-gold-100 text-gold-600 border-gold-300',
+      accepted: 'bg-ink-100 text-ink-700 border-ink-200',
+      approved: 'bg-ink-100 text-ink-700 border-ink-200',
+      declined: 'bg-rust-100 text-rust-700 border-rust-200',
+      denied: 'bg-rust-100 text-rust-700 border-rust-200',
+      completed: 'bg-ink-50 text-ink-500 border-ink-200',
+      returned: 'bg-ink-50 text-ink-500 border-ink-200'
+    };
+    const label = String(status || 'pending').replace('-', ' ');
+    return `<span class="text-[10px] font-mono uppercase tracking-wide px-2 py-1 rounded-md border ${tones[status] || tones.completed}">${esc(label)}</span>`;
+  }
+
+  function inboxCard(iconName, title, bodyHtml, actionsHtml, status, dateValue) {
+    const date = formatDate(dateValue);
     return `
-      <div class="bg-paper p-4 rounded-xl border border-ink-200 flex justify-between items-center gap-4">
+      <div class="bg-paper/80 p-4 rounded-xl border border-ink-200 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div class="flex gap-3 items-start">
           <div class="w-9 h-9 rounded-full bg-ink-800/10 text-ink-800 flex items-center justify-center shrink-0">${icon(iconName, 'w-4 h-4')}</div>
           <div>
-            <h4 class="font-semibold text-ink-950 text-sm">${title}</h4>
+            <div class="flex flex-wrap items-center gap-2">
+              <h4 class="font-semibold text-ink-950 text-sm">${title}</h4>
+              ${requestStatusPill(status)}
+            </div>
             <p class="text-xs text-ink-500 mt-1">${bodyHtml}</p>
+            ${date ? `<p class="text-[11px] text-ink-400 mt-1">${esc(date)}</p>` : ''}
           </div>
         </div>
-        <div class="flex gap-2 shrink-0">${actionsHtml}</div>
+        <div class="flex gap-2 shrink-0">${actionsHtml || ''}</div>
       </div>`;
   }
 
   function listenToInbox() {
-    db.collection("friendships")
-      .where("user2", "==", currentUser.uid)
-      .where("status", "==", "pending")
-      .onSnapshot(friendSnap => {
-        db.collection("requests")
-          .where("ownerId", "==", currentUser.uid)
-          .where("status", "==", "pending")
-          .onSnapshot(borrowSnap => {
-            const inboxBody = document.getElementById('inbox-body');
-            const badge = document.getElementById('inbox-badge');
-            inboxBody.innerHTML = '';
+    inboxUnsubscribers.forEach(unsub => unsub && unsub());
+    inboxUnsubscribers = [
+      db.collection("friendships").where("user2", "==", currentUser.uid)
+        .onSnapshot(snap => {
+          inboxState.friends = snap.docs.map(doc => ({ id: doc.id, kind: 'friend', ...doc.data() }));
+          renderInbox();
+        }, listenerError('friend requests')),
+      db.collection("requests").where("ownerId", "==", currentUser.uid)
+        .onSnapshot(snap => {
+          inboxState.ownerRequests = snap.docs.map(doc => ({ id: doc.id, audience: 'owner', ...doc.data() }));
+          renderInbox();
+        }, listenerError('borrow requests')),
+      db.collection("requests").where("requesterId", "==", currentUser.uid)
+        .onSnapshot(snap => {
+          inboxState.requesterRequests = snap.docs.map(doc => ({ id: doc.id, audience: 'requester', ...doc.data() }));
+          renderInbox();
+        }, listenerError('your request updates'))
+    ];
+  }
 
-            const totalCount = friendSnap.size + borrowSnap.size;
-            if (totalCount === 0) {
-              inboxBody.innerHTML = '<p class="text-ink-400 text-sm">No pending notifications.</p>';
-              badge.classList.add('hidden');
-              return;
-            }
+  function renderInbox() {
+    const inboxBody = document.getElementById('inbox-body');
+    const badge = document.getElementById('inbox-badge');
+    const items = [...inboxState.friends, ...inboxState.ownerRequests, ...inboxState.requesterRequests]
+      .filter(item => !(item.audience === 'requester' && item.ownerId === currentUser.uid))
+      .sort((a, b) => {
+        const aTime = a.createdAt && typeof a.createdAt.toMillis === 'function' ? a.createdAt.toMillis() : 0;
+        const bTime = b.createdAt && typeof b.createdAt.toMillis === 'function' ? b.createdAt.toMillis() : 0;
+        return bTime - aTime;
+      });
 
-            badge.textContent = totalCount;
-            badge.classList.remove('hidden');
+    inboxBody.innerHTML = '';
+    const pendingCount = items.filter(item =>
+      item.status === 'pending' &&
+      (item.kind === 'friend' || item.audience === 'owner' || item.type === 'return-reminder')
+    ).length;
+    if (pendingCount) {
+      badge.textContent = pendingCount;
+      badge.classList.remove('hidden');
+    } else {
+      badge.classList.add('hidden');
+    }
+    if (!items.length) {
+      inboxBody.innerHTML = '<p class="text-ink-400 text-sm">No inbox activity yet.</p>';
+      return;
+    }
 
-            friendSnap.forEach(doc => {
-              const req = { id: doc.id, ...doc.data() };
-              const actions = `
-                <button data-action="accept-friend" data-id="${esc(req.id)}" class="bg-ink-600/10 text-ink-700 hover:bg-ink-600/20 p-2 rounded-lg" title="Accept">${icon('check','w-4 h-4')}</button>
-                <button data-action="decline-friend" data-id="${esc(req.id)}" class="bg-rust-600/10 text-rust-600 hover:bg-rust-600/20 p-2 rounded-lg" title="Decline">${icon('x','w-4 h-4')}</button>`;
-              inboxBody.insertAdjacentHTML('beforeend', inboxCard('users', 'Friend request', `<span class="text-rust-600 font-semibold">${esc(req.user1Name)}</span> wants to connect libraries with you.`, actions));
-            });
+    items.forEach(req => {
+      if (req.kind === 'friend') {
+        const actions = req.status === 'pending' ? `
+          <button data-action="accept-friend" data-id="${esc(req.id)}" class="bg-ink-600/10 text-ink-700 hover:bg-ink-600/20 p-2 rounded-lg" title="Accept">${icon('check','w-4 h-4')}</button>
+          <button data-action="decline-friend" data-id="${esc(req.id)}" class="bg-rust-600/10 text-rust-600 hover:bg-rust-600/20 p-2 rounded-lg" title="Decline">${icon('x','w-4 h-4')}</button>` : '';
+        inboxBody.insertAdjacentHTML('beforeend', inboxCard('users', 'Friend request', `<span class="text-rust-600 font-semibold">${esc(req.user1Name)}</span> wants to connect libraries with you.`, actions, req.status, req.createdAt));
+        return;
+      }
 
-            borrowSnap.forEach(doc => {
-              const req = { id: doc.id, ...doc.data() };
-              const actions = `
-                <button data-action="approve-borrow" data-id="${esc(req.id)}" data-book="${esc(req.bookId || '')}" class="bg-ink-600/10 text-ink-700 hover:bg-ink-600/20 p-2 rounded-lg" title="Approve">${icon('check','w-4 h-4')}</button>
-                <button data-action="deny-borrow" data-id="${esc(req.id)}" class="bg-rust-600/10 text-rust-600 hover:bg-rust-600/20 p-2 rounded-lg" title="Deny">${icon('x','w-4 h-4')}</button>`;
-              inboxBody.insertAdjacentHTML('beforeend', inboxCard('book', 'Borrow request', `<span class="text-rust-600 font-semibold">${esc(req.requesterName)}</span> requested to borrow "${esc(req.title)}".`, actions));
-            });
-          }, listenerError('borrow requests'));
-      }, listenerError('friend requests'));
+      if (req.type === 'return-reminder') {
+        const actions = req.status === 'pending' && req.requesterId === currentUser.uid
+          ? `<button data-action="complete-reminder" data-id="${esc(req.id)}" class="bg-ink-600/10 text-ink-700 hover:bg-ink-600/20 px-3 py-1.5 rounded-lg text-xs font-semibold">Mark completed</button>`
+          : '';
+        const body = req.requesterId === currentUser.uid
+          ? `<span class="text-rust-600 font-semibold">${esc(req.ownerName || 'The owner')}</span> reminded you to return "${esc(req.title)}".`
+          : `Reminder sent to <span class="text-rust-600 font-semibold">${esc(req.requesterName || 'the borrower')}</span> for "${esc(req.title)}".`;
+        inboxBody.insertAdjacentHTML('beforeend', inboxCard('mail', 'Return reminder', body, actions, req.status, req.createdAt));
+        return;
+      }
+
+      if (req.audience === 'owner') {
+        const actions = req.status === 'pending' ? `
+          <button data-action="approve-borrow" data-id="${esc(req.id)}" data-book="${esc(req.bookId || '')}" class="bg-ink-600/10 text-ink-700 hover:bg-ink-600/20 p-2 rounded-lg" title="Approve">${icon('check','w-4 h-4')}</button>
+          <button data-action="deny-borrow" data-id="${esc(req.id)}" class="bg-rust-600/10 text-rust-600 hover:bg-rust-600/20 p-2 rounded-lg" title="Deny">${icon('x','w-4 h-4')}</button>` : '';
+        inboxBody.insertAdjacentHTML('beforeend', inboxCard('book', 'Borrow request', `<span class="text-rust-600 font-semibold">${esc(req.requesterName)}</span> requested to borrow "${esc(req.title)}".`, actions, req.status, req.createdAt));
+      } else {
+        const owner = req.ownerName || 'The owner';
+        const body = req.status === 'pending'
+          ? `Your request for "${esc(req.title)}" is waiting for <span class="text-rust-600 font-semibold">${esc(owner)}</span>.`
+          : `<span class="text-rust-600 font-semibold">${esc(owner)}</span> marked your request for "${esc(req.title)}" as ${esc(req.status)}.`;
+        inboxBody.insertAdjacentHTML('beforeend', inboxCard('book', 'Borrow update', body, '', req.status, req.createdAt));
+      }
+    });
   }
 
   async function respondFriendRequest(reqId, status) {
-    const res = status === 'accepted'
-      ? await guard(() => db.collection("friendships").doc(reqId).update({ status: 'accepted' }), { context: 'Accepting a friend request', success: 'Friend added — their shelf is now open to you.' })
-      : await guard(() => db.collection("friendships").doc(reqId).delete(), { context: 'Declining a friend request', success: 'Request declined.' });
+    const res = await guard(() => db.collection("friendships").doc(reqId).update({
+      status,
+      respondedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }), { context: 'Responding to a friend request', success: status === 'accepted' ? 'Friend added — their shelf is now open to you.' : 'Request declined.' });
     if (res === FAILED) return;
     await loadFriendsList();
     if (!document.getElementById('view-friends').classList.contains('hidden')) renderFriendsView();
@@ -915,15 +1239,37 @@
   window.respondFriendRequest = respondFriendRequest;
 
   async function respondBorrowRequest(reqId, bookId, status) {
-    const res = await guard(() => db.collection("requests").doc(reqId).update({ status }), { context: 'Responding to a borrow request' });
+    const reqDoc = await guard(() => db.collection("requests").doc(reqId).get(), { context: 'Loading borrow request' });
+    if (reqDoc === FAILED || !reqDoc.exists) return;
+    const req = reqDoc.data();
+    const res = await guard(() => db.collection("requests").doc(reqId).update({
+      status,
+      ownerName: userProfile.libraryName,
+      respondedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }), { context: 'Responding to a borrow request' });
     if (res === FAILED) return;
     if (status === 'approved' && bookId) {
-      await guard(() => db.collection("books").doc(bookId).update({ status: 'Lent Out' }), { context: 'Marking the book lent out', success: 'Approved — book marked as lent out.' });
+      await guard(() => db.collection("books").doc(bookId).update({
+        status: 'Lent Out',
+        borrowerId: req.requesterId,
+        borrowerName: req.requesterName,
+        borrowerEmail: req.requesterEmail || '',
+        lentAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      }), { context: 'Marking the book lent out', success: 'Approved — book marked as lent out.' });
     } else {
       toast('Request denied.', 'success');
     }
   }
   window.respondBorrowRequest = respondBorrowRequest;
+
+  async function completeReminder(reqId) {
+    await guard(() => db.collection("requests").doc(reqId).update({
+      status: 'completed',
+      completedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }), { context: 'Completing reminder', success: 'Reminder marked completed.' });
+  }
+  window.completeReminder = completeReminder;
 
   // --- DELEGATED ACTIONS ---
   // Dynamic buttons carry data-action attributes instead of inline onclick handlers.
@@ -939,6 +1285,7 @@
       case 'edit-book': openEditModal(d.id); break;
       case 'delete-book': deleteBook(d.id); break;
       case 'mark-returned': markReturned(d.id); break;
+      case 'send-reminder': sendReturnReminder(d.id); break;
       case 'borrow': sendBorrowRequest(d.id, d.title, d.owner); break;
       case 'add-friend': sendFriendRequest(d.owner, d.name); break;
       case 'view-shelf': viewFriendLibrary(d.uid, d.name); break;
@@ -948,6 +1295,7 @@
       case 'decline-friend': respondFriendRequest(d.id, 'declined'); break;
       case 'approve-borrow': respondBorrowRequest(d.id, d.book || null, 'approved'); break;
       case 'deny-borrow': respondBorrowRequest(d.id, null, 'denied'); break;
+      case 'complete-reminder': completeReminder(d.id); break;
     }
   });
 
