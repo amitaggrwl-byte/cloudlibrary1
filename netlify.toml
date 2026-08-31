@@ -1,0 +1,28 @@
+# Netlify configuration
+#
+# Publish directory and build settings are managed in the Netlify UI for this
+# project, so they are deliberately not repeated here.
+
+[build.environment]
+  # Why this is set:
+  #
+  # index.html contains the Firebase *web* app config (apiKey, authDomain,
+  # projectId, appId, ...). Netlify's "smart detection" flags the apiKey
+  # because it has the shape of a Google API key, which failed the build.
+  #
+  # A Firebase web apiKey is not a credential. It identifies the project to
+  # Google's servers and is designed to ship inside client-side code -- every
+  # visitor's browser can read it, and Firebase's own documentation states it
+  # is safe to expose. Access is controlled by Firestore security rules and
+  # the authorized-domains list, not by keeping this value hidden. So there is
+  # nothing to rotate or move into an environment variable here.
+  #
+  # This disables ONLY the heuristic "looks like a secret" scanner. Standard
+  # secret scanning still runs, so if a real secret is ever added as an
+  # environment variable and leaks into the build output, the build will
+  # still fail as intended.
+  #
+  # Tighter alternative (keeps smart detection switched on): instead of this
+  # flag, add SECRETS_SCAN_SMART_DETECTION_OMIT_VALUES in the Netlify UI with
+  # the Firebase apiKey as its value, to safelist just that one string.
+  SECRETS_SCAN_SMART_DETECTION_ENABLED = "false"

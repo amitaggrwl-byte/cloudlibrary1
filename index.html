@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CloudLibrary — a library between friends</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          paper: { DEFAULT: '#f6efe0', dark: '#eadfc6' },
+          ink: { 50:'#eef2ef',100:'#dce6df',200:'#b9cdbf',300:'#93b09c',400:'#6c9078',500:'#4a7460',600:'#375a48',700:'#2b4638',800:'#1f342c',900:'#152420',950:'#0f1813' },
+          rust: { 100:'#f4e3da',200:'#e7c2ae',300:'#e0a488',400:'#cf7f57',500:'#c1653f',600:'#b5563a',700:'#8f4230' },
+          gold: { 100:'#f7ecc9',300:'#e6c765',400:'#d9b94f',500:'#c9a227',600:'#a9861d' }
+        },
+        fontFamily: {
+          display: ['Fraunces', 'serif'],
+          body: ['Archivo', 'sans-serif'],
+          mono: ['"IBM Plex Mono"', 'monospace']
+        }
+      }
+    }
+  }
+</script>
+
+<style>
+  body { font-family: 'Archivo', sans-serif; }
+  .font-display { font-family: 'Fraunces', serif; }
+  .font-mono { font-family: 'IBM Plex Mono', monospace; }
+
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .animate-fade-up { animation: fadeUp .6s cubic-bezier(.16,1,.3,1) both; }
+
+  .grain-overlay {
+    background-image: radial-gradient(circle at 1px 1px, rgba(246,239,224,0.06) 1px, transparent 0);
+    background-size: 14px 14px;
+  }
+
+  .book-card { transition: transform .18s ease, box-shadow .18s ease; }
+  .book-card:hover { transform: translateY(-3px) rotate(-0.2deg); }
+
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { background: #b9cdbf; border-radius: 4px; }
+
+  .tab-btn.active { background: #152420; color: #f6efe0; }
+
+  @keyframes toastIn { from { opacity: 0; transform: translateY(12px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  .toast-item { animation: toastIn .28s cubic-bezier(.16,1,.3,1) both; }
+  .toast-item.toast-out { opacity: 0; transform: translateY(6px); transition: opacity .25s ease, transform .25s ease; }
+</style>
+</head>
+<body class="bg-paper text-ink-950 min-h-screen">
+
+<!-- AUTH / LOGIN OVERLAY -->
+<div id="login-screen" class="fixed inset-0 z-50 grid md:grid-cols-[1.15fr_1fr] bg-paper">
+  <div class="relative hidden md:flex flex-col justify-between bg-ink-950 text-paper p-10 lg:p-16 overflow-hidden">
+    <div class="absolute inset-0 grain-overlay pointer-events-none"></div>
+    <div class="absolute -right-16 top-24 flex gap-3 rotate-[8deg] opacity-90 pointer-events-none">
+      <div class="w-8 h-40 rounded-sm bg-rust-500"></div>
+      <div class="w-8 h-28 rounded-sm bg-gold-500 mt-10"></div>
+      <div class="w-8 h-48 rounded-sm bg-ink-500"></div>
+      <div class="w-8 h-32 rounded-sm bg-rust-300 mt-6"></div>
+    </div>
+
+    <div class="relative z-10 animate-fade-up">
+      <p class="font-mono text-xs uppercase tracking-[0.25em] text-ink-300 mb-6">Est. by readers, kept by friends</p>
+      <h1 class="font-display text-5xl lg:text-6xl leading-[1.05] max-w-md">A library that only grows when friendships do.</h1>
+      <p class="mt-5 text-ink-300 max-w-sm text-[15px] leading-relaxed">Some books are better borrowed than bought. Name a shelf, invite a friend, and see what they're reading.</p>
+    </div>
+
+    <div id="login-stats" class="relative z-10 grid grid-cols-3 gap-6 mt-12 border-t border-ink-700 pt-8"></div>
+    <p id="login-stats-fallback" class="hidden relative z-10 font-display italic text-ink-300 text-lg mt-12 border-t border-ink-700 pt-8">Every book on this network is on loan from someone who loves it.</p>
+  </div>
+
+  <div class="relative flex items-center justify-center p-6 md:p-10">
+    <div class="w-full max-w-sm bg-white/70 md:-ml-10 md:bg-white p-8 rounded-2xl border border-ink-200 shadow-2xl shadow-ink-950/10 animate-fade-up">
+      <p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-2">CloudLibrary</p>
+      <h2 class="font-display text-3xl text-ink-950 mb-2">Find your way back in.</h2>
+      <p class="text-ink-500 text-sm mb-8 leading-relaxed">Sign in to open your shelf and see what your friends are lending.</p>
+      <button onclick="signIn()" class="w-full flex items-center justify-center gap-3 bg-ink-950 hover:bg-ink-900 text-paper font-semibold py-3.5 px-4 rounded-xl transition-colors">
+        <svg viewBox="0 0 48 48" class="w-5 h-5"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59A14.5 14.5 0 0 1 9.5 24c0-1.59.27-3.13.76-4.59l-7.98-6.19A23.94 23.94 0 0 0 0 24c0 3.87.92 7.53 2.56 10.78z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.46-9.9l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+        Continue with Google
+      </button>
+      <p class="text-[11px] text-ink-400 mt-6 text-center leading-relaxed">No spam, no ads — just your friends' bookshelves.</p>
+    </div>
+  </div>
+</div>
+
+<!-- PROFILE SETUP MODAL (First Login) -->
+<div id="profile-modal" class="hidden fixed inset-0 bg-ink-950/80 z-50 flex flex-col justify-center items-center p-4">
+  <div class="bg-paper p-8 rounded-2xl w-full max-w-md border border-ink-200 shadow-2xl">
+    <p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-2">One last thing</p>
+    <h3 class="font-display text-2xl text-ink-950 mb-2">What should we call your shelf?</h3>
+    <p class="text-sm text-ink-500 mb-5 leading-relaxed">This is the name your friends will see when they browse your library.</p>
+    <input type="text" id="profile-name-input" placeholder="e.g. Sarah's Book Nook" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-ink-950 mb-4 focus:outline-none focus:ring-2 focus:ring-ink-700">
+    <button onclick="saveProfileName()" class="w-full bg-ink-950 hover:bg-ink-900 text-paper font-semibold py-3 rounded-lg transition-colors">Open my shelf</button>
+  </div>
+</div>
+
+<div id="app-content" class="max-w-6xl mx-auto space-y-8 hidden p-4 md:p-8">
+
+  <!-- Navigation Bar -->
+  <nav class="flex flex-col md:flex-row justify-between items-center bg-white p-4 rounded-xl border border-ink-200 shadow-sm gap-4">
+    <div class="flex gap-4 items-center">
+      <span class="font-display text-lg text-ink-950">CloudLibrary</span>
+      <div id="nav-tabs" class="flex gap-1 ml-2 border-l border-ink-200 pl-4">
+        <button onclick="switchTab('library')" id="tab-library" class="tab-btn active flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg font-semibold transition-colors"></button>
+        <button onclick="switchTab('friends')" id="tab-friends" class="tab-btn flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg text-ink-500 hover:text-ink-950 transition-colors"></button>
+        <button onclick="switchTab('search')" id="tab-search" class="tab-btn flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg text-ink-500 hover:text-ink-950 transition-colors"></button>
+        <button onclick="switchTab('inbox')" id="tab-inbox" class="tab-btn flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg text-ink-500 hover:text-ink-950 transition-colors"></button>
+      </div>
+    </div>
+    <div class="flex items-center gap-4">
+      <div id="user-info" class="text-sm font-semibold border-r border-ink-200 pr-4 text-ink-700"></div>
+      <button onclick="signOut()" class="text-xs text-ink-400 hover:text-ink-950 transition-colors">Sign Out</button>
+    </div>
+  </nav>
+
+  <!-- Header -->
+  <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-ink-950 text-paper p-7 rounded-2xl relative overflow-hidden">
+    <div class="absolute inset-0 grain-overlay pointer-events-none"></div>
+    <div class="relative z-10">
+      <h1 id="header-title" class="font-display text-3xl">My Library</h1>
+      <div id="owner-controls" class="mt-3 flex gap-2">
+        <button onclick="copyShareLink()" class="flex items-center gap-2 bg-paper/10 hover:bg-paper/20 text-paper text-xs font-semibold py-1.5 px-3 rounded-lg border border-paper/20 transition-colors"></button>
+      </div>
+    </div>
+  </header>
+
+  <!-- TAB 1: MY LIBRARY -->
+  <div id="view-library" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div id="admin-panel" class="bg-white p-6 rounded-2xl border border-ink-200 shadow-sm h-fit">
+      <div class="flex justify-between items-center mb-1">
+        <p class="font-mono text-[11px] uppercase tracking-widest text-rust-600">New acquisition</p>
+        <button type="button" id="start-scan-btn" class="flex items-center gap-1.5 bg-ink-800/5 text-ink-700 border border-ink-200 text-xs font-semibold py-1.5 px-3 rounded-lg hover:bg-ink-800/10 transition-colors"></button>
+      </div>
+      <h2 class="font-display text-xl text-ink-950 mb-4">Add a book</h2>
+      <form id="book-form" class="space-y-3">
+        <input type="text" id="title" required placeholder="Book title" class="w-full bg-paper border border-ink-200 rounded-lg p-3 text-ink-950 focus:outline-none focus:ring-2 focus:ring-ink-700">
+        <input type="text" id="author" required placeholder="Author" class="w-full bg-paper border border-ink-200 rounded-lg p-3 text-ink-950 focus:outline-none focus:ring-2 focus:ring-ink-700">
+        <div class="grid grid-cols-2 gap-3">
+          <select id="genre" class="w-full bg-paper border border-ink-200 rounded-lg p-3 text-ink-950 text-sm focus:outline-none focus:ring-2 focus:ring-ink-700">
+            <option value="" selected>Genre…</option>
+          </select>
+          <select id="condition" class="w-full bg-paper border border-ink-200 rounded-lg p-3 text-ink-950 text-sm focus:outline-none focus:ring-2 focus:ring-ink-700">
+            <option value="" selected>Condition…</option>
+          </select>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <input type="text" id="isbn" placeholder="ISBN (optional)" class="w-full bg-paper border border-ink-200 rounded-lg p-3 text-ink-950 text-sm focus:outline-none focus:ring-2 focus:ring-ink-700">
+          <input type="number" id="publishedYear" placeholder="Year" class="w-full bg-paper border border-ink-200 rounded-lg p-3 text-ink-950 text-sm focus:outline-none focus:ring-2 focus:ring-ink-700">
+        </div>
+        <input type="url" id="coverUrl" placeholder="Cover image URL (optional)" class="w-full bg-paper border border-ink-200 rounded-lg p-3 text-ink-950 text-sm focus:outline-none focus:ring-2 focus:ring-ink-700">
+        <textarea id="description" placeholder="A note about this copy — why you love it, its quirks…" rows="2" class="w-full bg-paper border border-ink-200 rounded-lg p-3 text-ink-950 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ink-700"></textarea>
+
+        <div class="flex items-center justify-between pt-1">
+          <div>
+            <p class="font-mono text-[10px] uppercase tracking-wider text-ink-400 mb-1">Your rating</p>
+            <div class="flex gap-0.5" id="rating-picker-add"></div>
+            <input type="hidden" id="rating-add" value="0">
+          </div>
+          <select id="status" class="bg-paper border border-ink-200 rounded-lg p-2.5 text-ink-950 text-sm focus:outline-none focus:ring-2 focus:ring-ink-700">
+            <option value="Available">Available</option>
+            <option value="Reading">Reading</option>
+            <option value="Lent Out">Lent Out</option>
+          </select>
+        </div>
+
+        <button type="submit" class="w-full bg-rust-600 hover:bg-rust-700 text-paper font-semibold py-3 px-4 rounded-lg transition-colors">Add to shelf</button>
+      </form>
+    </div>
+
+    <div id="library-panel" class="lg:col-span-2 space-y-4">
+      <div id="books-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+      <div id="empty-state" class="hidden text-center p-12 rounded-2xl border border-dashed border-ink-300 bg-white/50">
+        <p class="font-display text-xl text-ink-700">Your shelves are empty.</p>
+        <p class="text-sm text-ink-400 mt-1">Add your first book, or scan a barcode to get started.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB 2: FRIENDS -->
+  <div id="view-friends" class="hidden space-y-6">
+    <div class="bg-white p-6 rounded-2xl border border-ink-200 shadow-sm">
+      <p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-1">Connections</p>
+      <h2 class="font-display text-xl text-ink-950 mb-4">My friends' shelves</h2>
+      <div id="friends-list-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+    </div>
+
+    <div id="pending-sent-card" class="hidden bg-white p-6 rounded-2xl border border-ink-200 shadow-sm">
+      <p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-1">Awaiting reply</p>
+      <h2 class="font-display text-xl text-ink-950 mb-4">Requests you've sent</h2>
+      <div id="pending-sent-container" class="space-y-3"></div>
+    </div>
+  </div>
+
+  <!-- TAB 3: GLOBAL SEARCH -->
+  <div id="view-search" class="hidden space-y-4">
+    <div class="bg-white p-6 rounded-2xl border border-ink-200 shadow-sm">
+      <p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-1">Discover</p>
+      <h2 class="font-display text-xl text-ink-950 mb-4">Search libraries &amp; books</h2>
+      <div class="flex gap-2">
+        <input type="text" id="global-search-input" placeholder="Search by book title, author, or library name…" class="flex-1 bg-paper border border-ink-200 rounded-lg p-3 text-ink-950 focus:outline-none focus:ring-2 focus:ring-ink-700">
+        <button onclick="performGlobalSearch()" class="bg-ink-950 hover:bg-ink-900 text-paper font-semibold py-3 px-6 rounded-lg transition-colors">Search</button>
+      </div>
+    </div>
+    <div id="search-results-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+  </div>
+
+  <!-- TAB 4: INBOX -->
+  <div id="view-inbox" class="hidden space-y-6">
+    <div class="bg-white p-6 rounded-2xl border border-ink-200 shadow-sm">
+      <p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-1">Notifications</p>
+      <h2 class="font-display text-xl text-ink-950 mb-4">Requests</h2>
+      <div id="inbox-body" class="space-y-3">
+        <p class="text-ink-400 text-sm">No pending notifications.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div id="toast-stack" class="fixed bottom-5 right-5 z-[60] flex flex-col gap-2 items-end pointer-events-none"></div>
+
+<!-- Scanner Modal -->
+<div id="scanner-modal" class="hidden fixed inset-0 bg-ink-950/90 z-50 flex flex-col justify-center items-center p-4">
+  <div class="bg-paper p-4 rounded-2xl w-full max-w-md border border-ink-200 relative">
+    <h3 class="font-display text-lg text-ink-950 mb-2 text-center">Scan ISBN barcode</h3>
+    <div id="reader" class="w-full bg-ink-950 rounded-lg overflow-hidden border-2 border-rust-500"></div>
+    <p id="scan-status" class="text-ink-600 text-center text-sm font-semibold mt-4 h-5"></p>
+    <button id="close-scan-btn" class="mt-4 w-full bg-ink-100 text-ink-800 py-2 rounded-lg font-semibold">Cancel</button>
+  </div>
+</div>
+
+<!-- Edit Book Modal -->
+<div id="edit-book-modal" class="hidden fixed inset-0 bg-ink-950/80 z-50 flex flex-col justify-center items-center p-4">
+  <div class="bg-paper p-6 rounded-2xl w-full max-w-md border border-ink-200 shadow-2xl max-h-[90vh] overflow-y-auto">
+    <p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-1">Edit entry</p>
+    <h3 class="font-display text-2xl text-ink-950 mb-4">Update this book</h3>
+    <form id="edit-book-form" class="space-y-3">
+      <input type="hidden" id="edit-id">
+      <input type="text" id="edit-title" required placeholder="Book title" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-ink-950 focus:outline-none focus:ring-2 focus:ring-ink-700">
+      <input type="text" id="edit-author" required placeholder="Author" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-ink-950 focus:outline-none focus:ring-2 focus:ring-ink-700">
+      <div class="grid grid-cols-2 gap-3">
+        <select id="edit-genre" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-ink-950 text-sm focus:outline-none focus:ring-2 focus:ring-ink-700"></select>
+        <select id="edit-condition" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-ink-950 text-sm focus:outline-none focus:ring-2 focus:ring-ink-700"></select>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <input type="text" id="edit-isbn" placeholder="ISBN" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-ink-950 text-sm focus:outline-none focus:ring-2 focus:ring-ink-700">
+        <input type="number" id="edit-publishedYear" placeholder="Year" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-ink-950 text-sm focus:outline-none focus:ring-2 focus:ring-ink-700">
+      </div>
+      <input type="url" id="edit-coverUrl" placeholder="Cover image URL" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-ink-950 text-sm focus:outline-none focus:ring-2 focus:ring-ink-700">
+      <textarea id="edit-description" rows="2" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-ink-950 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-ink-700"></textarea>
+      <div class="flex items-center justify-between pt-1">
+        <div>
+          <p class="font-mono text-[10px] uppercase tracking-wider text-ink-400 mb-1">Your rating</p>
+          <div class="flex gap-0.5" id="rating-picker-edit"></div>
+          <input type="hidden" id="rating-edit" value="0">
+        </div>
+        <select id="edit-status" class="bg-white border border-ink-200 rounded-lg p-2.5 text-ink-950 text-sm focus:outline-none focus:ring-2 focus:ring-ink-700">
+          <option value="Available">Available</option>
+          <option value="Reading">Reading</option>
+          <option value="Lent Out">Lent Out</option>
+        </select>
+      </div>
+      <div class="flex gap-2 pt-2">
+        <button type="button" onclick="closeEditModal()" class="flex-1 bg-ink-100 text-ink-800 font-semibold py-3 rounded-lg">Cancel</button>
+        <button type="submit" class="flex-1 bg-ink-950 hover:bg-ink-900 text-paper font-semibold py-3 rounded-lg transition-colors">Save changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  // --- ICONS (inline SVG, no emoji) ---
+  const ICON_PATHS = {
+    book: '<path d="M4 5.2A2.3 2.3 0 0 1 6.3 3H19v16H6.3A2.3 2.3 0 0 1 4 16.7z"/><path d="M4 5.2v11.5A2.3 2.3 0 0 0 6.3 19H19"/>',
+    users: '<circle cx="8.5" cy="8" r="3"/><circle cx="16.5" cy="10" r="2.3"/><path d="M2.8 20c0-3 2.5-5.2 5.7-5.2s5.7 2.2 5.7 5.2"/><path d="M14.8 15.2c2.3.3 3.9 2 3.9 4.3"/>',
+    search: '<circle cx="10.5" cy="10.5" r="6.5"/><path d="M20 20l-4.5-4.5"/>',
+    bell: '<path d="M6 9a6 6 0 1 1 12 0c0 4 1.5 5.5 1.5 5.5H4.5S6 13 6 9Z"/><path d="M9.5 17.2a2.5 2.5 0 0 0 5 0"/>',
+    plus: '<path d="M12 5v14M5 12h14"/>',
+    camera: '<path d="M4 8h3.2l1.5-2h6.6L16.8 8H20v11H4z"/><circle cx="12" cy="13.5" r="3.1"/>',
+    link: '<path d="M9 15l6-6"/><path d="M8 13.5l-1.8 1.8a3.4 3.4 0 0 0 4.8 4.8l2.7-2.7"/><path d="M16 10.5l1.8-1.8a3.4 3.4 0 0 0-4.8-4.8L10.3 6.6"/>',
+    trash: '<path d="M4.5 7h15"/><path d="M9.5 7V4.9A1 1 0 0 1 10.5 4h3a1 1 0 0 1 1 .9V7"/><path d="M6.5 7l1 12.1A1 1 0 0 0 8.5 20h7a1 1 0 0 0 1-.9L17.5 7"/>',
+    pencil: '<path d="M4.5 19.5l.9-3.6L15.8 5.6l2.6 2.6L8.1 18.5z"/><path d="M14.3 7.1l2.6 2.6"/>',
+    undo: '<path d="M4 9.5h9a5 5 0 1 1 0 10h-2"/><path d="M8 5.5l-4 4 4 4"/>',
+    check: '<path d="M5 13l4 4L19 7"/>',
+    x: '<path d="M6 6l12 12M18 6L6 18"/>'
+  };
+  function icon(name, cls) {
+    return `<svg class="${cls||'w-4 h-4'}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${ICON_PATHS[name]||''}</svg>`;
+  }
+  const STAR_PATH = 'M12 3.5l2.6 5.4 5.9.6-4.4 4 1.2 5.8L12 16.6 6.7 19.3l1.2-5.8-4.4-4 5.9-.6z';
+
+  document.getElementById('tab-library').innerHTML = icon('book') + '<span>My Library</span>';
+  document.getElementById('tab-friends').innerHTML = icon('users') + '<span>Friends</span>';
+  document.getElementById('tab-search').innerHTML = icon('search') + '<span>Search</span>';
+  document.getElementById('tab-inbox').innerHTML = icon('bell') + '<span>Inbox</span><span id="inbox-badge" class="hidden bg-rust-500 text-paper rounded-full px-1.5 py-0.5 text-[10px] font-mono">0</span>';
+  document.getElementById('start-scan-btn').innerHTML = icon('camera') + '<span>Scan</span>';
+  document.getElementById('owner-controls').querySelector('button').innerHTML = icon('link') + '<span>Copy share link</span>';
+
+  // --- TEXT ESCAPING (prevents stored XSS from user-supplied titles/names/etc.) ---
+  function esc(str) {
+    return String(str ?? '')
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+  function safeUrl(url) {
+    if (!url) return '';
+    const trimmed = String(url).trim();
+    return /^https?:\/\//i.test(trimmed) ? trimmed : '';
+  }
+
+  // --- BOOK METADATA OPTIONS ---
+  const GENRES = ['Fiction','Non-Fiction','Sci-Fi & Fantasy','Mystery & Thriller','Romance','Biography & Memoir','History','Self-Help','Poetry','Other'];
+  const GENRE_COLORS = {
+    'Fiction':'bg-rust-500','Non-Fiction':'bg-ink-600','Sci-Fi & Fantasy':'bg-gold-500','Mystery & Thriller':'bg-ink-800',
+    'Romance':'bg-rust-400','Biography & Memoir':'bg-gold-600','History':'bg-ink-700','Self-Help':'bg-ink-500','Poetry':'bg-rust-700','Other':'bg-ink-400'
+  };
+  const CONDITIONS = ['New','Like New','Good','Well-Loved'];
+
+  function fillOptions(selectEl, values, placeholder) {
+    selectEl.innerHTML = `<option value="">${placeholder}</option>` + values.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
+  }
+  [['genre',GENRES,'Genre…'],['condition',CONDITIONS,'Condition…'],['edit-genre',GENRES,'Genre'],['edit-condition',CONDITIONS,'Condition']].forEach(([id, values, ph]) => {
+    fillOptions(document.getElementById(id), values, ph);
+  });
+
+  function starPickerHtml(prefix) {
+    return [1,2,3,4,5].map(n => `<button type="button" onclick="setRating('${prefix}', ${n})" data-n="${n}" class="rating-btn text-ink-300 hover:text-gold-500 transition-colors"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="${STAR_PATH}"/></svg></button>`).join('');
+  }
+  document.getElementById('rating-picker-add').innerHTML = starPickerHtml('add');
+  document.getElementById('rating-picker-edit').innerHTML = starPickerHtml('edit');
+
+  function setRating(prefix, n) {
+    document.getElementById(`rating-${prefix}`).value = n;
+    document.querySelectorAll(`#rating-picker-${prefix} .rating-btn`).forEach(btn => {
+      const active = parseInt(btn.dataset.n, 10) <= n;
+      btn.classList.toggle('text-gold-500', active);
+      btn.classList.toggle('text-ink-300', !active);
+    });
+  }
+
+  function starsRow(rating) {
+    rating = Number(rating) || 0;
+    if (!rating) return '';
+    let out = '<div class="flex gap-0.5 mt-1">';
+    for (let i = 1; i <= 5; i++) {
+      out += `<svg viewBox="0 0 24 24" class="w-3.5 h-3.5 ${i <= rating ? 'fill-gold-500' : 'fill-ink-200'}"><path d="${STAR_PATH}"/></svg>`;
+    }
+    return out + '</div>';
+  }
+
+  function bookImgFallback(imgEl) {
+    imgEl.style.display = 'none';
+    const fallback = imgEl.nextElementSibling;
+    if (fallback) fallback.classList.remove('hidden');
+  }
+
+  // --- TOASTS & ERROR HANDLING ---
+  // Firestore rejections (most often a security-rule denial) used to fail
+  // silently into the console. Every read/write now runs through guard() so
+  // the user actually finds out when something didn't save.
+  function toast(message, kind) {
+    const stack = document.getElementById('toast-stack');
+    if (!stack) return;
+    const tones = {
+      info: 'bg-ink-950 text-paper border-ink-700',
+      success: 'bg-ink-800 text-paper border-ink-600',
+      error: 'bg-rust-700 text-paper border-rust-400'
+    };
+    const el = document.createElement('div');
+    el.className = `toast-item pointer-events-auto max-w-xs text-sm font-medium px-4 py-3 rounded-xl border shadow-xl ${tones[kind] || tones.info}`;
+    el.setAttribute('role', kind === 'error' ? 'alert' : 'status');
+    el.textContent = message; // textContent, never innerHTML — message text can't inject markup
+    stack.appendChild(el);
+    setTimeout(() => {
+      el.classList.add('toast-out');
+      setTimeout(() => el.remove(), 260);
+    }, 4200);
+  }
+
+  const FAILED = Symbol('failed');
+  async function guard(action, opts) {
+    opts = opts || {};
+    try {
+      const value = await action();
+      if (opts.success) toast(opts.success, 'success');
+      return value;
+    } catch (err) {
+      console.error(opts.context || 'Firestore operation failed', err);
+      const denied = err && (err.code === 'permission-denied' || /permission|insufficient/i.test(err.message || ''));
+      const offline = err && (err.code === 'unavailable' || /offline|network/i.test(err.message || ''));
+      let msg = opts.error || 'Something went wrong. Please try again.';
+      if (denied) msg = opts.denied || "You don't have permission to do that.";
+      else if (offline) msg = 'You appear to be offline. Check your connection.';
+      toast(msg, 'error');
+      return FAILED;
+    }
+  }
+
+  // Surfaces listener failures too — onSnapshot swallows errors without this.
+  function listenerError(context) {
+    return (err) => {
+      console.error(context, err);
+      toast(`Couldn't load ${context}. ${err && err.code === 'permission-denied' ? 'Permission denied.' : 'Please reload.'}`, 'error');
+    };
+  }
+
+  // --- 1. FIREBASE SETUP ---
+  const firebaseConfig = {
+    apiKey: "AIzaSyDvOkBUugYLHy-WI2EhAMlXKVqpysB4FaU",
+    authDomain: "cloudlibrary-7b9ac.firebaseapp.com",
+    projectId: "cloudlibrary-7b9ac",
+    storageBucket: "cloudlibrary-7b9ac.firebasestorage.app",
+    messagingSenderId: "22697027954",
+    appId: "1:22697027954:web:3002524cc8cf37e50c15eb"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+  const auth = firebase.auth();
+  const googleProvider = new firebase.auth.GoogleAuthProvider();
+
+  let currentUser = null;
+  let userProfile = null;
+  let confirmedFriends = [];
+  let friendshipDocs = {};        // friendUid -> friendship document id (needed to unfriend)
+  let pendingSentRequests = [];   // outgoing requests the user can still cancel
+  let myBooksCache = {};
+
+  // --- 2. AUTHENTICATION & PROFILE CHECK ---
+  function signIn() { auth.signInWithPopup(googleProvider); }
+  function signOut() { auth.signOut(); }
+
+  auth.onAuthStateChanged(async (user) => {
+    if (user) {
+      currentUser = user;
+      document.getElementById('login-screen').classList.add('hidden');
+
+      const userDoc = await guard(() => db.collection("profiles").doc(user.uid).get(), { context: 'Loading your profile' });
+      if (userDoc === FAILED) return;
+      if (!userDoc.exists || !userDoc.data().libraryName) {
+        document.getElementById('profile-modal').classList.remove('hidden');
+      } else {
+        userProfile = userDoc.data();
+        initApp();
+      }
+    } else {
+      document.getElementById('login-screen').classList.remove('hidden');
+      document.getElementById('app-content').classList.add('hidden');
+    }
+  });
+
+  async function saveProfileName() {
+    const name = document.getElementById('profile-name-input').value.trim();
+    if (!name) return toast("Please enter a library name.", 'error');
+
+    const draft = { libraryName: name, ownerEmail: currentUser.email };
+    const res = await guard(() => db.collection("profiles").doc(currentUser.uid).set(draft), { context: 'Saving your profile' });
+    if (res === FAILED) return;
+    userProfile = draft;
+    document.getElementById('profile-modal').classList.add('hidden');
+    initApp();
+  }
+
+  async function initApp() {
+    document.getElementById('user-info').textContent = userProfile.libraryName;
+    document.getElementById('app-content').classList.remove('hidden');
+    await loadFriendsList();
+    fetchMyBooks();
+    listenToInbox();
+  }
+
+  // --- 3. TABS NAVIGATION ---
+  function switchTab(tabName) {
+    ['library', 'friends', 'search', 'inbox'].forEach(t => {
+      document.getElementById(`view-${t}`).classList.add('hidden');
+      document.getElementById(`tab-${t}`).classList.remove('active');
+      document.getElementById(`tab-${t}`).classList.add('text-ink-500');
+    });
+    document.getElementById(`view-${tabName}`).classList.remove('hidden');
+    document.getElementById(`tab-${tabName}`).classList.add('active');
+    document.getElementById(`tab-${tabName}`).classList.remove('text-ink-500');
+
+    if (tabName === 'friends') renderFriendsView();
+  }
+
+  // --- 4. BOOK CARD RENDERING (shared across my-library / friend-library / search) ---
+  function bookCoverHtml(book) {
+    const url = safeUrl(book.coverUrl);
+    const initial = (book.title || '?').trim().charAt(0).toUpperCase();
+    const colorClass = GENRE_COLORS[book.genre] || 'bg-ink-400';
+    const placeholder = `<div class="w-16 h-20 rounded-md ${colorClass} flex items-center justify-center font-display text-2xl text-paper shrink-0 ${url ? 'hidden' : ''}">${esc(initial)}</div>`;
+    const img = url ? `<img src="${esc(url)}" loading="lazy" onerror="bookImgFallback(this)" class="w-16 h-20 rounded-md object-cover shrink-0 border border-ink-200">` : '';
+    return img + placeholder;
+  }
+
+  function bookMetaChips(book) {
+    const chips = [];
+    if (book.genre) chips.push(`<span class="text-[10px] font-mono uppercase tracking-wide px-2 py-0.5 rounded-full ${GENRE_COLORS[book.genre] || 'bg-ink-400'} text-paper">${esc(book.genre)}</span>`);
+    if (book.condition) chips.push(`<span class="text-[10px] font-mono uppercase tracking-wide px-2 py-0.5 rounded-full bg-ink-100 text-ink-700">${esc(book.condition)}</span>`);
+    if (book.publishedYear) chips.push(`<span class="text-[10px] font-mono uppercase tracking-wide px-2 py-0.5 rounded-full bg-ink-100 text-ink-700">${esc(book.publishedYear)}</span>`);
+    return chips.join('');
+  }
+
+  function statusBadge(status) {
+    const map = { 'Available': 'bg-ink-600', 'Reading': 'bg-gold-600', 'Lent Out': 'bg-rust-600' };
+    return `<span class="text-[10px] font-mono uppercase tracking-wide px-2 py-1 rounded-md ${map[status] || 'bg-ink-400'} text-paper">${esc(status || 'Unknown')}</span>`;
+  }
+
+  function renderBookCard(book, actionsHtml, ownerLabel) {
+    return `
+      <div class="book-card bg-white rounded-2xl border border-ink-200 shadow-sm p-4 flex gap-4">
+        ${bookCoverHtml(book)}
+        <div class="flex-1 min-w-0">
+          <div class="flex items-start justify-between gap-2">
+            <div class="min-w-0">
+              <h3 class="font-display text-lg text-ink-950 leading-snug truncate">${esc(book.title)}</h3>
+              <p class="text-xs text-ink-500 font-mono">${esc(book.author)}</p>
+            </div>
+            ${statusBadge(book.status)}
+          </div>
+          ${ownerLabel ? `<p class="text-xs text-rust-600 font-semibold mt-1">${ownerLabel}</p>` : ''}
+          <div class="flex flex-wrap gap-1.5 mt-2">${bookMetaChips(book)}</div>
+          ${starsRow(book.rating)}
+          ${book.description ? `<p class="text-xs text-ink-500 mt-2 line-clamp-2">${esc(book.description)}</p>` : ''}
+          <div class="flex items-center gap-2 mt-3">${actionsHtml}</div>
+        </div>
+      </div>`;
+  }
+
+  // --- 5. MY LIBRARY & BOOKS ---
+  function fetchMyBooks() {
+    db.collection("books").where("ownerId", "==", currentUser.uid).onSnapshot((snapshot) => {
+      const grid = document.getElementById('books-grid');
+      grid.innerHTML = '';
+      myBooksCache = {};
+      if (snapshot.empty) {
+        document.getElementById('empty-state').classList.remove('hidden');
+      } else {
+        document.getElementById('empty-state').classList.add('hidden');
+        snapshot.forEach(doc => {
+          const book = { id: doc.id, ...doc.data() };
+          myBooksCache[book.id] = book;
+          const returnBtn = book.status === 'Lent Out'
+            ? `<button data-action="mark-returned" data-id="${esc(doc.id)}" class="flex items-center gap-1 text-ink-600 bg-ink-600/10 hover:bg-ink-600/20 px-2.5 py-1 text-xs font-semibold rounded-lg transition-colors">${icon('undo','w-3.5 h-3.5')}Mark returned</button>`
+            : '';
+          const actions = `
+            ${returnBtn}
+            <button data-action="edit-book" data-id="${esc(doc.id)}" class="flex items-center gap-1 text-ink-600 bg-ink-600/10 hover:bg-ink-600/20 px-2.5 py-1 text-xs font-semibold rounded-lg transition-colors">${icon('pencil','w-3.5 h-3.5')}Edit</button>
+            <button data-action="delete-book" data-id="${esc(doc.id)}" class="flex items-center gap-1 text-rust-600 bg-rust-600/10 hover:bg-rust-600/20 px-2.5 py-1 text-xs font-semibold rounded-lg transition-colors">${icon('trash','w-3.5 h-3.5')}Delete</button>`;
+          grid.insertAdjacentHTML('beforeend', renderBookCard(book, actions));
+        });
+      }
+    }, listenerError('your library'));
+  }
+
+  function collectBookFields(prefix) {
+    const val = (id) => document.getElementById(prefix ? `${prefix}-${id}` : id).value.trim();
+    return {
+      title: val('title'),
+      author: val('author'),
+      genre: val('genre'),
+      isbn: val('isbn'),
+      publishedYear: val('publishedYear') ? parseInt(val('publishedYear'), 10) : null,
+      condition: val('condition'),
+      coverUrl: val('coverUrl'),
+      description: val('description'),
+      rating: parseInt(document.getElementById(prefix ? `rating-${prefix}` : 'rating-add').value, 10) || 0,
+      status: document.getElementById(prefix ? `${prefix}-status` : 'status').value
+    };
+  }
+
+  document.getElementById('book-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fields = collectBookFields('');
+    const res = await guard(() => db.collection("books").add({
+      ...fields,
+      ownerId: currentUser.uid,
+      ownerName: userProfile.libraryName,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }), { context: 'Adding a book', success: `"${fields.title}" added to your shelf.` });
+    if (res === FAILED) return;
+    e.target.reset();
+    setRating('add', 0);
+  });
+
+  window.deleteBook = async function (id) {
+    if (!confirm("Delete this book?")) return;
+    await guard(() => db.collection("books").doc(id).delete(), { context: 'Deleting a book', success: 'Book removed from your shelf.' });
+  };
+
+  window.markReturned = async function (id) {
+    await guard(() => db.collection("books").doc(id).update({
+      status: 'Available',
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }), { context: 'Marking a book returned', success: 'Welcome home — marked available again.' });
+  };
+
+  function openEditModal(id) {
+    const book = myBooksCache[id];
+    if (!book) return;
+    document.getElementById('edit-id').value = id;
+    document.getElementById('edit-title').value = book.title || '';
+    document.getElementById('edit-author').value = book.author || '';
+    document.getElementById('edit-genre').value = book.genre || '';
+    document.getElementById('edit-condition').value = book.condition || '';
+    document.getElementById('edit-isbn').value = book.isbn || '';
+    document.getElementById('edit-publishedYear').value = book.publishedYear || '';
+    document.getElementById('edit-coverUrl').value = book.coverUrl || '';
+    document.getElementById('edit-description').value = book.description || '';
+    document.getElementById('edit-status').value = book.status || 'Available';
+    setRating('edit', book.rating || 0);
+    document.getElementById('edit-book-modal').classList.remove('hidden');
+  }
+  function closeEditModal() { document.getElementById('edit-book-modal').classList.add('hidden'); }
+  window.openEditModal = openEditModal;
+  window.closeEditModal = closeEditModal;
+
+  document.getElementById('edit-book-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('edit-id').value;
+    const res = await guard(() => db.collection("books").doc(id).update({
+      ...collectBookFields('edit'),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    }), { context: 'Updating a book', success: 'Changes saved.' });
+    if (res === FAILED) return;
+    closeEditModal();
+  });
+
+  // --- 6. FRIENDS SYSTEM ---
+  async function loadFriendsList() {
+    const snap = await guard(() => db.collection("friendships").where("status", "==", "accepted").get(), { context: 'Loading your friends' });
+    if (snap === FAILED) return;
+    confirmedFriends = [];
+    friendshipDocs = {};
+    snap.forEach(doc => {
+      const data = doc.data();
+      let other = null;
+      if (data.user1 === currentUser.uid) other = data.user2;
+      else if (data.user2 === currentUser.uid) other = data.user1;
+      if (other) {
+        confirmedFriends.push(other);
+        friendshipDocs[other] = doc.id; // keep the doc id so the pair can be unfriended
+      }
+    });
+  }
+
+  async function loadPendingSent() {
+    const snap = await guard(() => db.collection("friendships")
+      .where("user1", "==", currentUser.uid)
+      .where("status", "==", "pending").get(), { context: 'Loading sent requests' });
+    if (snap === FAILED) return;
+    pendingSentRequests = snap.docs.map(d => ({ id: d.id, name: d.data().user2Name || 'Unnamed library' }));
+  }
+
+  // Checks both directions of the relationship — a prior version only checked
+  // documents where the target happened to be user1, which produced false
+  // "already friends" positives whenever the target had any unrelated friendship.
+  async function friendshipExists(uidA, uidB) {
+    const [q1, q2] = await Promise.all([
+      db.collection("friendships").where("user1", "==", uidA).where("user2", "==", uidB).limit(1).get(),
+      db.collection("friendships").where("user1", "==", uidB).where("user2", "==", uidA).limit(1).get()
+    ]);
+    return !q1.empty || !q2.empty;
+  }
+
+  async function sendFriendRequest(targetUid, targetName) {
+    if (targetUid === currentUser.uid) return;
+    const exists = await guard(() => friendshipExists(currentUser.uid, targetUid), { context: 'Checking for an existing friendship' });
+    if (exists === FAILED) return;
+    if (exists) {
+      toast("Request already sent, or you're already friends.", 'info');
+      return;
+    }
+
+    const res = await guard(() => db.collection("friendships").add({
+      user1: currentUser.uid,
+      user1Name: userProfile.libraryName,
+      user2: targetUid,
+      user2Name: targetName,
+      status: 'pending',
+      senderId: currentUser.uid,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }), { context: 'Sending a friend request', success: `Friend request sent to ${targetName}.` });
+    if (res === FAILED) return;
+    if (!document.getElementById('view-friends').classList.contains('hidden')) renderFriendsView();
+  }
+
+  async function renderFriendsView() {
+    const container = document.getElementById('friends-list-container');
+    container.innerHTML = '<p class="text-ink-400 col-span-2">Loading your connections…</p>';
+
+    await Promise.all([loadFriendsList(), loadPendingSent()]);
+    renderPendingSent();
+    container.innerHTML = '';
+
+    if (confirmedFriends.length === 0) {
+      container.innerHTML = '<p class="text-ink-400 col-span-2">No friends yet. Use Search to find libraries worth borrowing from.</p>';
+      return;
+    }
+
+    // Profiles are fetched in parallel — this used to await one at a time.
+    const profiles = await Promise.all(confirmedFriends.map(uid =>
+      db.collection("profiles").doc(uid).get()
+        .then(doc => ({ uid, data: doc.exists ? doc.data() : null }))
+        .catch(() => ({ uid, data: null }))
+    ));
+
+    profiles.forEach(({ uid, data }) => {
+      if (!data) return;
+      const name = data.libraryName || 'Unnamed library';
+      const initial = esc(name.trim().charAt(0).toUpperCase() || '?');
+      container.insertAdjacentHTML('beforeend', `
+        <div class="bg-paper p-4 rounded-xl border border-ink-200 flex justify-between items-center gap-3">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="w-10 h-10 rounded-full bg-ink-800 text-paper font-display flex items-center justify-center text-sm shrink-0">${initial}</div>
+            <div class="min-w-0">
+              <h3 class="font-display text-base text-ink-950 truncate">${esc(name)}</h3>
+              <p class="text-xs text-ink-400">Connected friend</p>
+            </div>
+          </div>
+          <div class="flex gap-2 shrink-0">
+            <button data-action="view-shelf" data-uid="${esc(uid)}" data-name="${esc(name)}" class="bg-ink-800/10 text-ink-800 hover:bg-ink-800/20 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">View shelf</button>
+            <button data-action="unfriend" data-uid="${esc(uid)}" data-name="${esc(name)}" title="Remove friend" class="bg-rust-600/10 text-rust-600 hover:bg-rust-600/20 p-2 rounded-lg transition-colors">${icon('x','w-3.5 h-3.5')}</button>
+          </div>
+        </div>`);
+    });
+  }
+
+  function renderPendingSent() {
+    const card = document.getElementById('pending-sent-card');
+    const list = document.getElementById('pending-sent-container');
+    if (!pendingSentRequests.length) {
+      card.classList.add('hidden');
+      list.innerHTML = '';
+      return;
+    }
+    card.classList.remove('hidden');
+    list.innerHTML = pendingSentRequests.map(req => `
+      <div class="bg-paper p-4 rounded-xl border border-ink-200 flex justify-between items-center gap-3">
+        <p class="text-sm text-ink-700 min-w-0 truncate">Waiting on <span class="font-semibold text-ink-950">${esc(req.name)}</span> to accept.</p>
+        <button data-action="cancel-request" data-id="${esc(req.id)}" data-name="${esc(req.name)}" class="bg-rust-600/10 text-rust-600 hover:bg-rust-600/20 px-3 py-1.5 rounded-lg text-xs font-semibold shrink-0 transition-colors">Cancel</button>
+      </div>`).join('');
+  }
+
+  async function unfriend(friendUid, friendName) {
+    if (!confirm(`Remove ${friendName}? You'll both lose access to each other's shelves.`)) return;
+    const docId = friendshipDocs[friendUid];
+    if (!docId) return toast('Could not find that friendship — try reloading.', 'error');
+    const res = await guard(() => db.collection("friendships").doc(docId).delete(), { context: 'Removing a friend', success: `${friendName} removed.` });
+    if (res === FAILED) return;
+    renderFriendsView();
+  }
+
+  async function cancelSentRequest(reqId, targetName) {
+    const res = await guard(() => db.collection("friendships").doc(reqId).delete(), { context: 'Cancelling a request', success: `Request to ${targetName} cancelled.` });
+    if (res === FAILED) return;
+    renderFriendsView();
+  }
+
+  async function viewFriendLibrary(friendUid, friendName) {
+    switchTab('search');
+    document.getElementById('header-title').textContent = `${friendName}'s Library`;
+
+    const grid = document.getElementById('search-results-grid');
+    grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4">Loading library…</p>';
+
+    const snap = await guard(() => db.collection("books").where("ownerId", "==", friendUid).get(), { context: "Loading that library" });
+    if (snap === FAILED) { grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4">Could not load this library.</p>'; return; }
+    grid.innerHTML = '';
+
+    if (snap.empty) {
+      grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4">This friend has no books listed.</p>';
+      return;
+    }
+
+    snap.forEach(doc => {
+      const book = { id: doc.id, ...doc.data() };
+      const actions = book.status === 'Available'
+        ? `<button data-action="borrow" data-id="${esc(doc.id)}" data-title="${esc(book.title)}" data-owner="${esc(friendUid)}" class="text-ink-800 bg-ink-800/10 hover:bg-ink-800/20 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">Request to borrow</button>`
+        : `<span class="text-xs text-ink-400">Unavailable</span>`;
+      grid.insertAdjacentHTML('beforeend', renderBookCard(book, actions));
+    });
+  }
+  window.viewFriendLibrary = viewFriendLibrary;
+
+  // --- 7. GLOBAL SEARCH ---
+  async function performGlobalSearch() {
+    const query = document.getElementById('global-search-input').value.toLowerCase();
+    const grid = document.getElementById('search-results-grid');
+    grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4">Searching network…</p>';
+
+    const snap = await guard(() => db.collection("books").get(), { context: 'Searching the network' });
+    if (snap === FAILED) { grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4">Search failed. Please try again.</p>'; return; }
+    grid.innerHTML = '';
+    let found = false;
+
+    snap.forEach(doc => {
+      const book = { id: doc.id, ...doc.data() };
+      if (book.ownerId === currentUser.uid) return;
+
+      if ((book.title || '').toLowerCase().includes(query) || (book.author || '').toLowerCase().includes(query) || (book.ownerName && book.ownerName.toLowerCase().includes(query))) {
+        found = true;
+        const isFriend = confirmedFriends.includes(book.ownerId);
+
+        let actions;
+        if (isFriend) {
+          actions = book.status === 'Available'
+            ? `<button data-action="borrow" data-id="${esc(doc.id)}" data-title="${esc(book.title)}" data-owner="${esc(book.ownerId)}" class="text-ink-800 bg-ink-800/10 hover:bg-ink-800/20 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">Request to borrow</button>`
+            : `<span class="text-xs text-ink-400">Unavailable</span>`;
+        } else {
+          actions = `<button data-action="add-friend" data-owner="${esc(book.ownerId)}" data-name="${esc(book.ownerName || 'that library')}" class="text-rust-600 bg-rust-600/10 hover:bg-rust-600/20 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">Add friend</button>`;
+        }
+        const ownerLabel = `${esc(book.ownerName)}${isFriend ? ' · Friend' : ''}`;
+        grid.insertAdjacentHTML('beforeend', renderBookCard(book, actions, ownerLabel));
+      }
+    });
+    if (!found) grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4">No matching books or libraries found.</p>';
+  }
+  window.performGlobalSearch = performGlobalSearch;
+
+  // --- 8. BORROW & FRIEND REQUEST INBOX ---
+  async function sendBorrowRequest(bookId, title, ownerId) {
+    await guard(() => db.collection("requests").add({
+      type: 'borrow',
+      bookId, title, ownerId,
+      requesterId: currentUser.uid,
+      requesterName: userProfile.libraryName,
+      status: 'pending',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }), { context: 'Sending a borrow request', success: `Borrow request sent for "${title}".` });
+  }
+  window.sendBorrowRequest = sendBorrowRequest;
+  window.sendFriendRequest = sendFriendRequest;
+
+  function inboxCard(iconName, title, bodyHtml, actionsHtml) {
+    return `
+      <div class="bg-paper p-4 rounded-xl border border-ink-200 flex justify-between items-center gap-4">
+        <div class="flex gap-3 items-start">
+          <div class="w-9 h-9 rounded-full bg-ink-800/10 text-ink-800 flex items-center justify-center shrink-0">${icon(iconName, 'w-4 h-4')}</div>
+          <div>
+            <h4 class="font-semibold text-ink-950 text-sm">${title}</h4>
+            <p class="text-xs text-ink-500 mt-1">${bodyHtml}</p>
+          </div>
+        </div>
+        <div class="flex gap-2 shrink-0">${actionsHtml}</div>
+      </div>`;
+  }
+
+  function listenToInbox() {
+    db.collection("friendships")
+      .where("user2", "==", currentUser.uid)
+      .where("status", "==", "pending")
+      .onSnapshot(friendSnap => {
+        db.collection("requests")
+          .where("ownerId", "==", currentUser.uid)
+          .where("status", "==", "pending")
+          .onSnapshot(borrowSnap => {
+            const inboxBody = document.getElementById('inbox-body');
+            const badge = document.getElementById('inbox-badge');
+            inboxBody.innerHTML = '';
+
+            const totalCount = friendSnap.size + borrowSnap.size;
+            if (totalCount === 0) {
+              inboxBody.innerHTML = '<p class="text-ink-400 text-sm">No pending notifications.</p>';
+              badge.classList.add('hidden');
+              return;
+            }
+
+            badge.textContent = totalCount;
+            badge.classList.remove('hidden');
+
+            friendSnap.forEach(doc => {
+              const req = { id: doc.id, ...doc.data() };
+              const actions = `
+                <button data-action="accept-friend" data-id="${esc(req.id)}" class="bg-ink-600/10 text-ink-700 hover:bg-ink-600/20 p-2 rounded-lg" title="Accept">${icon('check','w-4 h-4')}</button>
+                <button data-action="decline-friend" data-id="${esc(req.id)}" class="bg-rust-600/10 text-rust-600 hover:bg-rust-600/20 p-2 rounded-lg" title="Decline">${icon('x','w-4 h-4')}</button>`;
+              inboxBody.insertAdjacentHTML('beforeend', inboxCard('users', 'Friend request', `<span class="text-rust-600 font-semibold">${esc(req.user1Name)}</span> wants to connect libraries with you.`, actions));
+            });
+
+            borrowSnap.forEach(doc => {
+              const req = { id: doc.id, ...doc.data() };
+              const actions = `
+                <button data-action="approve-borrow" data-id="${esc(req.id)}" data-book="${esc(req.bookId || '')}" class="bg-ink-600/10 text-ink-700 hover:bg-ink-600/20 p-2 rounded-lg" title="Approve">${icon('check','w-4 h-4')}</button>
+                <button data-action="deny-borrow" data-id="${esc(req.id)}" class="bg-rust-600/10 text-rust-600 hover:bg-rust-600/20 p-2 rounded-lg" title="Deny">${icon('x','w-4 h-4')}</button>`;
+              inboxBody.insertAdjacentHTML('beforeend', inboxCard('book', 'Borrow request', `<span class="text-rust-600 font-semibold">${esc(req.requesterName)}</span> requested to borrow "${esc(req.title)}".`, actions));
+            });
+          }, listenerError('borrow requests'));
+      }, listenerError('friend requests'));
+  }
+
+  async function respondFriendRequest(reqId, status) {
+    const res = status === 'accepted'
+      ? await guard(() => db.collection("friendships").doc(reqId).update({ status: 'accepted' }), { context: 'Accepting a friend request', success: 'Friend added — their shelf is now open to you.' })
+      : await guard(() => db.collection("friendships").doc(reqId).delete(), { context: 'Declining a friend request', success: 'Request declined.' });
+    if (res === FAILED) return;
+    await loadFriendsList();
+    if (!document.getElementById('view-friends').classList.contains('hidden')) renderFriendsView();
+  }
+  window.respondFriendRequest = respondFriendRequest;
+
+  async function respondBorrowRequest(reqId, bookId, status) {
+    const res = await guard(() => db.collection("requests").doc(reqId).update({ status }), { context: 'Responding to a borrow request' });
+    if (res === FAILED) return;
+    if (status === 'approved' && bookId) {
+      await guard(() => db.collection("books").doc(bookId).update({ status: 'Lent Out' }), { context: 'Marking the book lent out', success: 'Approved — book marked as lent out.' });
+    } else {
+      toast('Request denied.', 'success');
+    }
+  }
+  window.respondBorrowRequest = respondBorrowRequest;
+
+  // --- DELEGATED ACTIONS ---
+  // Dynamic buttons carry data-action attributes instead of inline onclick handlers.
+  // The old approach interpolated escaped text into a JS string inside an HTML
+  // attribute, so any title or library name containing an apostrophe (e.g.
+  // "Philosopher's Stone") produced a SyntaxError when clicked. dataset values
+  // are decoded by the parser and never re-parsed as code.
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    const d = btn.dataset;
+    switch (d.action) {
+      case 'edit-book': openEditModal(d.id); break;
+      case 'delete-book': deleteBook(d.id); break;
+      case 'mark-returned': markReturned(d.id); break;
+      case 'borrow': sendBorrowRequest(d.id, d.title, d.owner); break;
+      case 'add-friend': sendFriendRequest(d.owner, d.name); break;
+      case 'view-shelf': viewFriendLibrary(d.uid, d.name); break;
+      case 'unfriend': unfriend(d.uid, d.name); break;
+      case 'cancel-request': cancelSentRequest(d.id, d.name); break;
+      case 'accept-friend': respondFriendRequest(d.id, 'accepted'); break;
+      case 'decline-friend': respondFriendRequest(d.id, 'declined'); break;
+      case 'approve-borrow': respondBorrowRequest(d.id, d.book || null, 'approved'); break;
+      case 'deny-borrow': respondBorrowRequest(d.id, null, 'denied'); break;
+    }
+  });
+
+  // Dismiss the edit modal on backdrop click or Escape.
+  document.getElementById('edit-book-modal').addEventListener('click', (e) => {
+    if (e.target.id === 'edit-book-modal') closeEditModal();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeEditModal();
+  });
+
+  window.copyShareLink = function () {
+    const shareUrl = `${window.location.origin}${window.location.pathname}?user=${currentUser.uid}`;
+    navigator.clipboard.writeText(shareUrl)
+      .then(() => toast('Share link copied to your clipboard.', 'success'))
+      .catch(() => toast('Could not copy automatically. Link: ' + shareUrl, 'info'));
+  };
+
+  // --- 9. BARCODE SCANNER (autofills title, author, ISBN, year, cover, description) ---
+  let html5QrcodeScanner = null;
+  document.getElementById('start-scan-btn').addEventListener('click', () => {
+    document.getElementById('scanner-modal').classList.remove('hidden');
+    html5QrcodeScanner = new Html5Qrcode("reader");
+    html5QrcodeScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 100 } }, async (decodedText) => {
+      html5QrcodeScanner.stop();
+      document.getElementById('scan-status').textContent = 'Looking up book…';
+      try {
+        const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${encodeURIComponent(decodedText)}`);
+        const data = await res.json();
+        const info = data.items && data.items[0] && data.items[0].volumeInfo;
+        if (info) {
+          document.getElementById('title').value = info.title || '';
+          document.getElementById('author').value = (info.authors || []).join(', ');
+          document.getElementById('isbn').value = decodedText;
+          if (info.publishedDate) document.getElementById('publishedYear').value = parseInt(info.publishedDate.slice(0, 4), 10) || '';
+          if (info.description) document.getElementById('description').value = info.description.slice(0, 500);
+          if (info.imageLinks && info.imageLinks.thumbnail) document.getElementById('coverUrl').value = info.imageLinks.thumbnail.replace('http://', 'https://');
+        }
+      } catch (err) {
+        console.error('Book lookup failed', err);
+      }
+      document.getElementById('scanner-modal').classList.add('hidden');
+    }, () => {});
+  });
+  document.getElementById('close-scan-btn').addEventListener('click', () => {
+    if (html5QrcodeScanner) html5QrcodeScanner.stop();
+    document.getElementById('scanner-modal').classList.add('hidden');
+  });
+
+  // --- 10. PUBLIC LOGIN-SCREEN STATS ---
+  function animateCount(el, target) {
+    const start = performance.now();
+    const duration = 1100;
+    function step(now) {
+      const progress = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      el.textContent = Math.round(eased * target).toLocaleString();
+      if (progress < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  }
+
+  async function countDocs(ref) {
+    if (typeof ref.count === 'function') {
+      const snap = await ref.count().get();
+      return snap.data().count;
+    }
+    const snap = await ref.get();
+    return snap.size;
+  }
+
+  async function loadPublicStats() {
+    const tiles = [
+      { label: 'Volumes on shelves', ref: db.collection('books') },
+      { label: 'Libraries connected', ref: db.collection('profiles') },
+      { label: 'Friendships formed', ref: db.collection('friendships').where('status', '==', 'accepted') }
+    ];
+    const results = await Promise.allSettled(tiles.map(t => countDocs(t.ref)));
+    const container = document.getElementById('login-stats');
+    container.innerHTML = '';
+    let anySucceeded = false;
+
+    results.forEach((r, i) => {
+      if (r.status !== 'fulfilled') return;
+      anySucceeded = true;
+      const wrap = document.createElement('div');
+      wrap.className = 'animate-fade-up';
+      wrap.style.animationDelay = `${i * 0.12 + 0.2}s`;
+      wrap.innerHTML = `<div class="font-display text-4xl text-paper" data-target="${r.value}">0</div><div class="font-mono text-[10px] uppercase tracking-wider text-ink-300 mt-1">${tiles[i].label}</div>`;
+      container.appendChild(wrap);
+    });
+
+    if (!anySucceeded) {
+      document.getElementById('login-stats-fallback').classList.remove('hidden');
+      return;
+    }
+    container.querySelectorAll('[data-target]').forEach(el => animateCount(el, parseInt(el.dataset.target, 10)));
+  }
+  loadPublicStats().catch(() => document.getElementById('login-stats-fallback').classList.remove('hidden'));
+</script>
+</body>
+</html>
