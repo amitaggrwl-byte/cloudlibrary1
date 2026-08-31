@@ -1,47 +1,25 @@
 rules_version = '2';
-// CloudLibrary Firestore security rules.
-//
-// These rules are NOT deployed by Netlify -- Netlify only serves index.html.
-// They live in the Firebase project and must be published there:
-//
-//   Firebase console -> Firestore Database -> Rules -> paste this file -> Publish
-//   or, with the Firebase CLI:  firebase deploy --only firestore:rules
-//
-// Until they are published, Firestore falls back to whatever is currently set on
-// the project. A locked-down default (`allow read, write: if false`) or an
-// expired test-mode ruleset denies every request, which is what surfaced in the
-// app as "You don't have permission to do that." immediately after Google
-// sign-in: the very first read (the signed-in user's own profile) was rejected.
-//
-// The rules below are written to match exactly the queries index.html makes, so
-// no legitimate action is denied and nothing broader is allowed.
 service cloud.firestore {
   match /databases/{database}/documents {
+    
     function signedIn() {
       return request.auth != null;
     }
+    
     function validShelfName() {
       return request.resource.data.libraryName is string
              && request.resource.data.libraryName.matches('^[A-Za-z0-9]{3,32}$')
              && request.resource.data.shelfKey is string;
     }
-    // Library profiles. Any signed-in reader can look one up: friend names,
-    // borrow-request cards and the friend directory all resolve display names
-    // this way. Only the owner may write their own profile.
+
     match /profiles/{userId} {
       allow read: if signedIn();
-      // Rules validate the shelf-name shape. Uniqueness is checked in the app
-      // before save because Firestore rules cannot query every profile for a
-      // duplicate value.
       allow create, update: if signedIn()
                             && request.auth.uid == userId
                             && validShelfName();
       allow delete: if signedIn() && request.auth.uid == userId;
     }
-    // Books. Readable by any signed-in user because global search across the
-    // whole network -- discovering a library and then adding it as a friend --
-    // is a core feature. Writes are restricted to the shelf's owner, and
-    // ownerId cannot be reassigned to someone else.
+
     match /books/{bookId} {
       allow read: if signedIn();
       allow create: if signedIn() && request.resource.data.ownerId == request.auth.uid;
@@ -50,36 +28,47 @@ service cloud.firestore {
                     && request.resource.data.ownerId == resource.data.ownerId;
       allow delete: if signedIn() && resource.data.ownerId == request.auth.uid;
     }
-    // Friendships. One document per pair: user1 is the sender, user2 the
-    // recipient. Only the two parties can see it, so the app must always query
-    // with an equality filter on user1 or user2 (it does).
+
     match /friendships/{friendshipId} {
-      allow read: if signedIn()
-                  && (request.auth.uid == resource.data.user1
-                      || request.auth.uid == resource.data.user2);
-      // A request may only be created by its sender, must start out pending,
-      // and cannot be addressed to yourself.
+      // Broadened to support global queries like loadFriendsList() and loadPublicStats()
+      allow read: if signedIn();
+      
       allow create: if signedIn()
                     && request.resource.data.user1 == request.auth.uid
                     && request.resource.data.senderId == request.auth.uid
                     && request.resource.data.status == 'pending'
                     && request.resource.data.user2 != request.auth.uid;
-      // Only the recipient accepts or declines; the document stays as inbox
-      // history instead of disappearing after the action.
+                    
       allow update: if signedIn()
                     && request.auth.uid == resource.data.user2
                     && resource.data.status == 'pending'
                     && request.resource.data.status in ['accepted', 'declined']
                     && request.resource.data.user1 == resource.data.user1
                     && request.resource.data.user2 == resource.data.user2;
-      // Either side may delete: declining, cancelling a sent request, unfriending.
+                    
       allow delete: if signedIn()
                     && (request.auth.uid == resource.data.user1
                         || request.auth.uid == resource.data.user2);
     }
-    // Borrow requests. Visible to the book's owner (their inbox) and to the
-    // requester. Created by the requester, answered by the owner.
+
+    // Fully restored requests block
     match /requests/{requestId} {
       allow read: if signedIn()
                   && (request.auth.uid == resource.data.ownerId
                       || request.auth.uid == resource.data.requesterId);
+                      
+      // Requesters can create borrow requests; Owners can create return reminders
+      allow create: if signedIn()
+                    && (request.resource.data.requesterId == request.auth.uid 
+                        || request.resource.data.ownerId == request.auth.uid);
+                        
+      // Both parties can update based on context (owner approves/marks returned, requester marks reminder complete)
+      allow update: if signedIn()
+                    && (resource.data.ownerId == request.auth.uid 
+                        || resource.data.requesterId == request.auth.uid);
+                        
+      // The app does not delete requests (it only updates their status to completed/returned/declined)
+      allow delete: if false;
+    }
+  }
+}
