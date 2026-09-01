@@ -131,12 +131,16 @@ service cloud.firestore {
           && request.resource.data.ownerId == request.auth.uid
           && request.resource.data.status == 'completed')
       );
-      allow update: if signedIn()
-        && request.auth.uid == resource.data.requesterId
-        && resource.data.type == 'return-reminder'
+      allow update: if signedIn() && resource.data.type == 'return-reminder'
         && resource.data.status == 'pending'
-        && request.resource.data.status == 'completed'
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'completedAt']);
+        && (
+          (request.auth.uid == resource.data.requesterId
+            && request.resource.data.status == 'completed'
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'completedAt']))
+          || (request.auth.uid == resource.data.ownerId
+            && request.resource.data.status == 'cancelled'
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'cancellationReason', 'respondedAt']))
+        );
       allow delete: if signedIn() && (resource.data.ownerId == request.auth.uid || resource.data.requesterId == request.auth.uid);
     }
 

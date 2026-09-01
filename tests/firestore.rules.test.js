@@ -85,6 +85,33 @@ test('the browser cannot lend a book or change a score directly', async () => {
   await assertFails(owner.collection('books').doc('self-shared').set({ ownerId: 'owner', title: 'Private', status: 'Available', readerIds: ['stranger'] }));
 });
 
+test('an owner can delete an available book but not an active loan', async () => {
+  const owner = env.authenticatedContext('owner').firestore();
+  await assertSucceeds(owner.collection('books').doc('locked-book').delete());
+  await env.withSecurityRulesDisabled(async context => {
+    await context.firestore().collection('books').doc('active-loan').set({
+      ownerId: 'owner', ownerName: 'OwnerShelf', title: 'On loan', author: 'Author',
+      status: 'Lent Out', borrowerId: 'reader', readerIds: ['reader']
+    });
+  });
+  await assertFails(owner.collection('books').doc('active-loan').delete());
+});
+
+test('a reminder owner can cancel a pending reminder', async () => {
+  await env.withSecurityRulesDisabled(async context => {
+    await context.firestore().collection('requests').doc('reminder-1').set({
+      type: 'return-reminder', ownerId: 'owner', requesterId: 'reader',
+      status: 'pending', title: 'Book'
+    });
+  });
+  const owner = env.authenticatedContext('owner').firestore();
+  const reader = env.authenticatedContext('reader').firestore();
+  await assertSucceeds(owner.collection('requests').doc('reminder-1').update({
+    status: 'cancelled', cancellationReason: 'sender-cancelled', respondedAt: new Date()
+  }));
+  await assertFails(reader.collection('requests').doc('reminder-1').update({ status: 'completed', completedAt: new Date() }));
+});
+
 test('discovery searches are capped at ten documents', async () => {
   const alice = env.authenticatedContext('alice').firestore();
   await assertSucceeds(alice.collection('bookDiscovery').where('searchTokens', 'array-contains', 'har').limit(10).get());

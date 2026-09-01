@@ -106,19 +106,45 @@ exports.cleanUpMyInbox = onCall(callableRuntime, async request => {
   pendingFriendships.forEach(doc => profileIds.add(doc.data().user1));
   const profiles = await Promise.all([...profileIds].map(id => db.collection('profiles').doc(id).get()));
   const missingProfiles = new Set(profiles.filter(doc => !doc.exists).map(doc => doc.id));
+  const pendingReminders = pendingRequests.filter(doc => doc.data().type === 'return-reminder');
+  const reminderBookIds = [...new Set(pendingReminders.map(doc => doc.data().bookId).filter(Boolean))];
+  const reminderBooks = new Map((await Promise.all(reminderBookIds.map(id => db.collection('books').doc(id).get())))
+    .map(doc => [doc.id, doc]));
   const batch = db.batch();
   let cleaned = 0;
+  const cancellations = new Map();
   pendingRequests.forEach(doc => {
     const data = doc.data();
     const otherId = data.ownerId === uid ? data.requesterId : data.ownerId;
     if (!missingProfiles.has(otherId)) return;
-    cleaned += 1;
-    batch.update(doc.ref, { status: 'cancelled', cancellationReason: 'account-deleted', respondedAt: FieldValue.serverTimestamp() });
+    cancellations.set(doc.id, { ref: doc.ref, reason: 'account-deleted' });
   });
+  const newestReminderByLoan = new Set();
+  pendingReminders
+    .sort((a, b) => (b.data().createdAt?.toMillis?.() || 0) - (a.data().createdAt?.toMillis?.() || 0))
+    .forEach(doc => {
+      if (cancellations.has(doc.id)) return;
+      const reminder = doc.data();
+      const book = reminderBooks.get(reminder.bookId);
+      if (!book?.exists || book.data().status !== 'Lent Out' || book.data().borrowerId !== reminder.requesterId) {
+        cancellations.set(doc.id, { ref: doc.ref, reason: 'loan-closed' });
+        return;
+      }
+      const loanKey = `${reminder.ownerId}:${reminder.requesterId}:${reminder.bookId}`;
+      if (newestReminderByLoan.has(loanKey)) {
+        cancellations.set(doc.id, { ref: doc.ref, reason: 'duplicate-reminder' });
+        return;
+      }
+      newestReminderByLoan.add(loanKey);
+    });
   pendingFriendships.forEach(doc => {
     if (!missingProfiles.has(doc.data().user1)) return;
     cleaned += 1;
     batch.delete(doc.ref);
+  });
+  cancellations.forEach(({ ref, reason }) => {
+    cleaned += 1;
+    batch.update(ref, { status: 'cancelled', cancellationReason: reason, respondedAt: FieldValue.serverTimestamp() });
   });
   if (cleaned) await batch.commit();
   return { cleaned };
@@ -241,7 +267,13 @@ exports.onBookCreated = onDocumentCreated({ ...runtime, document: 'books/{bookId
     notifyWishers(event.params.bookId, { ...book, readerIds })
   ]));
 });
-exports.onBookDeleted = onDocumentDeleted({ ...runtime, document: 'books/{bookId}' }, event => refreshBookCount(event.data.data().ownerId));
+exports.onBookDeleted = onDocumentDeleted({ ...runtime, document: 'books/{bookId}' }, event => {
+  const book = event.data.data();
+  return Promise.all([
+    discoveryRef(event.params.bookId).delete(),
+    refreshBookCount(book.ownerId)
+  ]);
+});
 
 async function deleteQuery(query) {
   while (true) {
