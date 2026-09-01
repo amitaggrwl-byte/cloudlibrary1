@@ -175,7 +175,7 @@
         <input type="url" id="coverUrl" placeholder="Cover image URL (optional)" class="w-full bg-paper border border-ink-200 rounded-lg p-3 text-ink-950 text-sm focus:outline-none focus:ring-2 focus:ring-ink-700">
         <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2 items-center">
           <label for="coverFile" class="flex items-center justify-center gap-2 bg-ink-800/5 text-ink-700 border border-ink-200 text-xs font-semibold py-2.5 px-3 rounded-lg hover:bg-ink-800/10 transition-colors cursor-pointer">
-            <span id="cover-file-label">Add cover photo</span>
+            <span id="cover-file-label">Take or add cover photo</span>
           </label>
           <button type="button" id="clear-cover-photo" class="hidden text-xs font-semibold text-rust-600 bg-rust-600/10 hover:bg-rust-600/20 rounded-lg px-3 py-2.5">Clear</button>
           <input type="file" id="coverFile" accept="image/*" capture="environment" class="hidden">
@@ -209,6 +209,24 @@
         </div>
         <div id="borrowed-books-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
         <p id="borrowed-empty-state" class="text-sm text-ink-400">No borrowed books yet.</p>
+      </div>
+      <div id="borrow-history-panel" class="app-panel p-5 rounded-xl border border-ink-200 shadow-sm">
+        <div class="mb-3">
+          <p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-1">Reading record</p>
+          <h2 class="font-display text-xl text-ink-950">Borrowing history</h2>
+        </div>
+        <div id="borrow-history-list" class="space-y-3"></div>
+      </div>
+      <div id="wishlist-panel" class="app-panel p-5 rounded-xl border border-ink-200 shadow-sm">
+        <div class="mb-3">
+          <p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-1">Looking to borrow</p>
+          <h2 class="font-display text-xl text-ink-950">My wishlist</h2>
+        </div>
+        <form id="wishlist-form" class="flex gap-2 mb-3">
+          <input id="wishlist-title" required type="text" placeholder="Book title" class="min-w-0 flex-1 bg-paper border border-ink-200 rounded-lg px-3 py-2.5 text-sm text-ink-950 focus:outline-none focus:ring-2 focus:ring-ink-700">
+          <button type="submit" class="bg-ink-950 hover:bg-ink-900 text-paper px-4 rounded-lg text-xs font-semibold">Add</button>
+        </form>
+        <div id="wishlist-list" class="space-y-2"></div>
       </div>
       <div>
         <div class="flex items-center justify-between mb-3">
@@ -299,8 +317,8 @@
       </div>
       <input type="url" id="edit-coverUrl" placeholder="Cover image URL" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-ink-950 text-sm focus:outline-none focus:ring-2 focus:ring-ink-700">
       <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2 items-center">
-        <label for="edit-coverFile" class="flex items-center justify-center gap-2 bg-white text-ink-700 border border-ink-200 text-xs font-semibold py-2.5 px-3 rounded-lg hover:bg-ink-50 transition-colors cursor-pointer">
-          <span id="edit-cover-file-label">Replace cover photo</span>
+          <label for="edit-coverFile" class="flex items-center justify-center gap-2 bg-white text-ink-700 border border-ink-200 text-xs font-semibold py-2.5 px-3 rounded-lg hover:bg-ink-50 transition-colors cursor-pointer">
+            <span id="edit-cover-file-label">Take or replace cover photo</span>
         </label>
         <button type="button" id="edit-clear-cover-photo" class="hidden text-xs font-semibold text-rust-600 bg-rust-600/10 hover:bg-rust-600/20 rounded-lg px-3 py-2.5">Clear</button>
         <input type="file" id="edit-coverFile" accept="image/*" capture="environment" class="hidden">
@@ -341,6 +359,7 @@
     undo: '<path d="M4 9.5h9a5 5 0 1 1 0 10h-2"/><path d="M8 5.5l-4 4 4 4"/>',
     clock: '<circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 2"/>',
     mail: '<path d="M4 6.5h16v11H4z"/><path d="M4.5 7l7.5 6 7.5-6"/>',
+    star: '<path d="M12 3.5l2.6 5.4 5.9.6-4.4 4 1.2 5.8L12 16.6 6.7 19.3l1.2-5.8-4.4-4 5.9-.6z"/>',
     check: '<path d="M5 13l4 4L19 7"/>',
     x: '<path d="M6 6l12 12M18 6L6 18"/>'
   };
@@ -373,6 +392,48 @@
     const date = typeof value.toDate === 'function' ? value.toDate() : new Date(value);
     if (Number.isNaN(date.getTime())) return '';
     return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  function timestampMillis(value) {
+    if (!value) return 0;
+    if (typeof value.toMillis === 'function') return value.toMillis();
+    const date = value instanceof Date ? value : new Date(value);
+    return Number.isNaN(date.getTime()) ? 0 : date.getTime();
+  }
+
+  function avatarHtml(profile, name, sizeClass) {
+    const photoUrl = safeUrl(profile && (profile.photoURL || profile.photoUrl));
+    const initial = esc(String(name || '?').trim().charAt(0).toUpperCase() || '?');
+    const cls = sizeClass || 'w-10 h-10';
+    if (photoUrl) return `<img src="${esc(photoUrl)}" alt="" referrerpolicy="no-referrer" onerror="this.style.display='none';this.nextElementSibling.classList.remove('hidden')" class="${cls} rounded-full object-cover shrink-0 border border-ink-200"><div class="hidden ${cls} rounded-full bg-ink-800 text-paper font-display flex items-center justify-center text-sm shrink-0">${initial}</div>`;
+    return `<div class="${cls} rounded-full bg-ink-800 text-paper font-display flex items-center justify-center text-sm shrink-0">${initial}</div>`;
+  }
+
+  const ratingCache = new Map();
+  async function loadUserRating(uid) {
+    if (ratingCache.has(uid)) return ratingCache.get(uid);
+    const [eventsSnap, booksSnap] = await Promise.all([
+      db.collection('ratingEvents').where('subjectId', '==', uid).get(),
+      db.collection('books').where('ownerId', '==', uid).get()
+    ]);
+    const eventPoints = eventsSnap.docs.reduce((total, doc) => total + (Number(doc.data().points) || 0), 0);
+    const libraryPoints = Math.min(2, booksSnap.size * 0.2);
+    const score = Math.max(0, Math.min(10, Math.round((3 + libraryPoints + eventPoints) * 10) / 10));
+    ratingCache.set(uid, score);
+    return score;
+  }
+
+  function ratingBadgeHtml(uid, score) {
+    return `<span data-rating-user="${esc(uid)}" class="inline-flex items-center gap-1 text-[11px] font-semibold text-gold-600">${icon('star', 'w-3.5 h-3.5 fill-gold-500')}<span>${Number(score || 3).toFixed(1)}/10</span></span>`;
+  }
+
+  async function hydrateRatingBadges(profiles) {
+    await Promise.all(profiles.map(async ({ uid }) => {
+      try {
+        const score = await loadUserRating(uid);
+        document.querySelectorAll(`[data-rating-user="${CSS.escape(uid)}"] span`).forEach(el => { el.textContent = `${score.toFixed(1)}/10`; });
+      } catch (err) { console.warn('Could not load rating', err); }
+    }));
   }
 
   function shelfKeyFromName(name) {
@@ -613,6 +674,8 @@
       shelfKey,
       ownerEmail: currentUser.email,
       ownerName: currentUser.displayName || '',
+      photoURL: currentUser.photoURL || '',
+      ratingBase: 3,
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     };
     const res = await guard(() => db.collection("profiles").doc(currentUser.uid).set(draft), { context: 'Saving your profile' });
@@ -625,9 +688,15 @@
   async function initApp() {
     document.getElementById('user-info').textContent = userProfile.libraryName;
     document.getElementById('app-content').classList.remove('hidden');
+    if (currentUser.photoURL && userProfile.photoURL !== currentUser.photoURL) {
+      userProfile.photoURL = currentUser.photoURL;
+      db.collection('profiles').doc(currentUser.uid).update({ photoURL: currentUser.photoURL, ownerName: currentUser.displayName || '' }).catch(err => console.warn('Could not refresh profile photo', err));
+    }
     await loadFriendsList();
     fetchMyBooks();
     fetchBorrowedBooks();
+    fetchBorrowHistory();
+    fetchWishlist();
     listenToInbox();
   }
 
@@ -666,21 +735,24 @@
   }
 
   function statusBadge(status) {
-    const map = { 'Available': 'bg-ink-600', 'Reading': 'bg-gold-600', 'Lent Out': 'bg-rust-600' };
+    const map = { 'Available': 'bg-ink-600', 'Reading': 'bg-gold-600', 'Lent Out': 'bg-rust-600', 'Lost': 'bg-ink-950' };
     return `<span class="text-[10px] font-mono uppercase tracking-wide px-2 py-1 rounded-md ${map[status] || 'bg-ink-400'} text-paper">${esc(status || 'Unknown')}</span>`;
   }
 
   function loanDetailsHtml(book, mode) {
     if (book.status !== 'Lent Out') return '';
     const lentDate = formatDate(book.lentAt);
+    const dueDate = formatDate(book.loanDueAt);
+    const overdue = timestampMillis(book.loanDueAt) && timestampMillis(book.loanDueAt) < Date.now();
+    const dueText = dueDate ? ` Return ${overdue ? 'overdue since' : 'due'} ${esc(dueDate)}.` : '';
     if (mode === 'borrower') {
       return `<div class="loan-note mt-3 rounded-lg border border-rust-200 px-3 py-2 text-xs text-ink-700">
-        Borrowed from <span class="font-semibold text-ink-950">${esc(book.ownerName || 'a friend')}</span>${lentDate ? ` on ${esc(lentDate)}` : ''}.
+        Borrowed from <span class="font-semibold text-ink-950">${esc(book.ownerName || 'a friend')}</span>${lentDate ? ` on ${esc(lentDate)}` : ''}.${dueText}
       </div>`;
     }
     if (book.borrowerName || book.lentAt) {
       return `<div class="loan-note mt-3 rounded-lg border border-rust-200 px-3 py-2 text-xs text-ink-700">
-        Lent to <span class="font-semibold text-ink-950">${esc(book.borrowerName || 'Borrower')}</span>${lentDate ? ` on ${esc(lentDate)}` : ''}.
+        Lent to <span class="font-semibold text-ink-950">${esc(book.borrowerName || 'Borrower')}</span>${lentDate ? ` on ${esc(lentDate)}` : ''}.${dueText}
       </div>`;
     }
     return '';
@@ -727,9 +799,13 @@
           const reminderBtn = book.status === 'Lent Out' && book.borrowerId
             ? `<button data-action="send-reminder" data-id="${esc(doc.id)}" class="flex items-center gap-1 text-rust-600 bg-rust-600/10 hover:bg-rust-600/20 px-2.5 py-1 text-xs font-semibold rounded-lg transition-colors">${icon('mail','w-3.5 h-3.5')}Reminder</button>`
             : '';
+          const lostBtn = book.status === 'Lent Out' && timestampMillis(book.loanDueAt) < Date.now()
+            ? `<button data-action="mark-lost" data-id="${esc(doc.id)}" class="flex items-center gap-1 text-rust-600 bg-rust-600/10 hover:bg-rust-600/20 px-2.5 py-1 text-xs font-semibold rounded-lg transition-colors">${icon('x','w-3.5 h-3.5')}Report lost</button>`
+            : '';
           const actions = `
             ${returnBtn}
             ${reminderBtn}
+            ${lostBtn}
             <button data-action="edit-book" data-id="${esc(doc.id)}" class="flex items-center gap-1 text-ink-600 bg-ink-600/10 hover:bg-ink-600/20 px-2.5 py-1 text-xs font-semibold rounded-lg transition-colors">${icon('pencil','w-3.5 h-3.5')}Edit</button>
             <button data-action="delete-book" data-id="${esc(doc.id)}" class="flex items-center gap-1 text-rust-600 bg-rust-600/10 hover:bg-rust-600/20 px-2.5 py-1 text-xs font-semibold rounded-lg transition-colors">${icon('trash','w-3.5 h-3.5')}Delete</button>`;
           grid.insertAdjacentHTML('beforeend', renderBookCard(book, actions));
@@ -748,11 +824,25 @@
         const book = { id: doc.id, ...doc.data() };
         if (book.status !== 'Lent Out') return;
         borrowedBooksCache.push(book);
-        const actions = `<span class="flex items-center gap-1 text-xs font-semibold text-ink-500">${icon('clock','w-3.5 h-3.5')}Awaiting return</span>`;
+        const actions = `<span class="flex items-center gap-1 text-xs font-semibold ${timestampMillis(book.loanDueAt) < Date.now() ? 'text-rust-600' : 'text-ink-500'}">${icon('clock','w-3.5 h-3.5')}${timestampMillis(book.loanDueAt) < Date.now() ? 'Return overdue' : 'Due within 14 days'}</span>`;
         grid.insertAdjacentHTML('beforeend', renderBookCard(book, actions, null, 'borrower'));
       });
       empty.classList.toggle('hidden', borrowedBooksCache.length > 0);
     }, listenerError('borrowed books'));
+  }
+
+  function fetchBorrowHistory() {
+    db.collection('requests').where('requesterId', '==', currentUser.uid).onSnapshot((snapshot) => {
+      const history = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+        .filter(req => req.type === 'borrow')
+        .sort((a, b) => timestampMillis(b.returnedAt || b.lostAt || b.createdAt) - timestampMillis(a.returnedAt || a.lostAt || a.createdAt));
+      const list = document.getElementById('borrow-history-list');
+      if (!history.length) {
+        list.innerHTML = '<p class="text-sm text-ink-400">Borrowed books will stay here after they are returned.</p>';
+        return;
+      }
+      list.innerHTML = history.map(req => `<div class="bg-paper/70 border border-ink-200 rounded-lg px-4 py-3 flex items-center justify-between gap-3"><div class="min-w-0"><p class="font-semibold text-sm text-ink-950 truncate">${esc(req.title || 'Untitled book')}</p><p class="text-xs text-ink-500">From ${esc(req.ownerName || 'a friend')}${req.returnedAt ? ` · returned ${esc(formatDate(req.returnedAt))}` : ''}${req.lostAt ? ` · reported lost ${esc(formatDate(req.lostAt))}` : ''}</p></div>${requestStatusPill(req.status)}</div>`).join('');
+    }, listenerError('borrowing history'));
   }
 
   function collectBookFields(prefix) {
@@ -781,6 +871,7 @@
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     }), { context: 'Adding a book', success: `"${fields.title}" added to your shelf.` });
     if (res === FAILED) return;
+    notifyWishers({ id: res.id, ...fields });
     e.target.reset();
     inlineCoverData = '';
     document.getElementById('cover-file-label').textContent = 'Add cover photo';
@@ -788,32 +879,108 @@
     setRating('add', 0);
   });
 
+  function normalizedTitle(title) {
+    return String(title || '').trim().toLowerCase().replace(/\s+/g, ' ');
+  }
+
+  function fetchWishlist() {
+    db.collection('wishlists').where('userId', '==', currentUser.uid).onSnapshot((snapshot) => {
+      const list = document.getElementById('wishlist-list');
+      if (snapshot.empty) {
+        list.innerHTML = '<p class="text-sm text-ink-400">Save a title and we will tell you when a friend adds it.</p>';
+        return;
+      }
+      list.innerHTML = snapshot.docs.map(doc => `<div class="bg-paper/70 border border-ink-200 rounded-lg px-3 py-2 flex items-center justify-between gap-3"><span class="text-sm font-medium text-ink-800 truncate">${esc(doc.data().title)}</span><button data-action="delete-wish" data-id="${esc(doc.id)}" class="text-rust-600 p-1.5" title="Remove">${icon('x','w-3.5 h-3.5')}</button></div>`).join('');
+    }, listenerError('wishlist'));
+  }
+
+  document.getElementById('wishlist-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const title = document.getElementById('wishlist-title').value.trim();
+    if (!title) return;
+    const titleKey = normalizedTitle(title);
+    const existing = await guard(() => db.collection('wishlists').where('userId', '==', currentUser.uid).where('titleKey', '==', titleKey).limit(1).get(), { context: 'Checking your wishlist' });
+    if (existing === FAILED || !existing.empty) return existing === FAILED ? undefined : toast('That title is already on your wishlist.', 'info');
+    const res = await guard(() => db.collection('wishlists').add({ userId: currentUser.uid, userName: userProfile.libraryName, title, titleKey, createdAt: firebase.firestore.FieldValue.serverTimestamp() }), { context: 'Adding to your wishlist', success: 'Added to your wishlist.' });
+    if (res !== FAILED) e.target.reset();
+  });
+
+  async function notifyWishers(book) {
+    const titleKey = normalizedTitle(book.title);
+    if (!titleKey) return;
+    const wishes = await guard(() => db.collection('wishlists').where('titleKey', '==', titleKey).get(), { context: 'Checking friend wishlists' });
+    if (wishes === FAILED) return;
+    wishes.forEach(wishDoc => {
+      const wish = wishDoc.data();
+      if (!confirmedFriends.includes(wish.userId)) return;
+      db.collection('requests').add({
+        type: 'wishlist-match', bookId: book.id, title: book.title, ownerId: currentUser.uid,
+        ownerName: userProfile.libraryName, requesterId: wish.userId, requesterName: wish.userName || 'Friend',
+        status: 'completed', createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      }).catch(err => console.warn('Could not send wishlist match', err));
+    });
+  }
+
   window.deleteBook = async function (id) {
     if (!confirm("Delete this book?")) return;
     await guard(() => db.collection("books").doc(id).delete(), { context: 'Deleting a book', success: 'Book removed from your shelf.' });
   };
 
+  function ratingEventData(subjectId, book, points, type) {
+    return {
+      subjectId,
+      bookId: book.id,
+      ownerId: currentUser.uid,
+      points,
+      type,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+  }
+
   window.markReturned = async function (id) {
-    const res = await guard(() => db.collection("books").doc(id).update({
-      status: 'Available',
-      borrowerId: firebase.firestore.FieldValue.delete(),
-      borrowerName: firebase.firestore.FieldValue.delete(),
-      borrowerEmail: firebase.firestore.FieldValue.delete(),
-      lentAt: firebase.firestore.FieldValue.delete(),
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }), { context: 'Marking a book returned', success: 'Welcome home — marked available again.' });
-    if (res === FAILED) return;
-    const reqSnap = await guard(() => db.collection("requests").where("ownerId", "==", currentUser.uid).where("bookId", "==", id).get(), { context: 'Updating return history' });
+    const book = myBooksCache[id];
+    if (!book || book.status !== 'Lent Out' || !book.borrowerId) return toast('This book is no longer recorded as lent out.', 'error');
+    const heldFor = Date.now() - timestampMillis(book.lentAt);
+    const onTime = !timestampMillis(book.loanDueAt) || Date.now() <= timestampMillis(book.loanDueAt);
+    const points = heldFor >= 48 * 60 * 60 * 1000 && onTime ? 1 : (onTime ? 0 : -1);
+    const ratingType = points > 0 ? 'timely-return' : (onTime ? 'early-return' : 'late-return');
+    const reqSnap = await guard(() => db.collection('requests').where('ownerId', '==', currentUser.uid).where('bookId', '==', id).get(), { context: 'Updating return history' });
     if (reqSnap === FAILED) return;
-    reqSnap.forEach(doc => {
-      const req = doc.data();
-      if (req.type === 'borrow' && req.status === 'approved') {
-        db.collection("requests").doc(doc.id).update({
-          status: 'returned',
-          returnedAt: firebase.firestore.FieldValue.serverTimestamp()
-        }).catch(err => console.error('Return history update failed', err));
-      }
-    });
+    const activeRequest = reqSnap.docs.find(doc => doc.data().type === 'borrow' && doc.data().status === 'approved');
+    const res = await guard(async () => {
+      const batch = db.batch();
+      if (points) batch.set(db.collection('ratingEvents').doc(), ratingEventData(book.borrowerId, book, points, ratingType));
+      batch.update(db.collection('books').doc(id), {
+        status: 'Available',
+        borrowerId: firebase.firestore.FieldValue.delete(), borrowerName: firebase.firestore.FieldValue.delete(),
+        borrowerEmail: firebase.firestore.FieldValue.delete(), lentAt: firebase.firestore.FieldValue.delete(),
+        loanDueAt: firebase.firestore.FieldValue.delete(), updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      if (activeRequest) batch.update(activeRequest.ref, { status: 'returned', returnedAt: firebase.firestore.FieldValue.serverTimestamp(), returnRatingPoints: points });
+      return batch.commit();
+    }, { context: 'Marking a book returned', success: points > 0 ? 'Returned on time - borrower rating improved.' : 'Welcome home - marked available again.' });
+    if (res === FAILED) return;
+    ratingCache.delete(book.borrowerId);
+  };
+
+  window.markLost = async function (id) {
+    const book = myBooksCache[id];
+    if (!book || book.status !== 'Lent Out' || !book.borrowerId) return toast('This book is no longer recorded as lent out.', 'error');
+    if (!confirm(`Report "${book.title}" as lost? This permanently removes it from lending and applies a rating penalty to ${book.borrowerName || 'the borrower'}.`)) return;
+    const reqSnap = await guard(() => db.collection('requests').where('ownerId', '==', currentUser.uid).where('bookId', '==', id).get(), { context: 'Loading loan history' });
+    if (reqSnap === FAILED) return;
+    const activeRequest = reqSnap.docs.find(doc => doc.data().type === 'borrow' && doc.data().status === 'approved');
+    const res = await guard(async () => {
+      const batch = db.batch();
+      batch.set(db.collection('ratingEvents').doc(), ratingEventData(book.borrowerId, book, -3, 'lost-book'));
+      batch.update(db.collection('books').doc(id), {
+        status: 'Lost', lostAt: firebase.firestore.FieldValue.serverTimestamp(), updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      if (activeRequest) batch.update(activeRequest.ref, { status: 'lost', lostAt: firebase.firestore.FieldValue.serverTimestamp(), returnRatingPoints: -3 });
+      return batch.commit();
+    }, { context: 'Reporting a lost book', success: 'Book marked lost and lending record closed.' });
+    if (res === FAILED) return;
+    ratingCache.delete(book.borrowerId);
   };
 
   window.sendReturnReminder = async function (id) {
@@ -950,14 +1117,13 @@
     profiles.forEach(({ uid, data }) => {
       if (!data) return;
       const name = data.libraryName || 'Unnamed library';
-      const initial = esc(name.trim().charAt(0).toUpperCase() || '?');
       container.insertAdjacentHTML('beforeend', `
         <div class="bg-paper p-4 rounded-xl border border-ink-200 flex justify-between items-center gap-3">
           <div class="flex items-center gap-3 min-w-0">
-            <div class="w-10 h-10 rounded-full bg-ink-800 text-paper font-display flex items-center justify-center text-sm shrink-0">${initial}</div>
+            ${avatarHtml(data, name)}
             <div class="min-w-0">
               <h3 class="font-display text-base text-ink-950 truncate">${esc(name)}</h3>
-              <p class="text-xs text-ink-400">Connected friend</p>
+              <p class="text-xs text-ink-400">Connected friend · ${ratingBadgeHtml(uid, 3)}</p>
             </div>
           </div>
           <div class="flex gap-2 shrink-0">
@@ -966,6 +1132,7 @@
           </div>
         </div>`);
     });
+    hydrateRatingBadges(profiles.filter(item => item.data));
   }
 
   function renderPendingSent() {
@@ -1042,17 +1209,22 @@
     if (bookSnap === FAILED || profileSnap === FAILED) { grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4">Search failed. Please try again.</p>'; return; }
     grid.innerHTML = '';
     let found = false;
+    let visibleResults = 0;
     const matchingOwners = new Set();
 
-    profileSnap.forEach(doc => {
-      if (doc.id === currentUser.uid) return;
+    const profilesForSearch = profileSnap.docs
+      .filter(doc => doc.id !== currentUser.uid)
+      .sort((a, b) => Number(confirmedFriends.includes(b.id)) - Number(confirmedFriends.includes(a.id)));
+    profilesForSearch.forEach(doc => {
       const profile = doc.data();
       const fields = [profile.libraryName, profile.ownerName, profile.ownerEmail, profile.shelfKey].map(v => String(v || '').toLowerCase());
       const profileMatches = fields.some(v => v.includes(query));
       if (!profileMatches) return;
-      found = true;
-      matchingOwners.add(doc.id);
       const isFriend = confirmedFriends.includes(doc.id);
+      if (!isFriend && visibleResults >= 10) return;
+      found = true;
+      visibleResults += 1;
+      matchingOwners.add(doc.id);
       const name = profile.libraryName || 'Unnamed library';
       const email = profile.ownerEmail ? `<p class="text-xs text-ink-400 mt-1">${esc(profile.ownerEmail)}</p>` : '';
       const actions = isFriend
@@ -1060,22 +1232,32 @@
         : `<button data-action="add-friend" data-owner="${esc(doc.id)}" data-name="${esc(name)}" class="text-rust-600 bg-rust-600/10 hover:bg-rust-600/20 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">Add friend</button>`;
       grid.insertAdjacentHTML('beforeend', `
         <div class="app-panel rounded-xl border border-ink-200 shadow-sm p-4 flex justify-between items-center gap-3">
-          <div class="min-w-0">
+          <div class="flex items-center gap-3 min-w-0">
+            ${avatarHtml(profile, name)}
+            <div class="min-w-0">
             <p class="font-mono text-[10px] uppercase tracking-wider text-rust-600">${isFriend ? 'Friend shelf' : 'Library shelf'}</p>
             <h3 class="font-display text-lg text-ink-950 truncate">${esc(name)}</h3>
+            ${ratingBadgeHtml(doc.id, 3)}
             ${email}
+            </div>
           </div>
           <div class="shrink-0">${actions}</div>
         </div>`);
     });
 
-    bookSnap.forEach(doc => {
+    hydrateRatingBadges(profilesForSearch.map(doc => ({ uid: doc.id, data: doc.data() })));
+
+    const booksForSearch = bookSnap.docs
+      .filter(doc => doc.data().ownerId !== currentUser.uid)
+      .sort((a, b) => Number(confirmedFriends.includes(b.data().ownerId)) - Number(confirmedFriends.includes(a.data().ownerId)));
+    booksForSearch.forEach(doc => {
       const book = { id: doc.id, ...doc.data() };
-      if (book.ownerId === currentUser.uid) return;
 
       if (matchingOwners.has(book.ownerId) || (book.title || '').toLowerCase().includes(query) || (book.author || '').toLowerCase().includes(query) || (book.ownerName && book.ownerName.toLowerCase().includes(query))) {
-        found = true;
         const isFriend = confirmedFriends.includes(book.ownerId);
+        if (!isFriend && visibleResults >= 10) return;
+        found = true;
+        visibleResults += 1;
 
         let actions;
         if (isFriend) {
@@ -1098,6 +1280,12 @@
 
   // --- 8. BORROW & FRIEND REQUEST INBOX ---
   async function sendBorrowRequest(bookId, title, ownerId) {
+    if (borrowedBooksCache.length >= 3) return toast('You can borrow up to 3 books at a time. Return one before requesting another.', 'error');
+    const existing = await guard(() => db.collection('requests').where('requesterId', '==', currentUser.uid).where('bookId', '==', bookId).get(), { context: 'Checking your requests' });
+    if (existing === FAILED) return;
+    if (existing.docs.some(doc => doc.data().status === 'pending' || doc.data().status === 'approved')) return toast('You already have an active request for this book.', 'info');
+    const bookDoc = await guard(() => db.collection('books').doc(bookId).get(), { context: 'Checking book availability' });
+    if (bookDoc === FAILED || !bookDoc.exists || bookDoc.data().status !== 'Available') return toast('That book is no longer available.', 'error');
     await guard(() => db.collection("requests").add({
       type: 'borrow',
       bookId, title, ownerId,
@@ -1212,6 +1400,17 @@
         return;
       }
 
+      if (req.type === 'wishlist-match') {
+        const body = req.requesterId === currentUser.uid
+          ? `<span class="text-rust-600 font-semibold">${esc(req.ownerName || 'A friend')}</span> added "${esc(req.title)}" to their shelf.`
+          : `Your new book "${esc(req.title)}" matched ${esc(req.requesterName || 'a friend')}'s wishlist.`;
+        const actions = req.requesterId === currentUser.uid
+          ? `<button data-action="view-shelf" data-uid="${esc(req.ownerId)}" data-name="${esc(req.ownerName || 'Friend')}" class="bg-ink-600/10 text-ink-700 hover:bg-ink-600/20 px-3 py-1.5 rounded-lg text-xs font-semibold">View shelf</button>`
+          : '';
+        inboxBody.insertAdjacentHTML('beforeend', inboxCard('book', 'Wishlist match', body, actions, req.status, req.createdAt));
+        return;
+      }
+
       if (req.audience === 'owner') {
         const actions = req.status === 'pending' ? `
           <button data-action="approve-borrow" data-id="${esc(req.id)}" data-book="${esc(req.bookId || '')}" class="bg-ink-600/10 text-ink-700 hover:bg-ink-600/20 p-2 rounded-lg" title="Approve">${icon('check','w-4 h-4')}</button>
@@ -1242,24 +1441,30 @@
     const reqDoc = await guard(() => db.collection("requests").doc(reqId).get(), { context: 'Loading borrow request' });
     if (reqDoc === FAILED || !reqDoc.exists) return;
     const req = reqDoc.data();
-    const res = await guard(() => db.collection("requests").doc(reqId).update({
-      status,
-      ownerName: userProfile.libraryName,
-      respondedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }), { context: 'Responding to a borrow request' });
-    if (res === FAILED) return;
-    if (status === 'approved' && bookId) {
-      await guard(() => db.collection("books").doc(bookId).update({
-        status: 'Lent Out',
-        borrowerId: req.requesterId,
-        borrowerName: req.requesterName,
-        borrowerEmail: req.requesterEmail || '',
-        lentAt: firebase.firestore.FieldValue.serverTimestamp(),
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      }), { context: 'Marking the book lent out', success: 'Approved — book marked as lent out.' });
-    } else {
-      toast('Request denied.', 'success');
+    if (req.ownerId !== currentUser.uid || req.status !== 'pending') return toast('That request has already been handled.', 'error');
+    if (status !== 'approved' || !bookId) {
+      const res = await guard(() => db.collection('requests').doc(reqId).update({ status: 'denied', ownerName: userProfile.libraryName, respondedAt: firebase.firestore.FieldValue.serverTimestamp() }), { context: 'Denying a borrow request', success: 'Request denied.' });
+      return res;
     }
+    const dueAt = firebase.firestore.Timestamp.fromDate(new Date(Date.now() + 14 * 24 * 60 * 60 * 1000));
+    const res = await guard(() => db.runTransaction(async (transaction) => {
+      const bookRef = db.collection('books').doc(bookId);
+      const borrowerBooksQuery = db.collection('books').where('borrowerId', '==', req.requesterId);
+      const [freshRequest, bookDoc, borrowerBooks] = await Promise.all([transaction.get(reqDoc.ref), transaction.get(bookRef), transaction.get(borrowerBooksQuery)]);
+      if (!freshRequest.exists || freshRequest.data().status !== 'pending') throw new Error('This request was already handled.');
+      if (!bookDoc.exists || bookDoc.data().ownerId !== currentUser.uid || bookDoc.data().status !== 'Available') throw new Error('This book is no longer available.');
+      const activeLoans = borrowerBooks.docs.filter(doc => doc.data().status === 'Lent Out').length;
+      if (activeLoans >= 3) throw new Error('This reader already has 3 borrowed books.');
+      transaction.update(reqDoc.ref, { status: 'approved', ownerName: userProfile.libraryName, respondedAt: firebase.firestore.FieldValue.serverTimestamp(), loanDueAt: dueAt });
+      transaction.update(bookRef, {
+        status: 'Lent Out', borrowerId: req.requesterId, borrowerName: req.requesterName,
+        borrowerEmail: req.requesterEmail || '', lentAt: firebase.firestore.FieldValue.serverTimestamp(),
+        loanDueAt: dueAt, updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }), { context: 'Approving a borrow request', success: 'Approved - book is reserved for this reader for 14 days.' });
+    if (res === FAILED) return;
+    ratingCache.delete(currentUser.uid);
+    db.collection('ratingEvents').add({ subjectId: currentUser.uid, ownerId: currentUser.uid, points: 0.1, type: 'notification-action', createdAt: firebase.firestore.FieldValue.serverTimestamp() }).catch(err => console.warn('Could not record notification response', err));
   }
   window.respondBorrowRequest = respondBorrowRequest;
 
@@ -1285,6 +1490,7 @@
       case 'edit-book': openEditModal(d.id); break;
       case 'delete-book': deleteBook(d.id); break;
       case 'mark-returned': markReturned(d.id); break;
+      case 'mark-lost': markLost(d.id); break;
       case 'send-reminder': sendReturnReminder(d.id); break;
       case 'borrow': sendBorrowRequest(d.id, d.title, d.owner); break;
       case 'add-friend': sendFriendRequest(d.owner, d.name); break;
@@ -1296,6 +1502,7 @@
       case 'approve-borrow': respondBorrowRequest(d.id, d.book || null, 'approved'); break;
       case 'deny-borrow': respondBorrowRequest(d.id, null, 'denied'); break;
       case 'complete-reminder': completeReminder(d.id); break;
+      case 'delete-wish': guard(() => db.collection('wishlists').doc(d.id).delete(), { context: 'Removing wishlist item', success: 'Removed from your wishlist.' }); break;
     }
   });
 
@@ -1316,32 +1523,71 @@
 
   // --- 9. BARCODE SCANNER (autofills title, author, ISBN, year, cover, description) ---
   let html5QrcodeScanner = null;
-  document.getElementById('start-scan-btn').addEventListener('click', () => {
+  let scanInProgress = false;
+  async function stopScanner() {
+    if (!html5QrcodeScanner) return;
+    try { await html5QrcodeScanner.stop(); } catch (err) { console.warn('Scanner stop failed', err); }
+    try { await html5QrcodeScanner.clear(); } catch (err) { /* Reader may already be cleared. */ }
+    html5QrcodeScanner = null;
+  }
+
+  document.getElementById('start-scan-btn').addEventListener('click', async () => {
+    if (scanInProgress) return;
+    await stopScanner();
     document.getElementById('scanner-modal').classList.remove('hidden');
+    document.getElementById('scan-status').textContent = 'Point the ISBN barcode at the guide.';
     html5QrcodeScanner = new Html5Qrcode("reader");
-    html5QrcodeScanner.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 100 } }, async (decodedText) => {
-      html5QrcodeScanner.stop();
+    const barcodeFormats = window.Html5QrcodeSupportedFormats ? [
+      Html5QrcodeSupportedFormats.EAN_13, Html5QrcodeSupportedFormats.EAN_8,
+      Html5QrcodeSupportedFormats.UPC_A, Html5QrcodeSupportedFormats.UPC_E,
+      Html5QrcodeSupportedFormats.CODE_128
+    ] : undefined;
+    try {
+      await html5QrcodeScanner.start({ facingMode: 'environment' }, {
+        fps: 12,
+        qrbox: { width: 300, height: 180 },
+        aspectRatio: 1.7778,
+        formatsToSupport: barcodeFormats,
+        experimentalFeatures: { useBarCodeDetectorIfSupported: true }
+      }, async (decodedText) => {
+      if (scanInProgress) return;
+      scanInProgress = true;
+      const isbn = String(decodedText || '').replace(/[^0-9Xx]/g, '');
+      await stopScanner();
       document.getElementById('scan-status').textContent = 'Looking up book…';
       try {
-        const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${encodeURIComponent(decodedText)}`);
+        const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${encodeURIComponent(isbn)}`);
         const data = await res.json();
         const info = data.items && data.items[0] && data.items[0].volumeInfo;
         if (info) {
           document.getElementById('title').value = info.title || '';
           document.getElementById('author').value = (info.authors || []).join(', ');
-          document.getElementById('isbn').value = decodedText;
+          document.getElementById('isbn').value = isbn;
           if (info.publishedDate) document.getElementById('publishedYear').value = parseInt(info.publishedDate.slice(0, 4), 10) || '';
           if (info.description) document.getElementById('description').value = info.description.slice(0, 500);
           if (info.imageLinks && info.imageLinks.thumbnail) document.getElementById('coverUrl').value = info.imageLinks.thumbnail.replace('http://', 'https://');
+          toast('ISBN scanned and book details added.', 'success');
+        } else {
+          document.getElementById('isbn').value = isbn;
+          toast('ISBN scanned. No catalog match found, so you can add details manually.', 'info');
         }
       } catch (err) {
         console.error('Book lookup failed', err);
+        document.getElementById('isbn').value = isbn;
+        toast('ISBN scanned, but the book lookup failed. You can still add it manually.', 'info');
       }
       document.getElementById('scanner-modal').classList.add('hidden');
-    }, () => {});
+      scanInProgress = false;
+      }, () => {});
+    } catch (err) {
+      console.error('Scanner start failed', err);
+      document.getElementById('scan-status').textContent = 'Camera could not start. Check camera permission and try again.';
+      toast('Could not start the ISBN scanner. Check camera permission.', 'error');
+    }
   });
-  document.getElementById('close-scan-btn').addEventListener('click', () => {
-    if (html5QrcodeScanner) html5QrcodeScanner.stop();
+  document.getElementById('close-scan-btn').addEventListener('click', async () => {
+    await stopScanner();
+    scanInProgress = false;
     document.getElementById('scanner-modal').classList.add('hidden');
   });
 

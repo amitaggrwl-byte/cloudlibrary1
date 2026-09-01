@@ -96,18 +96,26 @@ service cloud.firestore {
                       || request.auth.uid == resource.data.requesterId);
 
       allow create: if signedIn()
-                    && request.resource.data.status == 'pending'
                     && (
                       (
                         request.resource.data.type == 'borrow'
+                        && request.resource.data.status == 'pending'
                         && request.resource.data.requesterId == request.auth.uid
                         && request.resource.data.ownerId != request.auth.uid
                       )
                       ||
                       (
                         request.resource.data.type == 'return-reminder'
+                        && request.resource.data.status == 'pending'
                         && request.resource.data.ownerId == request.auth.uid
                         && request.resource.data.requesterId != request.auth.uid
+                      )
+                      ||
+                      (
+                        request.resource.data.type == 'wishlist-match'
+                        && request.resource.data.ownerId == request.auth.uid
+                        && request.resource.data.requesterId != request.auth.uid
+                        && request.resource.data.status == 'completed'
                       )
                     );
 
@@ -130,6 +138,44 @@ service cloud.firestore {
       allow delete: if signedIn()
                     && (request.auth.uid == resource.data.ownerId
                         || request.auth.uid == resource.data.requesterId);
+    }
+
+    // Wishlists are public only enough for a friend who adds the same title to
+    // discover a match; users can only change their own saved wishes.
+    match /wishlists/{wishId} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+                    && request.resource.data.userId == request.auth.uid
+                    && request.resource.data.title is string
+                    && request.resource.data.titleKey is string;
+      allow update, delete: if signedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    // Immutable, auditable signals used to calculate a public 0-10 reader
+    // rating. A lender may record a return/lost-book outcome for their own
+    // book; a reader may record their own notification response. No client can
+    // edit or delete an existing signal.
+    match /ratingEvents/{eventId} {
+      allow read: if signedIn();
+      allow create: if signedIn()
+                    && request.resource.data.subjectId is string
+                    && request.resource.data.ownerId == request.auth.uid
+                    && request.resource.data.points is number
+                    && (
+                      (
+                        request.resource.data.type in ['timely-return', 'early-return', 'late-return', 'lost-book']
+                        && request.resource.data.bookId is string
+                        && request.resource.data.subjectId != request.auth.uid
+                        && get(/databases/$(database)/documents/books/$(request.resource.data.bookId)).data.ownerId == request.auth.uid
+                      )
+                      ||
+                      (
+                        request.resource.data.type == 'notification-action'
+                        && request.resource.data.subjectId == request.auth.uid
+                        && request.resource.data.points == 0.1
+                      )
+                    );
+      allow update, delete: if false;
     }
   }
 }
