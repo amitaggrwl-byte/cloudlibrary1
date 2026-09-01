@@ -312,18 +312,18 @@
     <div class="app-panel p-6 rounded-xl border border-ink-200 shadow-sm">
       <p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-1">Discover</p>
       <h2 class="font-display text-xl text-ink-950 mb-4">Search libraries &amp; books</h2>
-      <form id="global-search-form" class="flex flex-col sm:flex-row gap-2">
-        <input type="text" id="global-search-input" placeholder="Search by book, author, reader, or shelf name…" class="flex-1 bg-paper border border-ink-200 rounded-lg p-3 text-ink-950 focus:outline-none focus:ring-2 focus:ring-ink-700">
-        <select id="search-status-filter" class="bg-paper border border-ink-200 rounded-lg px-3 py-2 text-sm text-ink-700">
+      <form id="global-search-form" class="grid grid-cols-2 gap-2 md:flex">
+        <input type="text" id="global-search-input" placeholder="Search by book, author, reader, or shelf name…" class="col-span-2 min-w-0 md:flex-1 bg-paper border border-ink-200 rounded-lg p-3 text-ink-950 focus:outline-none focus:ring-2 focus:ring-ink-700">
+        <select id="search-status-filter" class="min-w-0 bg-paper border border-ink-200 rounded-lg px-3 py-2 text-sm text-ink-700">
           <option value="">Any availability</option>
           <option value="Available">Available</option>
           <option value="Reading">Reading</option>
           <option value="Lent Out">Lent out</option>
         </select>
-        <select id="search-genre-filter" class="bg-paper border border-ink-200 rounded-lg px-3 py-2 text-sm text-ink-700">
+        <select id="search-genre-filter" class="min-w-0 bg-paper border border-ink-200 rounded-lg px-3 py-2 text-sm text-ink-700">
           <option value="">Any genre</option>
         </select>
-        <button type="submit" class="bg-ink-950 hover:bg-ink-900 text-paper font-semibold py-3 px-6 rounded-lg transition-colors">Search</button>
+        <button type="submit" class="col-span-2 md:col-auto bg-ink-950 hover:bg-ink-900 text-paper font-semibold py-3 px-6 rounded-lg transition-colors">Search</button>
       </form>
     </div>
     <div id="search-results-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
