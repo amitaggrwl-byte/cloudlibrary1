@@ -305,6 +305,29 @@
     </div>
   </div>
 
+  <!-- FRIEND SHELF: reached from a confirmed friend's card or profile. -->
+  <div id="view-friend-shelf" class="hidden space-y-5">
+    <div id="friend-shelf-header" class="app-panel p-5 sm:p-6 rounded-xl border border-ink-200 shadow-sm"></div>
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div>
+        <p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-1">Shared shelf</p>
+        <h2 id="friend-shelf-title" class="font-display text-xl text-ink-950">Friend's books</h2>
+      </div>
+      <div class="grid grid-cols-2 gap-2 sm:flex">
+        <select id="friend-shelf-status-filter" class="min-w-0 bg-paper border border-ink-200 rounded-lg px-3 py-2 text-sm text-ink-700">
+          <option value="">Any availability</option>
+          <option value="Available">Available</option>
+          <option value="Reading">Reading</option>
+          <option value="Lent Out">Lent out</option>
+        </select>
+        <select id="friend-shelf-genre-filter" class="min-w-0 bg-paper border border-ink-200 rounded-lg px-3 py-2 text-sm text-ink-700">
+          <option value="">Any genre</option>
+        </select>
+      </div>
+    </div>
+    <div id="friend-shelf-books" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+  </div>
+
   <!-- TAB 3: GLOBAL SEARCH -->
   <div id="view-search" class="hidden space-y-4">
     <div class="app-panel p-6 rounded-xl border border-ink-200 shadow-sm">
@@ -418,6 +441,7 @@
     star: '<path d="M12 3.5l2.6 5.4 5.9.6-4.4 4 1.2 5.8L12 16.6 6.7 19.3l1.2-5.8-4.4-4 5.9-.6z"/>',
     check: '<path d="M5 13l4 4L19 7"/>',
     x: '<path d="M6 6l12 12M18 6L6 18"/>',
+    arrowLeft: '<path d="M19 12H5"/><path d="M11 18l-6-6 6-6"/>',
     userMinus: '<circle cx="10" cy="8" r="3"/><path d="M3.5 20c.5-3.1 2.9-5.2 6.5-5.2 1.1 0 2.1.2 3 .6"/><path d="M17 12h5M19.5 9.5v5"/>'
   };
   function icon(name, cls) {
@@ -503,7 +527,8 @@
     panel.innerHTML = '<p class="text-sm text-ink-400">Loading your reader score…</p>';
     try {
       const score = await loadUserRating(currentUser.uid);
-      panel.innerHTML = `<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"><div class="flex items-center gap-3">${avatarHtml(userProfile, userProfile.libraryName, 'w-12 h-12')}<div><p class="font-mono text-[11px] uppercase tracking-widest text-rust-600">Your reader profile</p><h2 class="font-display text-xl text-ink-950">${esc(userProfile.libraryName)}</h2>${userProfile.bio ? `<p class="text-sm text-ink-600 mt-1 max-w-md">${esc(userProfile.bio)}</p>` : `<p class="text-sm text-ink-400 mt-1">Add an introduction so people you know can recognise you.</p>`}</div></div><div class="flex items-center gap-5"><div><p class="font-display text-2xl text-[#8a6414]">${score.toFixed(1)}<span class="text-sm text-ink-400">/10</span></p><p class="text-[11px] text-ink-500">reader score</p></div><div><p class="font-semibold text-ink-950">${Number(userProfile.bookCount || 0)}</p><p class="text-[11px] text-ink-500">books listed</p></div><div><p class="font-semibold text-ink-950">${Number(userProfile.timelyReturns || 0)}</p><p class="text-[11px] text-ink-500">timely returns</p></div><button data-action="open-reader-profile" data-uid="self" class="text-xs font-semibold text-rust-600">Edit profile</button></div></div>`;
+      const memberSince = formatDate(userProfile.memberSince) || 'Recently';
+      panel.innerHTML = `<div class="relative"><button data-action="open-reader-profile" data-uid="self" title="Edit profile" aria-label="Edit profile" class="absolute top-0 right-0 p-1.5 text-rust-600 hover:text-rust-700 rounded-lg hover:bg-rust-600/10">${icon('pencil', 'w-4 h-4')}</button><div class="flex items-start gap-3 pr-8"><div class="shrink-0">${avatarHtml(userProfile, userProfile.libraryName, 'w-12 h-12 sm:w-14 sm:h-14')}</div><div class="min-w-0 flex-1"><p class="hidden sm:block font-mono text-[11px] uppercase tracking-widest text-rust-600">Your reader profile</p><h2 class="font-display text-2xl text-ink-950 leading-tight">${esc(userProfile.libraryName)}</h2>${userProfile.bio ? `<p class="text-sm text-ink-600 mt-1.5 max-w-3xl leading-relaxed">${esc(userProfile.bio)}</p>` : `<p class="text-sm text-ink-400 mt-1.5">Add an introduction so people you know can recognise you.</p>`}</div></div><div class="grid grid-cols-3 sm:grid-cols-5 gap-x-3 gap-y-3 mt-4 pt-3 border-t border-ink-200"><div><p class="font-display text-xl sm:text-2xl text-[#8a6414] leading-tight">${score.toFixed(1)}<span class="text-[11px] sm:text-sm text-ink-400">/10</span></p><p class="text-[10px] text-ink-500">reader score</p></div><div><p class="font-semibold text-ink-950 text-lg sm:text-xl leading-tight">${Number(userProfile.bookCount || 0)}</p><p class="text-[10px] text-ink-500">books listed</p></div><div><p class="font-semibold text-ink-950 text-lg sm:text-xl leading-tight">${Number(userProfile.timelyReturns || 0)}</p><p class="text-[10px] text-ink-500">timely returns</p></div><div><p class="font-semibold text-ink-950 text-lg sm:text-xl leading-tight">${confirmedFriends.length}</p><p class="text-[10px] text-ink-500">friends</p></div><div><p class="font-semibold text-ink-950 text-xs sm:text-sm leading-tight pt-0.5 truncate" title="${esc(memberSince)}">${esc(memberSince)}</p><p class="text-[10px] text-ink-500">member since</p></div></div></div>`;
     } catch (err) {
       console.warn('Could not load reader score', err);
       panel.innerHTML = '<p class="text-sm text-ink-400">Your reader score will appear here soon.</p>';
@@ -570,6 +595,7 @@
     fillOptions(document.getElementById(id), values, ph);
   });
   fillOptions(document.getElementById('search-genre-filter'), GENRES, 'Any genre');
+  fillOptions(document.getElementById('friend-shelf-genre-filter'), GENRES, 'Any genre');
 
   function starPickerHtml(prefix) {
     return [1,2,3,4,5].map(n => `<button type="button" onclick="setRating('${prefix}', ${n})" data-n="${n}" class="rating-btn text-ink-300 hover:text-gold-500 transition-colors"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="${STAR_PATH}"/></svg></button>`).join('');
@@ -737,6 +763,9 @@
   const storage = firebase.storage();
   const lendingFunctions = firebase.app().functions('asia-south1');
   const googleProvider = new firebase.auth.GoogleAuthProvider();
+  // Firebase signs out of CloudLibrary only; this makes Google ask which
+  // browser account should sign in instead of silently reusing the last one.
+  googleProvider.setCustomParameters({ prompt: 'select_account' });
 
   let currentUser = null;
   let userProfile = null;
@@ -883,21 +912,27 @@
   }
 
   // --- 3. TABS NAVIGATION ---
+  const PRIMARY_TABS = ['library', 'add', 'friends', 'search', 'inbox'];
+  const PAGE_VIEWS = [...PRIMARY_TABS, 'friend-shelf'];
+
   function switchTab(tabName) {
-    ['library', 'add', 'friends', 'search', 'inbox'].forEach(t => {
+    PAGE_VIEWS.forEach(t => {
       document.getElementById(`view-${t}`).classList.add('hidden');
-      document.getElementById(`tab-${t}`).classList.remove('active');
-      document.getElementById(`tab-${t}`).classList.add('text-ink-500');
-      document.getElementById(`tab-mobile-${t}`).classList.remove('active');
-      document.getElementById(`tab-mobile-${t}`).classList.add('text-ink-500');
+      if (PRIMARY_TABS.includes(t)) {
+        document.getElementById(`tab-${t}`).classList.remove('active');
+        document.getElementById(`tab-${t}`).classList.add('text-ink-500');
+        document.getElementById(`tab-mobile-${t}`).classList.remove('active');
+        document.getElementById(`tab-mobile-${t}`).classList.add('text-ink-500');
+      }
     });
     document.getElementById(`view-${tabName}`).classList.remove('hidden');
-    document.getElementById(`tab-${tabName}`).classList.add('active');
-    document.getElementById(`tab-${tabName}`).classList.remove('text-ink-500');
-    document.getElementById(`tab-mobile-${tabName}`).classList.add('active');
-    document.getElementById(`tab-mobile-${tabName}`).classList.remove('text-ink-500');
+    const activeTab = PRIMARY_TABS.includes(tabName) ? tabName : 'friends';
+    document.getElementById(`tab-${activeTab}`).classList.add('active');
+    document.getElementById(`tab-${activeTab}`).classList.remove('text-ink-500');
+    document.getElementById(`tab-mobile-${activeTab}`).classList.add('active');
+    document.getElementById(`tab-mobile-${activeTab}`).classList.remove('text-ink-500');
 
-    const titles = { library: 'My Library', add: 'Add a book', friends: 'Friends', search: 'Search Libraries', inbox: 'Inbox' };
+    const titles = { library: 'My Library', add: 'Add a book', friends: 'Friends', search: 'Search Libraries', inbox: 'Inbox', 'friend-shelf': 'Friend shelf' };
     document.getElementById('header-title').textContent = titles[tabName] || 'CloudLibrary';
     if (tabName === 'friends') renderFriendsView();
   }
@@ -1097,7 +1132,10 @@
         list.innerHTML = '<p class="text-sm text-ink-400">Borrowed books will stay here after they are returned.</p>';
         return;
       }
-      list.innerHTML = history.map(req => `<div class="bg-paper/70 border border-ink-200 rounded-lg px-4 py-3 flex items-center justify-between gap-3"><div class="min-w-0"><p class="font-semibold text-sm text-ink-950 truncate">${esc(req.title || 'Untitled book')}</p><p class="text-xs text-ink-500">From ${esc(req.ownerName || 'a friend')}${req.returnedAt ? ` · returned ${esc(formatDate(req.returnedAt))}` : ''}${req.lostAt ? ` · reported lost ${esc(formatDate(req.lostAt))}` : ''}</p></div>${requestStatusPill(req.status)}</div>`).join('');
+      list.innerHTML = history.map(req => {
+        const lender = req.ownerName && req.ownerName !== 'your friend' ? req.ownerName : 'Lender name unavailable';
+        return `<div class="bg-paper/70 border border-ink-200 rounded-lg px-4 py-3 flex items-center justify-between gap-3"><div class="min-w-0"><p class="font-semibold text-sm text-ink-950 truncate">${esc(req.title || 'Untitled book')}</p><p class="text-xs text-ink-500">Borrowed from <span class="font-semibold text-ink-700">${esc(lender)}</span>${req.returnedAt ? ` · returned ${esc(formatDate(req.returnedAt))}` : ''}${req.lostAt ? ` · reported lost ${esc(formatDate(req.lostAt))}` : ''}</p></div>${requestStatusPill(req.status)}</div>`;
+      }).join('');
     }, listenerError('borrowing history'));
   }
 
@@ -1440,18 +1478,19 @@
     profiles.forEach(({ uid, data }) => {
       if (!data) return;
       const name = data.libraryName || 'Unnamed library';
+      const memberSince = formatDate(data.memberSince);
       container.insertAdjacentHTML('beforeend', `
-        <div class="bg-paper p-4 rounded-xl border border-ink-200 flex justify-between items-center gap-3">
-          <div class="flex items-center gap-3 min-w-0">
+        <div class="bg-paper p-3.5 rounded-xl border border-ink-200 flex items-center justify-between gap-3">
+          <button data-action="open-reader-profile" data-uid="${esc(uid)}" class="flex items-center gap-3 min-w-0 text-left rounded-lg focus:outline-none focus:ring-2 focus:ring-ink-700/40">
             ${avatarHtml(data, name)}
             <div class="min-w-0">
-              <h3 class="font-display text-base text-ink-950 truncate">${esc(name)}</h3>
-              <p class="text-xs text-ink-400">Connected friend · ${ratingBadgeHtml(uid, 3)}</p>
+              <h3 class="font-display text-base text-ink-950 truncate underline-offset-2 hover:underline">${esc(name)}</h3>
+              <p class="text-xs text-ink-400 mt-0.5">${ratingBadgeHtml(uid, 3)}${memberSince ? ` · Joined ${esc(memberSince)}` : ''}</p>
             </div>
-          </div>
+          </button>
           <div class="flex gap-2 shrink-0">
             <button data-action="view-shelf" data-uid="${esc(uid)}" data-name="${esc(name)}" class="bg-ink-800/10 text-ink-800 hover:bg-ink-800/20 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">View shelf</button>
-            <button data-action="unfriend" data-uid="${esc(uid)}" data-name="${esc(name)}" title="Remove friend" class="bg-rust-600/10 text-rust-600 hover:bg-rust-600/20 p-2 rounded-lg transition-colors">${icon('x','w-3.5 h-3.5')}</button>
+            <button data-action="unfriend" data-uid="${esc(uid)}" data-name="${esc(name)}" title="Remove friend: both of you lose shelf access" aria-label="Remove friend and mutual shelf access" class="bg-rust-600/10 text-rust-600 hover:bg-rust-600/20 p-2 rounded-lg transition-colors">${icon('x','w-3.5 h-3.5')}</button>
           </div>
         </div>`);
     });
@@ -1489,36 +1528,54 @@
     renderFriendsView();
   }
 
-  async function viewFriendLibrary(friendUid, friendName) {
-    switchTab('search');
-    document.getElementById('header-title').textContent = `${friendName}'s Library`;
-    document.getElementById('global-search-input').value = '';
+  let activeFriendShelf = null;
 
-    const grid = document.getElementById('search-results-grid');
-    grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4">Loading library…</p>';
-
-    const snap = await guard(() => db.collection("books").where("ownerId", "==", friendUid).where('readerIds', 'array-contains', currentUser.uid).limit(150).get(), { context: "Loading that library" });
-    if (snap === FAILED) { grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4">Could not load this library.</p>'; return; }
-    grid.innerHTML = '';
-
-    if (snap.empty) {
-      grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4">This friend has no books listed.</p>';
+  function renderFriendShelfBooks() {
+    const grid = document.getElementById('friend-shelf-books');
+    if (!activeFriendShelf) return;
+    const statusFilter = document.getElementById('friend-shelf-status-filter').value;
+    const genreFilter = document.getElementById('friend-shelf-genre-filter').value;
+    const books = activeFriendShelf.books.filter(book =>
+      (!statusFilter || book.status === statusFilter) && (!genreFilter || book.genre === genreFilter)
+    );
+    if (!books.length) {
+      grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4">No books match these filters.</p>';
       return;
     }
-
-    const statusFilter = document.getElementById('search-status-filter').value;
-    const genreFilter = document.getElementById('search-genre-filter').value;
-    let shown = 0;
-    snap.forEach(doc => {
-      const book = { id: doc.id, ...doc.data() };
-      if ((statusFilter && book.status !== statusFilter) || (genreFilter && book.genre !== genreFilter)) return;
-      shown += 1;
+    grid.innerHTML = books.map(book => {
       const actions = book.status === 'Available'
-        ? borrowActionWrapper(doc.id, book.title, friendUid)
+        ? borrowActionWrapper(book.id, book.title, activeFriendShelf.uid)
         : `<span class="text-xs text-ink-400">Unavailable</span>`;
-      grid.insertAdjacentHTML('beforeend', renderBookCard(book, actions));
-    });
-    if (!shown) grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4">No books match the selected filters.</p>';
+      return renderBookCard(book, actions);
+    }).join('');
+  }
+
+  async function viewFriendLibrary(friendUid, friendName) {
+    switchTab('friend-shelf');
+    const header = document.getElementById('friend-shelf-header');
+    const grid = document.getElementById('friend-shelf-books');
+    document.getElementById('friend-shelf-status-filter').value = '';
+    document.getElementById('friend-shelf-genre-filter').value = '';
+    document.getElementById('friend-shelf-title').textContent = `${friendName}'s books`;
+    header.innerHTML = '<p class="text-sm text-ink-400">Loading reader and shelf…</p>';
+    grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4">Loading library…</p>';
+
+    const [profileDoc, snap] = await Promise.all([
+      guard(() => db.collection('profiles').doc(friendUid).get(), { context: 'Loading reader profile' }),
+      guard(() => db.collection('books').where('ownerId', '==', friendUid).where('readerIds', 'array-contains', currentUser.uid).limit(150).get(), { context: 'Loading that library' })
+    ]);
+    if (snap === FAILED) {
+      header.innerHTML = `<button data-action="back-to-friends" class="text-xs font-semibold text-ink-700">${icon('arrowLeft', 'w-4 h-4 inline')} Back to friends</button>`;
+      grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4">Could not load this library.</p>';
+      return;
+    }
+    const profile = profileDoc !== FAILED && profileDoc.exists ? profileDoc.data() : { libraryName: friendName };
+    const name = profile.libraryName || friendName || 'Friend';
+    const score = Math.max(0, Math.min(10, Number(profile.ratingScore ?? 3)));
+    header.innerHTML = `<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"><div class="flex items-center gap-3 min-w-0">${avatarHtml(profile, name, 'w-14 h-14')}<div class="min-w-0"><p class="font-mono text-[11px] uppercase tracking-widest text-rust-600">Reader's shelf</p><h1 class="font-display text-2xl text-ink-950 truncate">${esc(name)}</h1><p class="text-sm text-[#8a6414] font-semibold">${score.toFixed(1)}/10 reader score <span class="font-normal text-ink-400">· ${Number(profile.bookCount || snap.size)} books listed</span></p></div></div><div class="flex flex-wrap gap-2"><button data-action="open-reader-profile" data-uid="${esc(friendUid)}" class="bg-ink-800/10 text-ink-800 hover:bg-ink-800/20 px-3 py-2 rounded-lg text-xs font-semibold">View profile</button><button data-action="back-to-friends" class="text-xs font-semibold text-ink-600 hover:text-ink-950 px-2 py-2">Back to friends</button></div></div>${profile.bio ? `<p class="mt-4 text-sm text-ink-600 leading-relaxed max-w-3xl">${esc(profile.bio)}</p>` : ''}`;
+    document.getElementById('friend-shelf-title').textContent = `${name}'s books`;
+    activeFriendShelf = { uid: friendUid, books: snap.docs.map(doc => ({ id: doc.id, ...doc.data() })) };
+    renderFriendShelfBooks();
   }
   window.viewFriendLibrary = viewFriendLibrary;
 
@@ -1594,7 +1651,9 @@
     const result = await guard(() => db.collection("requests").add({
       type: 'borrow',
       bookId, title, ownerId,
-      ownerName: bookDoc.data().ownerName || 'your friend',
+      // Keep the lender's shelf name on the immutable loan record so history
+      // remains useful even after that reader closes their account.
+      ownerName: bookDoc.data().ownerName || '',
       requesterId: currentUser.uid,
       requesterName: userProfile.libraryName,
       status: 'pending',
@@ -1770,6 +1829,9 @@
     inboxVisibleCount += 10;
     renderInbox();
   });
+  ['friend-shelf-status-filter', 'friend-shelf-genre-filter'].forEach(id => {
+    document.getElementById(id).addEventListener('change', renderFriendShelfBooks);
+  });
 
   async function respondFriendRequest(reqId, status, button) {
     if (button) { button.disabled = true; button.title = 'Connecting libraries…'; }
@@ -1823,6 +1885,7 @@
       case 'borrow': sendBorrowRequest(d.id, d.title, d.owner); break;
       case 'add-friend': sendFriendRequest(d.owner, d.name); break;
       case 'view-shelf': viewFriendLibrary(d.uid, d.name); break;
+      case 'back-to-friends': switchTab('friends'); break;
       case 'unfriend': unfriend(d.uid, d.name); break;
       case 'cancel-request': cancelSentRequest(d.id, d.name); break;
       case 'accept-friend': respondFriendRequest(d.id, 'accepted', btn); break;
