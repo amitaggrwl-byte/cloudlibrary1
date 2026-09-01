@@ -115,35 +115,43 @@
     <p class="text-sm text-ink-500 mb-5 leading-relaxed">This is the name your friends will see when they browse your library.</p>
     <input type="text" id="profile-name-input" placeholder="e.g. SarahReads" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-ink-950 mb-2 focus:outline-none focus:ring-2 focus:ring-ink-700">
     <p id="profile-name-help" class="text-xs text-ink-500 mb-4">Use only letters and numbers. No spaces or special characters.</p>
+    <textarea id="profile-bio-input" rows="3" maxlength="280" placeholder="A short introduction for people you know in real life (optional)" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-sm text-ink-950 mb-4 resize-none focus:outline-none focus:ring-2 focus:ring-ink-700"></textarea>
     <button onclick="saveProfileName()" class="w-full bg-ink-950 hover:bg-ink-900 text-paper font-semibold py-3 rounded-lg transition-colors">Open my shelf</button>
+  </div>
+</div>
+
+<div id="reader-profile-modal" class="hidden fixed inset-0 bg-ink-950/80 z-50 flex flex-col justify-center items-center p-4">
+  <div class="bg-paper p-6 rounded-2xl w-full max-w-md border border-ink-200 shadow-2xl max-h-[90vh] overflow-y-auto relative">
+    <button type="button" data-action="close-reader-profile" title="Close profile" class="absolute top-4 right-4 p-2 text-ink-500 hover:text-ink-950">&times;</button>
+    <div id="reader-profile-body"></div>
   </div>
 </div>
 
 <div id="app-content" class="max-w-6xl mx-auto space-y-8 hidden p-4 md:p-8">
 
   <!-- Navigation Bar -->
-  <nav class="flex flex-col md:flex-row justify-between items-center bg-white p-4 rounded-xl border border-ink-200 shadow-sm gap-4">
-    <div class="flex gap-4 items-center">
-      <span class="font-display text-lg text-ink-950">CloudLibrary</span>
-      <div id="nav-tabs" class="flex gap-1 ml-2 border-l border-ink-200 pl-4">
+  <nav class="flex flex-col lg:flex-row lg:justify-between lg:items-center bg-white p-3 sm:p-4 rounded-xl border border-ink-200 shadow-sm gap-3">
+    <div class="flex flex-col sm:flex-row gap-3 sm:items-center w-full lg:w-auto min-w-0">
+      <span class="font-display text-lg text-ink-950 shrink-0">CloudLibrary</span>
+      <div id="nav-tabs" class="flex flex-wrap gap-1 sm:ml-2 sm:border-l sm:border-ink-200 sm:pl-4">
         <button onclick="switchTab('library')" id="tab-library" class="tab-btn active flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg font-semibold transition-colors"></button>
         <button onclick="switchTab('friends')" id="tab-friends" class="tab-btn flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg text-ink-500 hover:text-ink-950 transition-colors"></button>
         <button onclick="switchTab('search')" id="tab-search" class="tab-btn flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg text-ink-500 hover:text-ink-950 transition-colors"></button>
         <button onclick="switchTab('inbox')" id="tab-inbox" class="tab-btn flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg text-ink-500 hover:text-ink-950 transition-colors"></button>
       </div>
     </div>
-    <div class="flex items-center gap-4">
-      <div id="user-info" class="text-sm font-semibold border-r border-ink-200 pr-4 text-ink-700"></div>
-      <button onclick="signOut()" class="text-xs text-ink-400 hover:text-ink-950 transition-colors">Sign Out</button>
+    <div class="flex items-center justify-between sm:justify-start gap-4 w-full lg:w-auto">
+      <button type="button" data-action="open-reader-profile" data-uid="self" id="user-info" title="View your profile" class="min-w-0 truncate text-sm font-semibold border-r border-ink-200 pr-4 text-ink-700 hover:text-ink-950"></button>
+      <button onclick="signOut()" class="text-xs text-ink-500 hover:text-ink-950 transition-colors shrink-0">Sign Out</button>
     </div>
   </nav>
 
   <!-- Header -->
-  <header class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-ink-950 text-paper p-7 rounded-2xl relative overflow-hidden">
+  <header class="flex flex-row justify-between items-center gap-4 bg-ink-950 text-paper px-5 py-4 rounded-xl relative overflow-hidden">
     <div class="absolute inset-0 grain-overlay pointer-events-none"></div>
     <div class="relative z-10">
-      <h1 id="header-title" class="font-display text-3xl">My Library</h1>
-      <div id="owner-controls" class="mt-3 flex gap-2">
+      <h1 id="header-title" class="font-display text-2xl">My Library</h1>
+      <div id="owner-controls" class="mt-2 flex gap-2">
         <button onclick="copyShareLink()" class="flex items-center gap-2 bg-paper/10 hover:bg-paper/20 text-paper text-xs font-semibold py-1.5 px-3 rounded-lg border border-paper/20 transition-colors"></button>
       </div>
     </div>
@@ -200,6 +208,20 @@
     </div>
 
     <div id="library-panel" class="lg:col-span-2 space-y-6">
+      <div id="my-reader-score" class="app-panel p-5 rounded-xl border border-ink-200 shadow-sm"></div>
+      <div id="cloud-ticker-card" class="app-panel p-5 rounded-xl border border-ink-200 shadow-sm overflow-hidden">
+        <div class="flex items-center justify-between gap-3 mb-3">
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="w-2 h-2 rounded-full bg-rust-500 animate-pulse shrink-0"></span>
+            <p class="font-mono text-[11px] uppercase tracking-widest text-rust-600">Cloud ticker</p>
+          </div>
+          <div class="flex gap-1 shrink-0">
+            <button type="button" onclick="previousTicker()" title="Previous update" class="p-1.5 rounded-lg text-ink-500 hover:bg-ink-100">&#8592;</button>
+            <button type="button" onclick="nextTicker()" title="Next update" class="p-1.5 rounded-lg text-ink-500 hover:bg-ink-100">&#8594;</button>
+          </div>
+        </div>
+        <div id="cloud-ticker-content" class="min-h-[46px] flex items-center text-sm text-ink-600">Loading library activity…</div>
+      </div>
       <div id="borrowed-panel" class="app-panel p-5 rounded-xl border border-ink-200 shadow-sm">
         <div class="flex items-center justify-between mb-3">
           <div>
@@ -264,10 +286,10 @@
     <div class="app-panel p-6 rounded-xl border border-ink-200 shadow-sm">
       <p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-1">Discover</p>
       <h2 class="font-display text-xl text-ink-950 mb-4">Search libraries &amp; books</h2>
-      <div class="flex gap-2">
+      <form id="global-search-form" class="flex flex-col sm:flex-row gap-2">
         <input type="text" id="global-search-input" placeholder="Search by book, author, user name, email, or shelf name…" class="flex-1 bg-paper border border-ink-200 rounded-lg p-3 text-ink-950 focus:outline-none focus:ring-2 focus:ring-ink-700">
-        <button onclick="performGlobalSearch()" class="bg-ink-950 hover:bg-ink-900 text-paper font-semibold py-3 px-6 rounded-lg transition-colors">Search</button>
-      </div>
+        <button type="submit" class="bg-ink-950 hover:bg-ink-900 text-paper font-semibold py-3 px-6 rounded-lg transition-colors">Search</button>
+      </form>
     </div>
     <div id="search-results-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
   </div>
@@ -424,7 +446,7 @@
   }
 
   function ratingBadgeHtml(uid, score) {
-    return `<span data-rating-user="${esc(uid)}" class="inline-flex items-center gap-1 text-[11px] font-semibold text-gold-600">${icon('star', 'w-3.5 h-3.5 fill-gold-500')}<span>${Number(score || 3).toFixed(1)}/10</span></span>`;
+    return `<span data-rating-user="${esc(uid)}" class="inline-flex items-center gap-1 text-[11px] font-semibold text-[#8a6414]">${icon('star', 'w-3.5 h-3.5 fill-[#c9a227]')}<span>${Number(score || 3).toFixed(1)}/10</span></span>`;
   }
 
   async function hydrateRatingBadges(profiles) {
@@ -435,6 +457,50 @@
       } catch (err) { console.warn('Could not load rating', err); }
     }));
   }
+
+  async function renderMyReaderScore() {
+    const panel = document.getElementById('my-reader-score');
+    if (!panel || !currentUser || !userProfile) return;
+    panel.innerHTML = '<p class="text-sm text-ink-400">Loading your reader score…</p>';
+    try {
+      const [score, booksSnap, eventsSnap] = await Promise.all([
+        loadUserRating(currentUser.uid),
+        db.collection('books').where('ownerId', '==', currentUser.uid).get(),
+        db.collection('ratingEvents').where('subjectId', '==', currentUser.uid).get()
+      ]);
+      const positives = eventsSnap.docs.filter(doc => (Number(doc.data().points) || 0) > 0).length;
+      panel.innerHTML = `<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"><div class="flex items-center gap-3">${avatarHtml(userProfile, userProfile.libraryName, 'w-12 h-12')}<div><p class="font-mono text-[11px] uppercase tracking-widest text-rust-600">Your reader profile</p><h2 class="font-display text-xl text-ink-950">${esc(userProfile.libraryName)}</h2></div></div><div class="flex items-center gap-5"><div><p class="font-display text-2xl text-[#8a6414]">${score.toFixed(1)}<span class="text-sm text-ink-400">/10</span></p><p class="text-[11px] text-ink-500">reader score</p></div><div><p class="font-semibold text-ink-950">${booksSnap.size}</p><p class="text-[11px] text-ink-500">books listed</p></div><div><p class="font-semibold text-ink-950">${positives}</p><p class="text-[11px] text-ink-500">timely returns</p></div><button data-action="open-reader-profile" data-uid="self" class="text-xs font-semibold text-rust-600">View profile</button></div></div>`;
+    } catch (err) {
+      console.warn('Could not load reader score', err);
+      panel.innerHTML = '<p class="text-sm text-ink-400">Your reader score will appear here soon.</p>';
+    }
+  }
+
+  async function openReaderProfile(uid) {
+    const targetUid = uid === 'self' ? currentUser.uid : uid;
+    const modal = document.getElementById('reader-profile-modal');
+    const body = document.getElementById('reader-profile-body');
+    modal.classList.remove('hidden');
+    body.innerHTML = '<p class="text-sm text-ink-400">Loading reader profile…</p>';
+    const profileDoc = await guard(() => db.collection('profiles').doc(targetUid).get(), { context: 'Loading reader profile' });
+    if (profileDoc === FAILED || !profileDoc.exists) { body.innerHTML = '<p class="text-sm text-ink-400">This reader profile is unavailable.</p>'; return; }
+    const profile = profileDoc.data();
+    const [score, bookSnap] = await Promise.all([loadUserRating(targetUid), db.collection('books').where('ownerId', '==', targetUid).get()]);
+    const isSelf = targetUid === currentUser.uid;
+    const isFriend = confirmedFriends.includes(targetUid);
+    const name = profile.libraryName || 'Unnamed library';
+    const actions = isSelf
+      ? `<form id="profile-bio-form" class="mt-5 space-y-3"><label class="block text-xs font-semibold text-ink-700" for="profile-bio-edit">About you</label><textarea id="profile-bio-edit" rows="4" maxlength="280" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-sm text-ink-950 resize-none">${esc(profile.bio || '')}</textarea><button type="submit" class="bg-ink-950 text-paper px-4 py-2.5 rounded-lg text-xs font-semibold">Save introduction</button></form>`
+      : `<div class="mt-5 flex gap-2">${isFriend ? `<button data-action="view-shelf" data-uid="${esc(targetUid)}" data-name="${esc(name)}" class="bg-ink-800/10 text-ink-800 px-3 py-2.5 rounded-lg text-xs font-semibold">View shelf</button>` : `<button data-action="add-friend" data-owner="${esc(targetUid)}" data-name="${esc(name)}" class="bg-rust-600 text-paper px-3 py-2.5 rounded-lg text-xs font-semibold">Add friend</button>`}</div>`;
+    body.innerHTML = `<div class="flex items-center gap-4 pr-8">${avatarHtml(profile, name, 'w-16 h-16')}<div class="min-w-0"><p class="font-mono text-[10px] uppercase tracking-widest text-rust-600">Reader profile</p><h2 class="font-display text-2xl text-ink-950 truncate">${esc(name)}</h2><p class="text-sm text-[#8a6414] font-semibold">${score.toFixed(1)}/10 reader score</p></div></div><div class="grid grid-cols-2 gap-3 mt-5"><div class="bg-ink-800/5 rounded-lg p-3"><p class="font-semibold text-ink-950">${bookSnap.size}</p><p class="text-xs text-ink-500">books on shelf</p></div><div class="bg-ink-800/5 rounded-lg p-3"><p class="font-semibold text-ink-950">${isFriend ? 'Connected' : 'Not connected'}</p><p class="text-xs text-ink-500">library status</p></div></div><div class="mt-5"><p class="text-xs font-semibold text-ink-700 mb-1">About</p><p class="text-sm text-ink-600 leading-relaxed">${esc(profile.bio || 'No introduction added yet.')}</p></div>${actions}`;
+    if (isSelf) document.getElementById('profile-bio-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const bio = document.getElementById('profile-bio-edit').value.trim().slice(0, 280);
+      const res = await guard(() => db.collection('profiles').doc(currentUser.uid).update({ bio, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }), { context: 'Saving your introduction', success: 'Profile introduction saved.' });
+      if (res !== FAILED) { userProfile.bio = bio; renderMyReaderScore(); }
+    });
+  }
+  window.openReaderProfile = openReaderProfile;
 
   function shelfKeyFromName(name) {
     return String(name || '').trim().toLowerCase();
@@ -633,6 +699,9 @@
   let editCoverData = '';
   let inboxState = { friends: [], ownerRequests: [], requesterRequests: [] };
   let inboxUnsubscribers = [];
+  let tickerItems = [];
+  let tickerIndex = 0;
+  let tickerTimer = null;
 
   // --- 2. AUTHENTICATION & PROFILE CHECK ---
   function signIn() { auth.signInWithPopup(googleProvider); }
@@ -676,6 +745,7 @@
       ownerName: currentUser.displayName || '',
       photoURL: currentUser.photoURL || '',
       ratingBase: 3,
+      bio: document.getElementById('profile-bio-input').value.trim().slice(0, 280),
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     };
     const res = await guard(() => db.collection("profiles").doc(currentUser.uid).set(draft), { context: 'Saving your profile' });
@@ -698,6 +768,8 @@
     fetchBorrowHistory();
     fetchWishlist();
     listenToInbox();
+    initCloudTicker();
+    renderMyReaderScore();
   }
 
   // --- 3. TABS NAVIGATION ---
@@ -779,6 +851,57 @@
         </div>
       </div>`;
   }
+
+  async function initCloudTicker() {
+    const content = document.getElementById('cloud-ticker-content');
+    if (!content) return;
+    try {
+      const [booksSnap, profilesSnap] = await Promise.all([
+        db.collection('books').get(), db.collection('profiles').get()
+      ]);
+      const books = booksSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const available = books.filter(book => book.status === 'Available' && book.ownerId !== currentUser.uid);
+      const genres = {};
+      books.forEach(book => { if (book.genre) genres[book.genre] = (genres[book.genre] || 0) + 1; });
+      const topGenre = Object.keys(genres).sort((a, b) => genres[b] - genres[a])[0] || 'Fiction';
+      tickerItems = [
+        `<div><span class="font-display text-base text-ink-950">${available.length} books</span><span class="text-ink-500"> are ready to borrow across ${profilesSnap.size} libraries.</span></div>`,
+        `<div><span class="font-display text-base text-ink-950">${esc(topGenre)}</span><span class="text-ink-500"> is the most shared genre in CloudLibrary right now.</span></div>`
+      ];
+      if (available.length) {
+        const book = available[Math.floor(Math.random() * available.length)];
+        const friend = confirmedFriends.includes(book.ownerId);
+        const action = friend
+          ? `<button data-action="borrow" data-id="${esc(book.id)}" data-title="${esc(book.title)}" data-owner="${esc(book.ownerId)}" class="ml-3 text-xs font-semibold text-rust-600">Request to borrow</button>`
+          : `<button data-action="add-friend" data-owner="${esc(book.ownerId)}" data-name="${esc(book.ownerName || 'that library')}" class="ml-3 text-xs font-semibold text-rust-600">Connect</button>`;
+        tickerItems.splice(1, 0, `<div><span class="font-display text-base text-ink-950">${esc(book.title)}</span><span class="text-ink-500"> by ${esc(book.author)} is available from ${esc(book.ownerName || 'a reader')}.</span>${action}</div>`);
+      }
+      tickerIndex = 0;
+      renderTicker();
+      clearInterval(tickerTimer);
+      tickerTimer = setInterval(nextTicker, 6500);
+    } catch (err) {
+      console.warn('Cloud ticker could not load', err);
+      content.textContent = 'Community updates are temporarily unavailable. Refresh after signing in.';
+    }
+  }
+
+  function renderTicker() {
+    const content = document.getElementById('cloud-ticker-content');
+    if (content && tickerItems.length) content.innerHTML = tickerItems[tickerIndex];
+  }
+  function nextTicker() {
+    if (!tickerItems.length) return;
+    tickerIndex = (tickerIndex + 1) % tickerItems.length;
+    renderTicker();
+  }
+  function previousTicker() {
+    if (!tickerItems.length) return;
+    tickerIndex = (tickerIndex - 1 + tickerItems.length) % tickerItems.length;
+    renderTicker();
+  }
+  window.nextTicker = nextTicker;
+  window.previousTicker = previousTicker;
 
   // --- 5. MY LIBRARY & BOOKS ---
   function fetchMyBooks() {
@@ -1037,12 +1160,20 @@
 
   // --- 6. FRIENDS SYSTEM ---
   async function loadFriendsList() {
-    const snap = await guard(() => db.collection("friendships").where("status", "==", "accepted").get(), { context: 'Loading your friends' });
-    if (snap === FAILED) return;
+    // Firestore rules can prove access only when the query includes the current
+    // user as one side of the friendship. A status-only query is denied even
+    // after the other person accepts the request.
+    const result = await guard(() => Promise.all([
+      db.collection('friendships').where('user1', '==', currentUser.uid).get(),
+      db.collection('friendships').where('user2', '==', currentUser.uid).get()
+    ]), { context: 'Loading your friends' });
+    if (result === FAILED) return;
     confirmedFriends = [];
     friendshipDocs = {};
-    snap.forEach(doc => {
+    const docs = [...result[0].docs, ...result[1].docs];
+    docs.forEach(doc => {
       const data = doc.data();
+      if (data.status !== 'accepted') return;
       let other = null;
       if (data.user1 === currentUser.uid) other = data.user2;
       else if (data.user2 === currentUser.uid) other = data.user1;
@@ -1229,7 +1360,7 @@
       const email = profile.ownerEmail ? `<p class="text-xs text-ink-400 mt-1">${esc(profile.ownerEmail)}</p>` : '';
       const actions = isFriend
         ? `<button data-action="view-shelf" data-uid="${esc(doc.id)}" data-name="${esc(name)}" class="bg-ink-800/10 text-ink-800 hover:bg-ink-800/20 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">View shelf</button>`
-        : `<button data-action="add-friend" data-owner="${esc(doc.id)}" data-name="${esc(name)}" class="text-rust-600 bg-rust-600/10 hover:bg-rust-600/20 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">Add friend</button>`;
+        : `<button data-action="open-reader-profile" data-uid="${esc(doc.id)}" class="text-rust-600 bg-rust-600/10 hover:bg-rust-600/20 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">View profile</button>`;
       grid.insertAdjacentHTML('beforeend', `
         <div class="app-panel rounded-xl border border-ink-200 shadow-sm p-4 flex justify-between items-center gap-3">
           <div class="flex items-center gap-3 min-w-0">
@@ -1274,8 +1405,9 @@
     if (!found) grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4">No matching books or libraries found.</p>';
   }
   window.performGlobalSearch = performGlobalSearch;
-  document.getElementById('global-search-input').addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') performGlobalSearch();
+  document.getElementById('global-search-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    performGlobalSearch();
   });
 
   // --- 8. BORROW & FRIEND REQUEST INBOX ---
@@ -1503,6 +1635,8 @@
       case 'deny-borrow': respondBorrowRequest(d.id, null, 'denied'); break;
       case 'complete-reminder': completeReminder(d.id); break;
       case 'delete-wish': guard(() => db.collection('wishlists').doc(d.id).delete(), { context: 'Removing wishlist item', success: 'Removed from your wishlist.' }); break;
+      case 'open-reader-profile': openReaderProfile(d.uid); break;
+      case 'close-reader-profile': document.getElementById('reader-profile-modal').classList.add('hidden'); break;
     }
   });
 
