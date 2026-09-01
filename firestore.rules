@@ -1,181 +1,154 @@
 rules_version = '2';
 
-// CloudLibrary Firestore security rules.
-//
-// These rules are NOT deployed by Netlify -- Netlify only serves index.html.
-// They live in the Firebase project and must be published there:
-//
-//   Firebase console -> Firestore Database -> Rules -> paste this file -> Publish
-//   or, with the Firebase CLI:  firebase deploy --only firestore:rules
-//
-// Until they are published, Firestore falls back to whatever is currently set on
-// the project. A locked-down default (`allow read, write: if false`) or an
-// expired test-mode ruleset denies every request, which is what surfaced in the
-// app as "You don't have permission to do that." immediately after Google
-// sign-in: the very first read (the signed-in user's own profile) was rejected.
-//
-// The rules below are written to match exactly the queries index.html makes, so
-// no legitimate action is denied and nothing broader is allowed.
-
+// CloudLibrary clean-launch rules. Firebase Functions performs loan, return,
+// loss, and accepted-friendship state changes with Admin credentials.
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    function signedIn() {
-      return request.auth != null;
+    function signedIn() { return request.auth != null; }
+    function own(id) { return signedIn() && request.auth.uid == id; }
+    function validShelfName(data) {
+      return data.libraryName is string
+        && data.libraryName.matches('^[A-Za-z0-9]{3,32}$')
+        && data.shelfKey is string;
+    }
+    function publicProfileFields(data) {
+      return data.keys().hasOnly([
+        'libraryName', 'shelfKey', 'ownerName', 'photoURL', 'bio',
+        'ratingScore', 'ratingAdjustment', 'bookCount', 'timelyReturns',
+        'searchTokens', 'updatedAt'
+      ]);
+    }
+    function profileEditableFields() {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+        'ownerName', 'photoURL', 'bio',
+        'searchTokens', 'updatedAt'
+      ]) && (
+        request.resource.data.ratingScore == resource.data.ratingScore
+        && request.resource.data.ratingAdjustment == resource.data.ratingAdjustment
+        && request.resource.data.bookCount == resource.data.bookCount
+        && request.resource.data.timelyReturns == resource.data.timelyReturns
+      );
+    }
+    function canReadBook() {
+      return signedIn() && (
+        resource.data.ownerId == request.auth.uid
+        || resource.data.borrowerId == request.auth.uid
+        || request.auth.uid in resource.data.readerIds
+      );
     }
 
-    function validShelfName() {
-      return request.resource.data.libraryName is string
-             && request.resource.data.libraryName.matches('^[A-Za-z0-9]{3,32}$')
-             && request.resource.data.shelfKey is string;
-    }
-
-    // Library profiles. Any signed-in reader can look one up: friend names,
-    // borrow-request cards and the friend directory all resolve display names
-    // this way. Only the owner may write their own profile.
+    // Public discovery profiles contain no email address or other contact data.
     match /profiles/{userId} {
-      allow read: if signedIn();
-      // Rules validate the shelf-name shape. Uniqueness is checked in the app
-      // before save because Firestore rules cannot query every profile for a
-      // duplicate value.
-      allow create, update: if signedIn()
-                            && request.auth.uid == userId
-                            && validShelfName();
-      allow delete: if signedIn() && request.auth.uid == userId;
+      allow get: if signedIn();
+      allow list: if signedIn() && request.query.limit != null && request.query.limit <= 10;
+      allow create: if own(userId) && validShelfName(request.resource.data)
+        && publicProfileFields(request.resource.data)
+        && existsAfter(/databases/$(database)/documents/shelfNames/$(request.resource.data.shelfKey))
+        && getAfter(/databases/$(database)/documents/shelfNames/$(request.resource.data.shelfKey)).data.ownerId == request.auth.uid
+        && request.resource.data.ratingScore == 3
+        && request.resource.data.ratingAdjustment == 0
+        && request.resource.data.bookCount == 0
+        && request.resource.data.timelyReturns == 0;
+      allow update: if own(userId) && validShelfName(request.resource.data)
+        && publicProfileFields(request.resource.data) && profileEditableFields();
+      allow delete: if own(userId);
     }
 
-    // Books. Readable by any signed-in user because global search across the
-    // whole network -- discovering a library and then adding it as a friend --
-    // is a core feature. Writes are restricted to the shelf's owner, and
-    // ownerId cannot be reassigned to someone else.
+    match /shelfNames/{shelfKey} {
+      allow get: if signedIn();
+      allow create: if own(request.resource.data.ownerId)
+        && request.resource.data.keys().hasOnly(['ownerId', 'createdAt'])
+        && existsAfter(/databases/$(database)/documents/profiles/$(request.auth.uid));
+      allow delete: if own(resource.data.ownerId) && !existsAfter(/databases/$(database)/documents/profiles/$(request.auth.uid));
+    }
+
+    // Complete book records are visible only to the owner, active borrower, or
+    // readers explicitly added by the accepted-friend Function.
     match /books/{bookId} {
-      allow read: if signedIn();
+      allow get: if canReadBook();
+      allow list: if canReadBook() && request.query.limit != null && request.query.limit <= 150;
+      allow create: if signedIn()
+        && request.resource.data.ownerId == request.auth.uid
+        && request.resource.data.status in ['Available', 'Reading']
+        && request.resource.data.readerIds == [];
+      allow update: if signedIn()
+        && resource.data.ownerId == request.auth.uid
+        && request.resource.data.ownerId == resource.data.ownerId
+        && (request.resource.data.status == resource.data.status
+          || (resource.data.status in ['Available', 'Reading']
+            && request.resource.data.status in ['Available', 'Reading']))
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'title', 'author', 'genre', 'isbn', 'publishedYear', 'condition',
+          'coverUrl', 'description', 'rating', 'status', 'updatedAt'
+        ]);
+      allow delete: if signedIn() && resource.data.ownerId == request.auth.uid
+        && resource.data.status != 'Lent Out';
+    }
+
+    // Search sees only the compact, deliberately non-sensitive card data.
+    match /bookDiscovery/{bookId} {
+      allow get: if signedIn();
+      allow list: if signedIn() && request.query.limit != null && request.query.limit <= 10;
       allow create: if signedIn() && request.resource.data.ownerId == request.auth.uid;
-      allow update: if signedIn()
-                    && resource.data.ownerId == request.auth.uid
-                    && request.resource.data.ownerId == resource.data.ownerId;
-      allow delete: if signedIn() && resource.data.ownerId == request.auth.uid;
+      allow update, delete: if signedIn() && resource.data.ownerId == request.auth.uid
+        && request.resource.data.ownerId == resource.data.ownerId;
     }
 
-    // Friendships. One document per pair: user1 is the sender, user2 the
-    // recipient. Only the two parties can see it, so the app must always query
-    // with an equality filter on user1 or user2 (it does).
     match /friendships/{friendshipId} {
-      allow read: if signedIn()
-                  && (request.auth.uid == resource.data.user1
-                      || request.auth.uid == resource.data.user2);
-
-      // A request may only be created by its sender, must start out pending,
-      // and cannot be addressed to yourself.
+      allow get: if signedIn() && (resource.data.user1 == request.auth.uid || resource.data.user2 == request.auth.uid);
+      allow list: if signedIn() && request.query.limit != null && request.query.limit <= 100
+        && (resource.data.user1 == request.auth.uid || resource.data.user2 == request.auth.uid);
       allow create: if signedIn()
-                    && request.resource.data.user1 == request.auth.uid
-                    && request.resource.data.senderId == request.auth.uid
-                    && request.resource.data.status == 'pending'
-                    && request.resource.data.user2 != request.auth.uid;
-
-      // Only the recipient accepts or declines; the document stays as inbox
-      // history instead of disappearing after the action.
-      allow update: if signedIn()
-                    && request.auth.uid == resource.data.user2
-                    && resource.data.status == 'pending'
-                    && request.resource.data.status in ['accepted', 'declined']
-                    && request.resource.data.user1 == resource.data.user1
-                    && request.resource.data.user2 == resource.data.user2;
-
-      // Either side may delete: declining, cancelling a sent request, unfriending.
-      allow delete: if signedIn()
-                    && (request.auth.uid == resource.data.user1
-                        || request.auth.uid == resource.data.user2);
+        && request.resource.data.user1 == request.auth.uid
+        && request.resource.data.senderId == request.auth.uid
+        && request.resource.data.user2 != request.auth.uid
+        && request.resource.data.status == 'pending';
+      // Acceptance is handled by respondToFriendRequest. This prevents a client
+      // from claiming an accepted relationship without also sharing both shelves.
+      allow update: if false;
+      allow delete: if signedIn() && resource.data.status == 'pending'
+        && resource.data.user1 == request.auth.uid;
     }
 
-    // Borrow requests. Visible to the book's owner (their inbox) and to the
-    // requester. Created by the requester, answered by the owner.
     match /requests/{requestId} {
-      allow read: if signedIn()
-                  && (request.auth.uid == resource.data.ownerId
-                      || request.auth.uid == resource.data.requesterId);
-
-      allow create: if signedIn()
-                    && (
-                      (
-                        request.resource.data.type == 'borrow'
-                        && request.resource.data.status == 'pending'
-                        && request.resource.data.requesterId == request.auth.uid
-                        && request.resource.data.ownerId != request.auth.uid
-                      )
-                      ||
-                      (
-                        request.resource.data.type == 'return-reminder'
-                        && request.resource.data.status == 'pending'
-                        && request.resource.data.ownerId == request.auth.uid
-                        && request.resource.data.requesterId != request.auth.uid
-                      )
-                      ||
-                      (
-                        request.resource.data.type == 'wishlist-match'
-                        && request.resource.data.ownerId == request.auth.uid
-                        && request.resource.data.requesterId != request.auth.uid
-                        && request.resource.data.status == 'completed'
-                      )
-                    );
-
-      // The owner approves, denies, or marks returned. The borrower may only
-      // mark a return-reminder notification completed.
+      allow get: if signedIn() && (resource.data.ownerId == request.auth.uid || resource.data.requesterId == request.auth.uid);
+      allow list: if signedIn() && request.query.limit != null && request.query.limit <= 100
+        && (resource.data.ownerId == request.auth.uid || resource.data.requesterId == request.auth.uid);
+      allow create: if signedIn() && (
+        (request.resource.data.type == 'borrow'
+          && request.resource.data.status == 'pending'
+          && request.resource.data.requesterId == request.auth.uid
+          && request.resource.data.ownerId != request.auth.uid
+          && get(/databases/$(database)/documents/books/$(request.resource.data.bookId)).data.ownerId == request.resource.data.ownerId
+          && get(/databases/$(database)/documents/books/$(request.resource.data.bookId)).data.status == 'Available'
+          && request.auth.uid in get(/databases/$(database)/documents/books/$(request.resource.data.bookId)).data.readerIds)
+        || (request.resource.data.type == 'return-reminder'
+          && request.resource.data.ownerId == request.auth.uid
+          && request.resource.data.status == 'pending')
+        || (request.resource.data.type == 'wishlist-match'
+          && request.resource.data.ownerId == request.auth.uid
+          && request.resource.data.status == 'completed')
+      );
       allow update: if signedIn()
-                    && request.resource.data.ownerId == resource.data.ownerId
-                    && request.resource.data.requesterId == resource.data.requesterId
-                    && request.resource.data.bookId == resource.data.bookId
-                    && (
-                      request.auth.uid == resource.data.ownerId
-                      ||
-                      (
-                        request.auth.uid == resource.data.requesterId
-                        && resource.data.type == 'return-reminder'
-                        && request.resource.data.status == 'completed'
-                      )
-                    );
-
-      allow delete: if signedIn()
-                    && (request.auth.uid == resource.data.ownerId
-                        || request.auth.uid == resource.data.requesterId);
+        && request.auth.uid == resource.data.requesterId
+        && resource.data.type == 'return-reminder'
+        && resource.data.status == 'pending'
+        && request.resource.data.status == 'completed'
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'completedAt']);
+      allow delete: if signedIn() && (resource.data.ownerId == request.auth.uid || resource.data.requesterId == request.auth.uid);
     }
 
-    // Wishlists are public only enough for a friend who adds the same title to
-    // discover a match; users can only change their own saved wishes.
     match /wishlists/{wishId} {
-      allow read: if signedIn();
-      allow create: if signedIn()
-                    && request.resource.data.userId == request.auth.uid
-                    && request.resource.data.title is string
-                    && request.resource.data.titleKey is string;
+      allow get: if signedIn() && resource.data.userId == request.auth.uid;
+      allow list: if signedIn() && request.query.limit != null && request.query.limit <= 100
+        && resource.data.userId == request.auth.uid;
+      allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
       allow update, delete: if signedIn() && resource.data.userId == request.auth.uid;
     }
 
-    // Immutable, auditable signals used to calculate a public 0-10 reader
-    // rating. A lender may record a return/lost-book outcome for their own
-    // book; a reader may record their own notification response. No client can
-    // edit or delete an existing signal.
+    // Ratings are written only by Firebase Functions; no browser writes are allowed.
     match /ratingEvents/{eventId} {
-      allow read: if signedIn();
-      allow create: if signedIn()
-                    && request.resource.data.subjectId is string
-                    && request.resource.data.ownerId == request.auth.uid
-                    && request.resource.data.points is number
-                    && (
-                      (
-                        request.resource.data.type in ['timely-return', 'early-return', 'late-return', 'lost-book']
-                        && request.resource.data.bookId is string
-                        && request.resource.data.subjectId != request.auth.uid
-                        && get(/databases/$(database)/documents/books/$(request.resource.data.bookId)).data.ownerId == request.auth.uid
-                      )
-                      ||
-                      (
-                        request.resource.data.type == 'notification-action'
-                        && request.resource.data.subjectId == request.auth.uid
-                        && request.resource.data.points == 0.1
-                      )
-                    );
-      allow update, delete: if false;
+      allow read, write: if false;
     }
   }
 }

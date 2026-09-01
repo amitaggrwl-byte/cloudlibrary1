@@ -4,17 +4,20 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>CloudLibrary — a library between friends</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23152420'/%3E%3Cpath d='M18 16h28v34H18z' fill='%23f6efe0'/%3E%3Cpath d='M25 22h14M25 29h14M25 36h9' stroke='%23b5563a' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 
 <script src="https://cdn.tailwindcss.com"></script>
-<script src="https://unpkg.com/html5-qrcode"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-functions-compat.js"></script>
 
 <script>
   tailwind.config = {
@@ -61,9 +64,18 @@
   ::-webkit-scrollbar { width: 8px; height: 8px; }
   ::-webkit-scrollbar-thumb { background: #b9cdbf; border-radius: 4px; }
 
-  .tab-btn.active { background: #152420; color: #f6efe0; }
+  .tab-btn.active,
+  .tab-btn.active:hover,
+  .tab-btn.active:focus-visible { background: #152420; color: #f6efe0 !important; }
+  .tab-btn:focus-visible { outline: 3px solid #e6c765; outline-offset: 2px; }
+  .brand-mark { width: 38px; height: 38px; display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; background: #152420; color: #f6efe0; box-shadow: inset 0 0 0 1px rgba(246,239,224,.22), 0 4px 10px rgba(21,36,32,.12); }
+  .brand-wordmark { font-family: 'Fraunces', serif; font-weight: 600; line-height: 1; }
+  .mobile-nav { padding-bottom: max(10px, env(safe-area-inset-bottom)); }
   .app-panel { background: rgba(255,255,255,.86); backdrop-filter: blur(12px); }
   .loan-note { background: linear-gradient(135deg, rgba(244,227,218,.8), rgba(247,236,201,.55)); }
+  #cloud-ticker-card { background: linear-gradient(110deg, rgba(255,255,255,.92), rgba(247,236,201,.62), rgba(230,199,101,.18)); }
+  @keyframes tickerIn { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: translateX(0); } }
+  .ticker-item { animation: tickerIn .42s cubic-bezier(.16,1,.3,1) both; }
 
   @keyframes toastIn { from { opacity: 0; transform: translateY(12px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
   .toast-item { animation: toastIn .28s cubic-bezier(.16,1,.3,1) both; }
@@ -89,8 +101,7 @@
       <p class="mt-5 text-ink-300 max-w-sm text-[15px] leading-relaxed">Some books are better borrowed than bought. Name a shelf, invite a friend, and see what they're reading.</p>
     </div>
 
-    <div id="login-stats" class="relative z-10 grid grid-cols-3 gap-6 mt-12 border-t border-ink-700 pt-8"></div>
-    <p id="login-stats-fallback" class="hidden relative z-10 font-display italic text-ink-300 text-lg mt-12 border-t border-ink-700 pt-8">Every book on this network is on loan from someone who loves it.</p>
+    <p class="relative z-10 font-display italic text-ink-300 text-lg mt-12 border-t border-ink-700 pt-8">Every book on this network is on loan from someone who loves it.</p>
   </div>
 
   <div class="relative flex items-center justify-center p-6 md:p-10">
@@ -127,27 +138,37 @@
   </div>
 </div>
 
-<div id="app-content" class="max-w-6xl mx-auto space-y-8 hidden p-4 md:p-8">
+<div id="app-content" class="max-w-6xl mx-auto space-y-8 hidden p-4 pb-24 md:p-8">
 
   <!-- Navigation Bar -->
-  <nav class="flex flex-col lg:flex-row lg:justify-between lg:items-center bg-white p-3 sm:p-4 rounded-xl border border-ink-200 shadow-sm gap-3">
-    <div class="flex flex-col sm:flex-row gap-3 sm:items-center w-full lg:w-auto min-w-0">
-      <span class="font-display text-lg text-ink-950 shrink-0">CloudLibrary</span>
-      <div id="nav-tabs" class="flex flex-wrap gap-1 sm:ml-2 sm:border-l sm:border-ink-200 sm:pl-4">
-        <button onclick="switchTab('library')" id="tab-library" class="tab-btn active flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg font-semibold transition-colors"></button>
-        <button onclick="switchTab('friends')" id="tab-friends" class="tab-btn flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg text-ink-500 hover:text-ink-950 transition-colors"></button>
-        <button onclick="switchTab('search')" id="tab-search" class="tab-btn flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg text-ink-500 hover:text-ink-950 transition-colors"></button>
-        <button onclick="switchTab('inbox')" id="tab-inbox" class="tab-btn flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-lg text-ink-500 hover:text-ink-950 transition-colors"></button>
-      </div>
+  <nav class="flex items-center justify-between bg-white p-3 sm:p-4 rounded-xl border border-ink-200 shadow-sm gap-3">
+    <div class="flex items-center gap-2.5 min-w-0 shrink">
+      <span id="brand-mark" class="brand-mark shrink-0" aria-hidden="true"></span>
+      <div class="min-w-0"><span class="brand-wordmark block text-[22px] sm:text-2xl text-ink-950 truncate">CloudLibrary</span><button type="button" data-action="open-reader-profile" data-uid="self" id="user-info" title="View your reader profile" class="block max-w-[140px] sm:max-w-[220px] truncate text-left text-[11px] font-semibold text-rust-600 hover:text-ink-950"></button></div>
     </div>
-    <div class="flex items-center justify-between sm:justify-start gap-4 w-full lg:w-auto">
-      <button type="button" data-action="open-reader-profile" data-uid="self" id="user-info" title="View your profile" class="min-w-0 truncate text-sm font-semibold border-r border-ink-200 pr-4 text-ink-700 hover:text-ink-950"></button>
-      <button onclick="signOut()" class="text-xs text-ink-500 hover:text-ink-950 transition-colors shrink-0">Sign Out</button>
+    <div id="nav-tabs" class="hidden md:flex items-center gap-1 min-w-0">
+      <button onclick="switchTab('library')" id="tab-library" class="tab-btn active flex items-center justify-center gap-1.5 min-w-0 text-sm px-3 py-2 rounded-lg font-semibold transition-colors"></button>
+      <button onclick="switchTab('add')" id="tab-add" class="tab-btn flex items-center justify-center gap-1.5 min-w-0 text-sm px-3 py-2 rounded-lg text-ink-500 hover:text-ink-950 transition-colors"></button>
+      <button onclick="switchTab('friends')" id="tab-friends" class="tab-btn flex items-center justify-center gap-1.5 min-w-0 text-sm px-3 py-2 rounded-lg text-ink-500 hover:text-ink-950 transition-colors"></button>
+      <button onclick="switchTab('search')" id="tab-search" class="tab-btn flex items-center justify-center gap-1.5 min-w-0 text-sm px-3 py-2 rounded-lg text-ink-500 hover:text-ink-950 transition-colors"></button>
+      <button onclick="switchTab('inbox')" id="tab-inbox" class="tab-btn flex items-center justify-center gap-1.5 min-w-0 text-sm px-3 py-2 rounded-lg text-ink-500 hover:text-ink-950 transition-colors"></button>
+    </div>
+    <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+      <button type="button" id="copy-share-button" onclick="copyShareLink()" title="Copy share link" class="p-2 text-ink-500 hover:text-ink-950"></button>
+      <button onclick="signOut()" class="text-xs sm:text-sm text-ink-500 hover:text-ink-950 transition-colors font-medium">Sign Out</button>
     </div>
   </nav>
 
+  <nav class="mobile-nav md:hidden fixed inset-x-0 bottom-0 z-40 bg-white/95 backdrop-blur border-t border-ink-200 px-2 pt-2 grid grid-cols-5 gap-1 shadow-[0_-8px_24px_rgba(21,36,32,.10)]">
+    <button onclick="switchTab('library')" id="tab-mobile-library" class="tab-btn active flex flex-col items-center justify-center gap-1 min-w-0 py-2 rounded-lg text-[10px] font-semibold transition-colors"></button>
+    <button onclick="switchTab('add')" id="tab-mobile-add" class="tab-btn flex flex-col items-center justify-center gap-1 min-w-0 py-2 rounded-lg text-[10px] font-semibold text-ink-500 transition-colors"></button>
+    <button onclick="switchTab('friends')" id="tab-mobile-friends" class="tab-btn flex flex-col items-center justify-center gap-1 min-w-0 py-2 rounded-lg text-[10px] font-semibold text-ink-500 transition-colors"></button>
+    <button onclick="switchTab('search')" id="tab-mobile-search" class="tab-btn flex flex-col items-center justify-center gap-1 min-w-0 py-2 rounded-lg text-[10px] font-semibold text-ink-500 transition-colors"></button>
+    <button onclick="switchTab('inbox')" id="tab-mobile-inbox" class="tab-btn flex flex-col items-center justify-center gap-1 min-w-0 py-2 rounded-lg text-[10px] font-semibold text-ink-500 transition-colors"></button>
+  </nav>
+
   <!-- Header -->
-  <header class="flex flex-row justify-between items-center gap-4 bg-ink-950 text-paper px-5 py-4 rounded-xl relative overflow-hidden">
+  <header class="hidden flex flex-row justify-between items-center gap-4 bg-ink-950 text-paper px-5 py-4 rounded-xl relative overflow-hidden">
     <div class="absolute inset-0 grain-overlay pointer-events-none"></div>
     <div class="relative z-10">
       <h1 id="header-title" class="font-display text-2xl">My Library</h1>
@@ -158,7 +179,9 @@
   </header>
 
   <!-- TAB 1: MY LIBRARY -->
-  <div id="view-library" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+  <div id="view-library" class="space-y-6">
+    <div id="my-reader-score" class="app-panel p-5 rounded-xl border border-ink-200 shadow-sm"></div>
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
     <div id="admin-panel" class="app-panel p-6 rounded-xl border border-ink-200 shadow-sm h-fit">
       <div class="flex justify-between items-center mb-1">
         <p class="font-mono text-[11px] uppercase tracking-widest text-rust-600">New acquisition</p>
@@ -199,16 +222,14 @@
           <select id="status" class="bg-paper border border-ink-200 rounded-lg p-2.5 text-ink-950 text-sm focus:outline-none focus:ring-2 focus:ring-ink-700">
             <option value="Available">Available</option>
             <option value="Reading">Reading</option>
-            <option value="Lent Out">Lent Out</option>
           </select>
         </div>
 
-        <button type="submit" class="w-full bg-rust-600 hover:bg-rust-700 text-paper font-semibold py-3 px-4 rounded-lg transition-colors">Add to shelf</button>
+        <button type="submit" id="add-book-submit" class="w-full bg-rust-600 hover:bg-rust-700 disabled:opacity-60 disabled:cursor-not-allowed text-paper font-semibold py-3 px-4 rounded-lg transition-colors">Add to shelf</button>
       </form>
     </div>
 
-    <div id="library-panel" class="lg:col-span-2 space-y-6">
-      <div id="my-reader-score" class="app-panel p-5 rounded-xl border border-ink-200 shadow-sm"></div>
+    <div id="library-panel" class="lg:col-span-3 space-y-6">
       <div id="cloud-ticker-card" class="app-panel p-5 rounded-xl border border-ink-200 shadow-sm overflow-hidden">
         <div class="flex items-center justify-between gap-3 mb-3">
           <div class="flex items-center gap-2 min-w-0">
@@ -264,6 +285,11 @@
       </div>
       </div>
     </div>
+    </div>
+  </div>
+
+  <div id="view-add" class="hidden max-w-xl mx-auto">
+    <div id="add-book-slot"></div>
   </div>
 
   <!-- TAB 2: FRIENDS -->
@@ -287,7 +313,16 @@
       <p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-1">Discover</p>
       <h2 class="font-display text-xl text-ink-950 mb-4">Search libraries &amp; books</h2>
       <form id="global-search-form" class="flex flex-col sm:flex-row gap-2">
-        <input type="text" id="global-search-input" placeholder="Search by book, author, user name, email, or shelf name…" class="flex-1 bg-paper border border-ink-200 rounded-lg p-3 text-ink-950 focus:outline-none focus:ring-2 focus:ring-ink-700">
+        <input type="text" id="global-search-input" placeholder="Search by book, author, reader, or shelf name…" class="flex-1 bg-paper border border-ink-200 rounded-lg p-3 text-ink-950 focus:outline-none focus:ring-2 focus:ring-ink-700">
+        <select id="search-status-filter" class="bg-paper border border-ink-200 rounded-lg px-3 py-2 text-sm text-ink-700">
+          <option value="">Any availability</option>
+          <option value="Available">Available</option>
+          <option value="Reading">Reading</option>
+          <option value="Lent Out">Lent out</option>
+        </select>
+        <select id="search-genre-filter" class="bg-paper border border-ink-200 rounded-lg px-3 py-2 text-sm text-ink-700">
+          <option value="">Any genre</option>
+        </select>
         <button type="submit" class="bg-ink-950 hover:bg-ink-900 text-paper font-semibold py-3 px-6 rounded-lg transition-colors">Search</button>
       </form>
     </div>
@@ -355,7 +390,6 @@
         <select id="edit-status" class="bg-white border border-ink-200 rounded-lg p-2.5 text-ink-950 text-sm focus:outline-none focus:ring-2 focus:ring-ink-700">
           <option value="Available">Available</option>
           <option value="Reading">Reading</option>
-          <option value="Lent Out">Lent Out</option>
         </select>
       </div>
       <div class="flex gap-2 pt-2">
@@ -370,6 +404,7 @@
   // --- ICONS (inline SVG, no emoji) ---
   const ICON_PATHS = {
     book: '<path d="M4 5.2A2.3 2.3 0 0 1 6.3 3H19v16H6.3A2.3 2.3 0 0 1 4 16.7z"/><path d="M4 5.2v11.5A2.3 2.3 0 0 0 6.3 19H19"/>',
+    bookOpen: '<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H11a2 2 0 0 1 2 2v15a2 2 0 0 0-2-2H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H13v15a2 2 0 0 1 2-2h2.5a2.5 2.5 0 0 1 2 2.5z"/>',
     users: '<circle cx="8.5" cy="8" r="3"/><circle cx="16.5" cy="10" r="2.3"/><path d="M2.8 20c0-3 2.5-5.2 5.7-5.2s5.7 2.2 5.7 5.2"/><path d="M14.8 15.2c2.3.3 3.9 2 3.9 4.3"/>',
     search: '<circle cx="10.5" cy="10.5" r="6.5"/><path d="M20 20l-4.5-4.5"/>',
     bell: '<path d="M6 9a6 6 0 1 1 12 0c0 4 1.5 5.5 1.5 5.5H4.5S6 13 6 9Z"/><path d="M9.5 17.2a2.5 2.5 0 0 0 5 0"/>',
@@ -383,7 +418,8 @@
     mail: '<path d="M4 6.5h16v11H4z"/><path d="M4.5 7l7.5 6 7.5-6"/>',
     star: '<path d="M12 3.5l2.6 5.4 5.9.6-4.4 4 1.2 5.8L12 16.6 6.7 19.3l1.2-5.8-4.4-4 5.9-.6z"/>',
     check: '<path d="M5 13l4 4L19 7"/>',
-    x: '<path d="M6 6l12 12M18 6L6 18"/>'
+    x: '<path d="M6 6l12 12M18 6L6 18"/>',
+    userMinus: '<circle cx="10" cy="8" r="3"/><path d="M3.5 20c.5-3.1 2.9-5.2 6.5-5.2 1.1 0 2.1.2 3 .6"/><path d="M17 12h5M19.5 9.5v5"/>'
   };
   function icon(name, cls) {
     return `<svg class="${cls||'w-4 h-4'}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${ICON_PATHS[name]||''}</svg>`;
@@ -391,11 +427,20 @@
   const STAR_PATH = 'M12 3.5l2.6 5.4 5.9.6-4.4 4 1.2 5.8L12 16.6 6.7 19.3l1.2-5.8-4.4-4 5.9-.6z';
 
   document.getElementById('tab-library').innerHTML = icon('book') + '<span>My Library</span>';
+  document.getElementById('brand-mark').innerHTML = icon('bookOpen', 'w-5 h-5');
+  document.getElementById('tab-add').innerHTML = icon('plus') + '<span>Add book</span>';
   document.getElementById('tab-friends').innerHTML = icon('users') + '<span>Friends</span>';
   document.getElementById('tab-search').innerHTML = icon('search') + '<span>Search</span>';
   document.getElementById('tab-inbox').innerHTML = icon('bell') + '<span>Inbox</span><span id="inbox-badge" class="hidden bg-rust-500 text-paper rounded-full px-1.5 py-0.5 text-[10px] font-mono">0</span>';
+  document.getElementById('tab-mobile-library').innerHTML = icon('book', 'w-5 h-5') + '<span>Library</span>';
+  document.getElementById('tab-mobile-add').innerHTML = icon('plus', 'w-5 h-5') + '<span>Add</span>';
+  document.getElementById('tab-mobile-friends').innerHTML = icon('users', 'w-5 h-5') + '<span>Friends</span>';
+  document.getElementById('tab-mobile-search').innerHTML = icon('search', 'w-5 h-5') + '<span>Search</span>';
+  document.getElementById('tab-mobile-inbox').innerHTML = icon('bell', 'w-5 h-5') + '<span>Inbox <span id="mobile-inbox-badge" class="hidden inline-flex items-center justify-center min-w-4 h-4 ml-0.5 bg-rust-500 text-paper rounded-full px-1 text-[9px] font-mono">0</span></span>';
   document.getElementById('start-scan-btn').innerHTML = icon('camera') + '<span>Scan</span>';
+  document.getElementById('copy-share-button').innerHTML = icon('link');
   document.getElementById('owner-controls').querySelector('button').innerHTML = icon('link') + '<span>Copy share link</span>';
+  document.getElementById('add-book-slot').appendChild(document.getElementById('admin-panel'));
 
   // --- TEXT ESCAPING (prevents stored XSS from user-supplied titles/names/etc.) ---
   function esc(str) {
@@ -406,7 +451,7 @@
   function safeUrl(url) {
     if (!url) return '';
     const trimmed = String(url).trim();
-    return /^(https?:\/\/|data:image\/)/i.test(trimmed) ? trimmed : '';
+    return /^https:\/\//i.test(trimmed) ? trimmed : '';
   }
 
   function formatDate(value) {
@@ -434,13 +479,8 @@
   const ratingCache = new Map();
   async function loadUserRating(uid) {
     if (ratingCache.has(uid)) return ratingCache.get(uid);
-    const [eventsSnap, booksSnap] = await Promise.all([
-      db.collection('ratingEvents').where('subjectId', '==', uid).get(),
-      db.collection('books').where('ownerId', '==', uid).get()
-    ]);
-    const eventPoints = eventsSnap.docs.reduce((total, doc) => total + (Number(doc.data().points) || 0), 0);
-    const libraryPoints = Math.min(2, booksSnap.size * 0.2);
-    const score = Math.max(0, Math.min(10, Math.round((3 + libraryPoints + eventPoints) * 10) / 10));
+    const profileSnap = await db.collection('profiles').doc(uid).get();
+    const score = Math.max(0, Math.min(10, Number(profileSnap.data()?.ratingScore ?? 3)));
     ratingCache.set(uid, score);
     return score;
   }
@@ -463,13 +503,8 @@
     if (!panel || !currentUser || !userProfile) return;
     panel.innerHTML = '<p class="text-sm text-ink-400">Loading your reader score…</p>';
     try {
-      const [score, booksSnap, eventsSnap] = await Promise.all([
-        loadUserRating(currentUser.uid),
-        db.collection('books').where('ownerId', '==', currentUser.uid).get(),
-        db.collection('ratingEvents').where('subjectId', '==', currentUser.uid).get()
-      ]);
-      const positives = eventsSnap.docs.filter(doc => (Number(doc.data().points) || 0) > 0).length;
-      panel.innerHTML = `<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"><div class="flex items-center gap-3">${avatarHtml(userProfile, userProfile.libraryName, 'w-12 h-12')}<div><p class="font-mono text-[11px] uppercase tracking-widest text-rust-600">Your reader profile</p><h2 class="font-display text-xl text-ink-950">${esc(userProfile.libraryName)}</h2></div></div><div class="flex items-center gap-5"><div><p class="font-display text-2xl text-[#8a6414]">${score.toFixed(1)}<span class="text-sm text-ink-400">/10</span></p><p class="text-[11px] text-ink-500">reader score</p></div><div><p class="font-semibold text-ink-950">${booksSnap.size}</p><p class="text-[11px] text-ink-500">books listed</p></div><div><p class="font-semibold text-ink-950">${positives}</p><p class="text-[11px] text-ink-500">timely returns</p></div><button data-action="open-reader-profile" data-uid="self" class="text-xs font-semibold text-rust-600">View profile</button></div></div>`;
+      const score = await loadUserRating(currentUser.uid);
+      panel.innerHTML = `<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"><div class="flex items-center gap-3">${avatarHtml(userProfile, userProfile.libraryName, 'w-12 h-12')}<div><p class="font-mono text-[11px] uppercase tracking-widest text-rust-600">Your reader profile</p><h2 class="font-display text-xl text-ink-950">${esc(userProfile.libraryName)}</h2>${userProfile.bio ? `<p class="text-sm text-ink-600 mt-1 max-w-md">${esc(userProfile.bio)}</p>` : `<p class="text-sm text-ink-400 mt-1">Add an introduction so people you know can recognise you.</p>`}</div></div><div class="flex items-center gap-5"><div><p class="font-display text-2xl text-[#8a6414]">${score.toFixed(1)}<span class="text-sm text-ink-400">/10</span></p><p class="text-[11px] text-ink-500">reader score</p></div><div><p class="font-semibold text-ink-950">${Number(userProfile.bookCount || 0)}</p><p class="text-[11px] text-ink-500">books listed</p></div><div><p class="font-semibold text-ink-950">${Number(userProfile.timelyReturns || 0)}</p><p class="text-[11px] text-ink-500">timely returns</p></div><button data-action="open-reader-profile" data-uid="self" class="text-xs font-semibold text-rust-600">Edit profile</button></div></div>`;
     } catch (err) {
       console.warn('Could not load reader score', err);
       panel.innerHTML = '<p class="text-sm text-ink-400">Your reader score will appear here soon.</p>';
@@ -485,19 +520,21 @@
     const profileDoc = await guard(() => db.collection('profiles').doc(targetUid).get(), { context: 'Loading reader profile' });
     if (profileDoc === FAILED || !profileDoc.exists) { body.innerHTML = '<p class="text-sm text-ink-400">This reader profile is unavailable.</p>'; return; }
     const profile = profileDoc.data();
-    const [score, bookSnap] = await Promise.all([loadUserRating(targetUid), db.collection('books').where('ownerId', '==', targetUid).get()]);
+    const score = await loadUserRating(targetUid);
     const isSelf = targetUid === currentUser.uid;
     const isFriend = confirmedFriends.includes(targetUid);
+    const relationship = relationshipStates[targetUid];
     const name = profile.libraryName || 'Unnamed library';
     const actions = isSelf
-      ? `<form id="profile-bio-form" class="mt-5 space-y-3"><label class="block text-xs font-semibold text-ink-700" for="profile-bio-edit">About you</label><textarea id="profile-bio-edit" rows="4" maxlength="280" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-sm text-ink-950 resize-none">${esc(profile.bio || '')}</textarea><button type="submit" class="bg-ink-950 text-paper px-4 py-2.5 rounded-lg text-xs font-semibold">Save introduction</button></form>`
-      : `<div class="mt-5 flex gap-2">${isFriend ? `<button data-action="view-shelf" data-uid="${esc(targetUid)}" data-name="${esc(name)}" class="bg-ink-800/10 text-ink-800 px-3 py-2.5 rounded-lg text-xs font-semibold">View shelf</button>` : `<button data-action="add-friend" data-owner="${esc(targetUid)}" data-name="${esc(name)}" class="bg-rust-600 text-paper px-3 py-2.5 rounded-lg text-xs font-semibold">Add friend</button>`}</div>`;
-    body.innerHTML = `<div class="flex items-center gap-4 pr-8">${avatarHtml(profile, name, 'w-16 h-16')}<div class="min-w-0"><p class="font-mono text-[10px] uppercase tracking-widest text-rust-600">Reader profile</p><h2 class="font-display text-2xl text-ink-950 truncate">${esc(name)}</h2><p class="text-sm text-[#8a6414] font-semibold">${score.toFixed(1)}/10 reader score</p></div></div><div class="grid grid-cols-2 gap-3 mt-5"><div class="bg-ink-800/5 rounded-lg p-3"><p class="font-semibold text-ink-950">${bookSnap.size}</p><p class="text-xs text-ink-500">books on shelf</p></div><div class="bg-ink-800/5 rounded-lg p-3"><p class="font-semibold text-ink-950">${isFriend ? 'Connected' : 'Not connected'}</p><p class="text-xs text-ink-500">library status</p></div></div><div class="mt-5"><p class="text-xs font-semibold text-ink-700 mb-1">About</p><p class="text-sm text-ink-600 leading-relaxed">${esc(profile.bio || 'No introduction added yet.')}</p></div>${actions}`;
+      ? `<form id="profile-bio-form" class="mt-5 space-y-3"><label class="block text-xs font-semibold text-ink-700" for="profile-bio-edit">About you</label><textarea id="profile-bio-edit" rows="4" maxlength="280" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-sm text-ink-950 resize-none">${esc(profile.bio || '')}</textarea><button type="submit" class="bg-ink-950 text-paper px-4 py-2.5 rounded-lg text-xs font-semibold">Save introduction</button></form><button data-action="delete-account" class="mt-6 text-xs font-semibold text-rust-600">Delete my account</button>`
+      : `<div class="mt-5 flex flex-wrap gap-2">${isFriend ? `<button data-action="view-shelf" data-uid="${esc(targetUid)}" data-name="${esc(name)}" class="bg-ink-800/10 text-ink-800 px-3 py-2.5 rounded-lg text-xs font-semibold">View shelf</button>` : relationship === 'pending' && relationshipSenders[targetUid] === currentUser.uid ? `<span class="text-xs font-semibold text-gold-600 py-2.5">Friend request sent</span><button data-action="cancel-request" data-id="${esc(relationshipDocs[targetUid] || '')}" data-name="${esc(name)}" class="text-xs font-semibold text-rust-600 px-2">Cancel request</button>` : relationship === 'pending' ? `<button data-action="switch-inbox" class="bg-ink-800/10 text-ink-800 px-3 py-2.5 rounded-lg text-xs font-semibold">Review request in Inbox</button>` : `<button data-action="add-friend" data-owner="${esc(targetUid)}" data-name="${esc(name)}" class="bg-rust-600 text-paper px-3 py-2.5 rounded-lg text-xs font-semibold">Add friend</button>`}</div>`;
+    body.innerHTML = `<div class="flex items-center gap-4 pr-8">${avatarHtml(profile, name, 'w-16 h-16')}<div class="min-w-0"><p class="font-mono text-[10px] uppercase tracking-widest text-rust-600">Reader profile</p><h2 class="font-display text-2xl text-ink-950 truncate">${esc(name)}</h2><p class="text-sm text-[#8a6414] font-semibold">${score.toFixed(1)}/10 reader score</p></div></div><div class="grid grid-cols-2 gap-3 mt-5"><div class="bg-ink-800/5 rounded-lg p-3"><p class="font-semibold text-ink-950">${Number(profile.bookCount || 0)}</p><p class="text-xs text-ink-500">books on shelf</p></div><div class="bg-ink-800/5 rounded-lg p-3"><p class="font-semibold text-ink-950">${isFriend ? 'Connected' : 'Not connected'}</p><p class="text-xs text-ink-500">library status</p></div></div><div class="mt-5"><p class="text-xs font-semibold text-ink-700 mb-1">About</p><p class="text-sm text-ink-600 leading-relaxed">${esc(profile.bio || 'No introduction added yet.')}</p></div>${actions}`;
     if (isSelf) document.getElementById('profile-bio-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const bio = document.getElementById('profile-bio-edit').value.trim().slice(0, 280);
-      const res = await guard(() => db.collection('profiles').doc(currentUser.uid).update({ bio, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }), { context: 'Saving your introduction', success: 'Profile introduction saved.' });
-      if (res !== FAILED) { userProfile.bio = bio; renderMyReaderScore(); }
+      const nextProfile = { ...userProfile, bio };
+      const res = await guard(() => db.collection('profiles').doc(currentUser.uid).set(publicProfileData(nextProfile)), { context: 'Saving your introduction', success: 'Profile introduction saved.' });
+      if (res !== FAILED) { userProfile = nextProfile; renderMyReaderScore(); }
     });
   }
   window.openReaderProfile = openReaderProfile;
@@ -524,6 +561,7 @@
   [['genre',GENRES,'Genre…'],['condition',CONDITIONS,'Condition…'],['edit-genre',GENRES,'Genre'],['edit-condition',CONDITIONS,'Condition']].forEach(([id, values, ph]) => {
     fillOptions(document.getElementById(id), values, ph);
   });
+  fillOptions(document.getElementById('search-genre-filter'), GENRES, 'Any genre');
 
   function starPickerHtml(prefix) {
     return [1,2,3,4,5].map(n => `<button type="button" onclick="setRating('${prefix}', ${n})" data-n="${n}" class="rating-btn text-ink-300 hover:text-gold-500 transition-colors"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="${STAR_PATH}"/></svg></button>`).join('');
@@ -569,7 +607,7 @@
           canvas.height = Math.max(1, Math.round(img.height * scale));
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          resolve(canvas.toDataURL('image/jpeg', 0.76));
+          canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('Photo compression failed')), 'image/jpeg', 0.76);
         };
         img.onerror = reject;
         img.src = reader.result;
@@ -582,8 +620,9 @@
   document.getElementById('coverFile').addEventListener('change', async (e) => {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
+    if (file.size > 10 * 1024 * 1024) return toast('Please choose a photo smaller than 10 MB.', 'error');
     try {
-      inlineCoverData = await resizeImageFile(file);
+      inlineCoverFile = await resizeImageFile(file);
       document.getElementById('coverUrl').value = '';
       document.getElementById('cover-file-label').textContent = 'Cover photo ready';
       document.getElementById('clear-cover-photo').classList.remove('hidden');
@@ -595,7 +634,7 @@
   });
 
   document.getElementById('clear-cover-photo').addEventListener('click', () => {
-    inlineCoverData = '';
+    inlineCoverFile = null;
     document.getElementById('coverFile').value = '';
     document.getElementById('cover-file-label').textContent = 'Add cover photo';
     document.getElementById('clear-cover-photo').classList.add('hidden');
@@ -605,7 +644,7 @@
     const file = e.target.files && e.target.files[0];
     if (!file) return;
     try {
-      editCoverData = await resizeImageFile(file);
+      editCoverFile = await resizeImageFile(file);
       document.getElementById('edit-coverUrl').value = '';
       document.getElementById('edit-cover-file-label').textContent = 'New cover photo ready';
       document.getElementById('edit-clear-cover-photo').classList.remove('hidden');
@@ -617,7 +656,7 @@
   });
 
   document.getElementById('edit-clear-cover-photo').addEventListener('click', () => {
-    editCoverData = '';
+    editCoverFile = null;
     document.getElementById('edit-coverFile').value = '';
     document.getElementById('edit-cover-file-label').textContent = 'Replace cover photo';
     document.getElementById('edit-clear-cover-photo').classList.add('hidden');
@@ -668,6 +707,7 @@
   // Surfaces listener failures too — onSnapshot swallows errors without this.
   function listenerError(context) {
     return (err) => {
+      if (isSigningOut || !currentUser) return;
       console.error(context, err);
       toast(`Couldn't load ${context}. ${err && err.code === 'permission-denied' ? 'Permission denied.' : 'Please reload.'}`, 'error');
     };
@@ -686,6 +726,8 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
   const auth = firebase.auth();
+  const storage = firebase.storage();
+  const lendingFunctions = firebase.app().functions('asia-south1');
   const googleProvider = new firebase.auth.GoogleAuthProvider();
 
   let currentUser = null;
@@ -695,21 +737,68 @@
   let pendingSentRequests = [];   // outgoing requests the user can still cancel
   let myBooksCache = {};
   let borrowedBooksCache = [];
-  let inlineCoverData = '';
-  let editCoverData = '';
+  let borrowRequestStates = {};
+  let inlineCoverFile = null;
+  let bookSubmissionInProgress = false;
+  let editCoverFile = null;
   let inboxState = { friends: [], ownerRequests: [], requesterRequests: [] };
   let inboxUnsubscribers = [];
+  let relationshipStates = {};
+  let relationshipDocs = {};
+  let relationshipSenders = {};
+  let isSigningOut = false;
   let tickerItems = [];
   let tickerIndex = 0;
   let tickerTimer = null;
+  const searchCache = new Map();
+  const SEARCH_CACHE_MS = 60 * 1000;
+  const INACTIVITY_LIMIT_MS = 30 * 60 * 1000;
+  let inactivityTimer = null;
+
+  // Keep sessions in this browser session only. Closing the final tab/window
+  // clears Firebase's session state instead of restoring the reader next time.
+  const authPersistenceReady = auth.setPersistence(firebase.auth.Auth.Persistence.SESSION)
+    .catch(err => console.warn('Could not set session-only sign-in', err));
+
+  function resetInactivityTimer() {
+    if (!currentUser) return;
+    clearTimeout(inactivityTimer);
+    inactivityTimer = setTimeout(() => {
+      toast('You were signed out after 30 minutes of inactivity.', 'info');
+      auth.signOut();
+    }, INACTIVITY_LIMIT_MS);
+  }
+  ['pointerdown', 'keydown', 'touchstart', 'scroll'].forEach(eventName => {
+    document.addEventListener(eventName, resetInactivityTimer, { passive: eventName !== 'keydown' });
+  });
 
   // --- 2. AUTHENTICATION & PROFILE CHECK ---
-  function signIn() { auth.signInWithPopup(googleProvider); }
-  function signOut() { auth.signOut(); }
+  function signIn() { authPersistenceReady.then(() => auth.signInWithPopup(googleProvider)); }
+  function signOut() {
+    isSigningOut = true;
+    clearTimeout(inactivityTimer);
+    inboxUnsubscribers.forEach(unsubscribe => unsubscribe && unsubscribe());
+    inboxUnsubscribers = [];
+    auth.signOut();
+  }
+
+  async function deleteAccount() {
+    if (!confirm('Delete your CloudLibrary account and all books, requests, wishlists, and cover photos? This cannot be undone.')) return;
+    if (prompt('Type DELETE to confirm account removal.') !== 'DELETE') return toast('Account deletion cancelled.', 'info');
+    const res = await guard(() => lendingFunctions.httpsCallable('deleteMyAccount')({ confirmation: 'DELETE' }), {
+      context: 'Deleting your account',
+      error: 'Return or close every active loan before deleting this account.'
+    });
+    if (res === FAILED) return;
+    clearTimeout(inactivityTimer);
+    await auth.signOut();
+    toast('Your account has been deleted.', 'success');
+  }
 
   auth.onAuthStateChanged(async (user) => {
     if (user) {
       currentUser = user;
+      resetInactivityTimer();
       document.getElementById('login-screen').classList.add('hidden');
 
       const userDoc = await guard(() => db.collection("profiles").doc(user.uid).get(), { context: 'Loading your profile' });
@@ -721,8 +810,12 @@
         initApp();
       }
     } else {
+      clearTimeout(inactivityTimer);
+      currentUser = null;
+      userProfile = null;
       document.getElementById('login-screen').classList.remove('hidden');
       document.getElementById('app-content').classList.add('hidden');
+      isSigningOut = false;
     }
   });
 
@@ -741,14 +834,16 @@
     const draft = {
       libraryName: name,
       shelfKey,
-      ownerEmail: currentUser.email,
       ownerName: currentUser.displayName || '',
       photoURL: currentUser.photoURL || '',
-      ratingBase: 3,
-      bio: document.getElementById('profile-bio-input').value.trim().slice(0, 280),
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      bio: document.getElementById('profile-bio-input').value.trim().slice(0, 280)
     };
-    const res = await guard(() => db.collection("profiles").doc(currentUser.uid).set(draft), { context: 'Saving your profile' });
+    const res = await guard(() => {
+      const batch = db.batch();
+      batch.set(db.collection("profiles").doc(currentUser.uid), publicProfileData(draft));
+      batch.set(db.collection('shelfNames').doc(shelfKey), { ownerId: currentUser.uid, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+      return batch.commit();
+    }, { context: 'Saving your profile' });
     if (res === FAILED) return;
     userProfile = draft;
     document.getElementById('profile-modal').classList.add('hidden');
@@ -758,10 +853,6 @@
   async function initApp() {
     document.getElementById('user-info').textContent = userProfile.libraryName;
     document.getElementById('app-content').classList.remove('hidden');
-    if (currentUser.photoURL && userProfile.photoURL !== currentUser.photoURL) {
-      userProfile.photoURL = currentUser.photoURL;
-      db.collection('profiles').doc(currentUser.uid).update({ photoURL: currentUser.photoURL, ownerName: currentUser.displayName || '' }).catch(err => console.warn('Could not refresh profile photo', err));
-    }
     await loadFriendsList();
     fetchMyBooks();
     fetchBorrowedBooks();
@@ -774,16 +865,20 @@
 
   // --- 3. TABS NAVIGATION ---
   function switchTab(tabName) {
-    ['library', 'friends', 'search', 'inbox'].forEach(t => {
+    ['library', 'add', 'friends', 'search', 'inbox'].forEach(t => {
       document.getElementById(`view-${t}`).classList.add('hidden');
       document.getElementById(`tab-${t}`).classList.remove('active');
       document.getElementById(`tab-${t}`).classList.add('text-ink-500');
+      document.getElementById(`tab-mobile-${t}`).classList.remove('active');
+      document.getElementById(`tab-mobile-${t}`).classList.add('text-ink-500');
     });
     document.getElementById(`view-${tabName}`).classList.remove('hidden');
     document.getElementById(`tab-${tabName}`).classList.add('active');
     document.getElementById(`tab-${tabName}`).classList.remove('text-ink-500');
+    document.getElementById(`tab-mobile-${tabName}`).classList.add('active');
+    document.getElementById(`tab-mobile-${tabName}`).classList.remove('text-ink-500');
 
-    const titles = { library: 'My Library', friends: 'Friends', search: 'Search Libraries', inbox: 'Inbox' };
+    const titles = { library: 'My Library', add: 'Add a book', friends: 'Friends', search: 'Search Libraries', inbox: 'Inbox' };
     document.getElementById('header-title').textContent = titles[tabName] || 'CloudLibrary';
     if (tabName === 'friends') renderFriendsView();
   }
@@ -847,26 +942,45 @@
           ${starsRow(book.rating)}
           ${book.description ? `<p class="text-xs text-ink-500 mt-2 line-clamp-2">${esc(book.description)}</p>` : ''}
           ${loanDetailsHtml(book, mode)}
-          <div class="flex items-center gap-2 mt-3">${actionsHtml}</div>
+          <div class="flex flex-wrap items-center gap-2 mt-3">${actionsHtml}</div>
         </div>
       </div>`;
+  }
+
+  function borrowActionHtml(bookId, title, ownerId) {
+    const state = borrowRequestStates[bookId];
+    if (state === 'pending') return `<span class="text-xs font-semibold text-gold-600">Request sent</span>`;
+    if (state === 'approved') return `<span class="text-xs font-semibold text-ink-600">Borrowed</span>`;
+    if (state === 'returned') return `<button data-action="borrow" data-id="${esc(bookId)}" data-title="${esc(title)}" data-owner="${esc(ownerId)}" class="text-ink-800 bg-ink-800/10 hover:bg-ink-800/20 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">Borrow again</button>`;
+    if (state === 'denied') return `<button data-action="borrow" data-id="${esc(bookId)}" data-title="${esc(title)}" data-owner="${esc(ownerId)}" class="text-ink-800 bg-ink-800/10 hover:bg-ink-800/20 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">Request again</button>`;
+    return `<button data-action="borrow" data-id="${esc(bookId)}" data-title="${esc(title)}" data-owner="${esc(ownerId)}" class="text-ink-800 bg-ink-800/10 hover:bg-ink-800/20 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">Request to borrow</button>`;
+  }
+
+  function borrowActionWrapper(bookId, title, ownerId) {
+    return `<span data-borrow-action="${esc(bookId)}" data-title="${esc(title)}" data-owner="${esc(ownerId)}">${borrowActionHtml(bookId, title, ownerId)}</span>`;
+  }
+
+  function refreshBorrowActions() {
+    document.querySelectorAll('[data-borrow-action]').forEach(el => {
+      el.innerHTML = borrowActionHtml(el.dataset.borrowAction, el.dataset.title, el.dataset.owner);
+    });
   }
 
   async function initCloudTicker() {
     const content = document.getElementById('cloud-ticker-content');
     if (!content) return;
     try {
-      const [booksSnap, profilesSnap] = await Promise.all([
-        db.collection('books').get(), db.collection('profiles').get()
-      ]);
-      const books = booksSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      const available = books.filter(book => book.status === 'Available' && book.ownerId !== currentUser.uid);
+      const friendShelves = await Promise.all(confirmedFriends.slice(0, 10).map(uid =>
+        db.collection('books').where('ownerId', '==', uid).where('readerIds', 'array-contains', currentUser.uid).limit(10).get()
+      ));
+      const books = friendShelves.flatMap(snap => snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      const available = books.filter(book => book.status === 'Available');
       const genres = {};
       books.forEach(book => { if (book.genre) genres[book.genre] = (genres[book.genre] || 0) + 1; });
       const topGenre = Object.keys(genres).sort((a, b) => genres[b] - genres[a])[0] || 'Fiction';
       tickerItems = [
-        `<div><span class="font-display text-base text-ink-950">${available.length} books</span><span class="text-ink-500"> are ready to borrow across ${profilesSnap.size} libraries.</span></div>`,
-        `<div><span class="font-display text-base text-ink-950">${esc(topGenre)}</span><span class="text-ink-500"> is the most shared genre in CloudLibrary right now.</span></div>`
+        `<div class="ticker-item"><span class="font-mono text-[10px] uppercase tracking-widest text-rust-600 mr-2">Your circle</span><span class="font-display text-base text-ink-950">${available.length} books</span><span class="text-ink-500"> are currently available from friends.</span></div>`,
+        `<div class="ticker-item"><span class="font-mono text-[10px] uppercase tracking-widest text-rust-600 mr-2">Shelf note</span><span class="font-display text-base text-ink-950">${esc(topGenre)}</span><span class="text-ink-500"> is the most common genre in your friends' libraries.</span></div>`
       ];
       if (available.length) {
         const book = available[Math.floor(Math.random() * available.length)];
@@ -874,7 +988,7 @@
         const action = friend
           ? `<button data-action="borrow" data-id="${esc(book.id)}" data-title="${esc(book.title)}" data-owner="${esc(book.ownerId)}" class="ml-3 text-xs font-semibold text-rust-600">Request to borrow</button>`
           : `<button data-action="add-friend" data-owner="${esc(book.ownerId)}" data-name="${esc(book.ownerName || 'that library')}" class="ml-3 text-xs font-semibold text-rust-600">Connect</button>`;
-        tickerItems.splice(1, 0, `<div><span class="font-display text-base text-ink-950">${esc(book.title)}</span><span class="text-ink-500"> by ${esc(book.author)} is available from ${esc(book.ownerName || 'a reader')}.</span>${action}</div>`);
+        tickerItems.splice(1, 0, `<div class="ticker-item"><span class="font-mono text-[10px] uppercase tracking-widest text-rust-600 mr-2">Available now</span><span class="font-display text-base text-ink-950">${esc(book.title)}</span><span class="text-ink-500"> by ${esc(book.author)} is available from ${esc(book.ownerName || 'a reader')}.</span>${action}</div>`);
       }
       tickerIndex = 0;
       renderTicker();
@@ -905,7 +1019,7 @@
 
   // --- 5. MY LIBRARY & BOOKS ---
   function fetchMyBooks() {
-    db.collection("books").where("ownerId", "==", currentUser.uid).onSnapshot((snapshot) => {
+    db.collection("books").where("ownerId", "==", currentUser.uid).limit(150).onSnapshot((snapshot) => {
       const grid = document.getElementById('books-grid');
       grid.innerHTML = '';
       myBooksCache = {};
@@ -938,7 +1052,7 @@
   }
 
   function fetchBorrowedBooks() {
-    db.collection("books").where("borrowerId", "==", currentUser.uid).onSnapshot((snapshot) => {
+    db.collection("books").where("borrowerId", "==", currentUser.uid).limit(150).onSnapshot((snapshot) => {
       const grid = document.getElementById('borrowed-books-grid');
       const empty = document.getElementById('borrowed-empty-state');
       grid.innerHTML = '';
@@ -955,7 +1069,7 @@
   }
 
   function fetchBorrowHistory() {
-    db.collection('requests').where('requesterId', '==', currentUser.uid).onSnapshot((snapshot) => {
+    db.collection('requests').where('requesterId', '==', currentUser.uid).limit(100).onSnapshot((snapshot) => {
       const history = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
         .filter(req => req.type === 'borrow')
         .sort((a, b) => timestampMillis(b.returnedAt || b.lostAt || b.createdAt) - timestampMillis(a.returnedAt || a.lostAt || a.createdAt));
@@ -977,7 +1091,7 @@
       isbn: val('isbn'),
       publishedYear: val('publishedYear') ? parseInt(val('publishedYear'), 10) : null,
       condition: val('condition'),
-      coverUrl: prefix ? (val('coverUrl') || editCoverData) : (val('coverUrl') || inlineCoverData),
+      coverUrl: val('coverUrl'),
       description: val('description'),
       rating: parseInt(document.getElementById(prefix ? `rating-${prefix}` : 'rating-add').value, 10) || 0,
       status: document.getElementById(prefix ? `${prefix}-status` : 'status').value
@@ -986,28 +1100,100 @@
 
   document.getElementById('book-form').addEventListener('submit', async (e) => {
     e.preventDefault();
+    if (bookSubmissionInProgress) return;
+    bookSubmissionInProgress = true;
+    const submitButton = document.getElementById('add-book-submit');
+    submitButton.disabled = true;
+    submitButton.textContent = 'Adding to shelf…';
     const fields = collectBookFields('');
-    const res = await guard(() => db.collection("books").add({
-      ...fields,
-      ownerId: currentUser.uid,
-      ownerName: userProfile.libraryName,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    }), { context: 'Adding a book', success: `"${fields.title}" added to your shelf.` });
-    if (res === FAILED) return;
-    notifyWishers({ id: res.id, ...fields });
+    const bookRef = db.collection('books').doc();
+    if (inlineCoverFile) {
+      const uploaded = await guard(() => uploadCoverPhoto(bookRef.id, inlineCoverFile), { context: 'Uploading cover photo' });
+      if (uploaded === FAILED) {
+        bookSubmissionInProgress = false;
+        submitButton.disabled = false;
+        submitButton.textContent = 'Add to shelf';
+        return;
+      }
+      fields.coverUrl = uploaded;
+    }
+    const book = { ...fields, ownerId: currentUser.uid, ownerName: userProfile.libraryName, readerIds: [], createdAt: firebase.firestore.FieldValue.serverTimestamp() };
+    const res = await guard(() => {
+      const batch = db.batch();
+      batch.set(bookRef, book);
+      batch.set(db.collection('bookDiscovery').doc(bookRef.id), discoveryBookData(bookRef.id, book));
+      return batch.commit();
+    }, { context: 'Adding a book', success: `"${fields.title}" added to your shelf.` });
+    if (res === FAILED) {
+      bookSubmissionInProgress = false;
+      submitButton.disabled = false;
+      submitButton.textContent = 'Add to shelf';
+      return;
+    }
     e.target.reset();
-    inlineCoverData = '';
+    inlineCoverFile = null;
     document.getElementById('cover-file-label').textContent = 'Add cover photo';
     document.getElementById('clear-cover-photo').classList.add('hidden');
     setRating('add', 0);
+    bookSubmissionInProgress = false;
+    submitButton.disabled = false;
+    submitButton.textContent = 'Add to shelf';
   });
 
   function normalizedTitle(title) {
     return String(title || '').trim().toLowerCase().replace(/\s+/g, ' ');
   }
 
+  function searchTokens(...values) {
+    const tokens = new Set();
+    values.filter(Boolean).forEach(value => {
+      String(value).toLowerCase().match(/[a-z0-9]+/g)?.forEach(word => {
+        for (let i = 1; i <= Math.min(word.length, 24); i += 1) tokens.add(word.slice(0, i));
+      });
+    });
+    return [...tokens];
+  }
+
+  function discoveryBookData(bookId, book) {
+    return {
+      bookId,
+      ownerId: book.ownerId,
+      ownerName: book.ownerName || '',
+      title: book.title || '',
+      author: book.author || '',
+      genre: book.genre || '',
+      coverUrl: book.coverUrl || '',
+      status: book.status || 'Available',
+      searchTokens: searchTokens(book.title, book.author, book.ownerName),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+  }
+
+  function publicProfileData(profile) {
+    return {
+      libraryName: profile.libraryName || '',
+      shelfKey: profile.shelfKey || '',
+      ownerName: profile.ownerName || '',
+      photoURL: profile.photoURL || '',
+      bio: String(profile.bio || '').slice(0, 280),
+      ratingScore: Number(profile.ratingScore ?? 3),
+      ratingAdjustment: Number(profile.ratingAdjustment || 0),
+      bookCount: Number(profile.bookCount || 0),
+      timelyReturns: Number(profile.timelyReturns || 0),
+      searchTokens: searchTokens(profile.libraryName, profile.ownerName, profile.shelfKey),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    };
+  }
+
+  async function uploadCoverPhoto(bookId, blob) {
+    if (!blob || blob.size > 350 * 1024) throw new Error('Compressed cover photo is too large. Please use a smaller photo.');
+    const ref = storage.ref(`covers/${currentUser.uid}/${bookId}.jpg`);
+    await ref.put(blob, { contentType: 'image/jpeg', cacheControl: 'public,max-age=31536000,immutable' });
+    return ref.getDownloadURL();
+  }
+
   function fetchWishlist() {
-    db.collection('wishlists').where('userId', '==', currentUser.uid).onSnapshot((snapshot) => {
+    db.collection('wishlists').where('userId', '==', currentUser.uid).limit(100).onSnapshot((snapshot) => {
       const list = document.getElementById('wishlist-list');
       if (snapshot.empty) {
         list.innerHTML = '<p class="text-sm text-ink-400">Save a title and we will tell you when a friend adds it.</p>';
@@ -1029,24 +1215,20 @@
   });
 
   async function notifyWishers(book) {
-    const titleKey = normalizedTitle(book.title);
-    if (!titleKey) return;
-    const wishes = await guard(() => db.collection('wishlists').where('titleKey', '==', titleKey).get(), { context: 'Checking friend wishlists' });
-    if (wishes === FAILED) return;
-    wishes.forEach(wishDoc => {
-      const wish = wishDoc.data();
-      if (!confirmedFriends.includes(wish.userId)) return;
-      db.collection('requests').add({
-        type: 'wishlist-match', bookId: book.id, title: book.title, ownerId: currentUser.uid,
-        ownerName: userProfile.libraryName, requesterId: wish.userId, requesterName: wish.userName || 'Friend',
-        status: 'completed', createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      }).catch(err => console.warn('Could not send wishlist match', err));
-    });
+    // Matching is handled by the trusted onBookCreated Function. Keeping this
+    // stub avoids an unsafe client-side collection query for older callers.
+    return undefined;
   }
 
   window.deleteBook = async function (id) {
     if (!confirm("Delete this book?")) return;
-    await guard(() => db.collection("books").doc(id).delete(), { context: 'Deleting a book', success: 'Book removed from your shelf.' });
+    await guard(async () => {
+      const discovery = await db.collection('bookDiscovery').doc(id).get();
+      const batch = db.batch();
+      batch.delete(db.collection('books').doc(id));
+      if (discovery.exists) batch.delete(discovery.ref);
+      return batch.commit();
+    }, { context: 'Deleting a book', success: 'Book removed from your shelf.' });
   };
 
   function ratingEventData(subjectId, book, points, type) {
@@ -1063,45 +1245,15 @@
   window.markReturned = async function (id) {
     const book = myBooksCache[id];
     if (!book || book.status !== 'Lent Out' || !book.borrowerId) return toast('This book is no longer recorded as lent out.', 'error');
-    const heldFor = Date.now() - timestampMillis(book.lentAt);
-    const onTime = !timestampMillis(book.loanDueAt) || Date.now() <= timestampMillis(book.loanDueAt);
-    const points = heldFor >= 48 * 60 * 60 * 1000 && onTime ? 1 : (onTime ? 0 : -1);
-    const ratingType = points > 0 ? 'timely-return' : (onTime ? 'early-return' : 'late-return');
-    const reqSnap = await guard(() => db.collection('requests').where('ownerId', '==', currentUser.uid).where('bookId', '==', id).get(), { context: 'Updating return history' });
-    if (reqSnap === FAILED) return;
-    const activeRequest = reqSnap.docs.find(doc => doc.data().type === 'borrow' && doc.data().status === 'approved');
-    const res = await guard(async () => {
-      const batch = db.batch();
-      if (points) batch.set(db.collection('ratingEvents').doc(), ratingEventData(book.borrowerId, book, points, ratingType));
-      batch.update(db.collection('books').doc(id), {
-        status: 'Available',
-        borrowerId: firebase.firestore.FieldValue.delete(), borrowerName: firebase.firestore.FieldValue.delete(),
-        borrowerEmail: firebase.firestore.FieldValue.delete(), lentAt: firebase.firestore.FieldValue.delete(),
-        loanDueAt: firebase.firestore.FieldValue.delete(), updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      if (activeRequest) batch.update(activeRequest.ref, { status: 'returned', returnedAt: firebase.firestore.FieldValue.serverTimestamp(), returnRatingPoints: points });
-      return batch.commit();
-    }, { context: 'Marking a book returned', success: points > 0 ? 'Returned on time - borrower rating improved.' : 'Welcome home - marked available again.' });
-    if (res === FAILED) return;
-    ratingCache.delete(book.borrowerId);
+    const res = await guard(() => lendingFunctions.httpsCallable('closeLoan')({ bookId: id, outcome: 'returned' }), { context: 'Marking a book returned', success: 'Book marked returned and the reader score updated.' });
+    if (res !== FAILED) ratingCache.delete(book.borrowerId);
   };
 
   window.markLost = async function (id) {
     const book = myBooksCache[id];
     if (!book || book.status !== 'Lent Out' || !book.borrowerId) return toast('This book is no longer recorded as lent out.', 'error');
     if (!confirm(`Report "${book.title}" as lost? This permanently removes it from lending and applies a rating penalty to ${book.borrowerName || 'the borrower'}.`)) return;
-    const reqSnap = await guard(() => db.collection('requests').where('ownerId', '==', currentUser.uid).where('bookId', '==', id).get(), { context: 'Loading loan history' });
-    if (reqSnap === FAILED) return;
-    const activeRequest = reqSnap.docs.find(doc => doc.data().type === 'borrow' && doc.data().status === 'approved');
-    const res = await guard(async () => {
-      const batch = db.batch();
-      batch.set(db.collection('ratingEvents').doc(), ratingEventData(book.borrowerId, book, -3, 'lost-book'));
-      batch.update(db.collection('books').doc(id), {
-        status: 'Lost', lostAt: firebase.firestore.FieldValue.serverTimestamp(), updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      if (activeRequest) batch.update(activeRequest.ref, { status: 'lost', lostAt: firebase.firestore.FieldValue.serverTimestamp(), returnRatingPoints: -3 });
-      return batch.commit();
-    }, { context: 'Reporting a lost book', success: 'Book marked lost and lending record closed.' });
+    const res = await guard(() => lendingFunctions.httpsCallable('closeLoan')({ bookId: id, outcome: 'lost' }), { context: 'Reporting a lost book', success: 'Book marked lost and lending record closed.' });
     if (res === FAILED) return;
     ratingCache.delete(book.borrowerId);
   };
@@ -1109,7 +1261,7 @@
   window.sendReturnReminder = async function (id) {
     const book = myBooksCache[id];
     if (!book || !book.borrowerId) return toast('No borrower is recorded for this book.', 'error');
-    await guard(() => db.collection("requests").add({
+    const result = await guard(() => db.collection("requests").add({
       type: 'return-reminder',
       bookId: id,
       title: book.title || 'Untitled book',
@@ -1133,7 +1285,7 @@
     document.getElementById('edit-isbn').value = book.isbn || '';
     document.getElementById('edit-publishedYear').value = book.publishedYear || '';
     document.getElementById('edit-coverUrl').value = book.coverUrl || '';
-    editCoverData = '';
+    editCoverFile = null;
     document.getElementById('edit-coverFile').value = '';
     document.getElementById('edit-cover-file-label').textContent = 'Replace cover photo';
     document.getElementById('edit-clear-cover-photo').classList.add('hidden');
@@ -1149,12 +1301,21 @@
   document.getElementById('edit-book-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const id = document.getElementById('edit-id').value;
-    const res = await guard(() => db.collection("books").doc(id).update({
-      ...collectBookFields('edit'),
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }), { context: 'Updating a book', success: 'Changes saved.' });
+    const fields = collectBookFields('edit');
+    if (editCoverFile) {
+      const uploaded = await guard(() => uploadCoverPhoto(id, editCoverFile), { context: 'Uploading cover photo' });
+      if (uploaded === FAILED) return;
+      fields.coverUrl = uploaded;
+    }
+    const existing = myBooksCache[id] || {};
+    const res = await guard(() => {
+      const batch = db.batch();
+      batch.update(db.collection('books').doc(id), fields);
+      batch.set(db.collection('bookDiscovery').doc(id), discoveryBookData(id, { ...existing, ...fields }));
+      return batch.commit();
+    }, { context: 'Updating a book', success: 'Changes saved.' });
     if (res === FAILED) return;
-    editCoverData = '';
+    editCoverFile = null;
     closeEditModal();
   });
 
@@ -1164,22 +1325,29 @@
     // user as one side of the friendship. A status-only query is denied even
     // after the other person accepts the request.
     const result = await guard(() => Promise.all([
-      db.collection('friendships').where('user1', '==', currentUser.uid).get(),
-      db.collection('friendships').where('user2', '==', currentUser.uid).get()
+      db.collection('friendships').where('user1', '==', currentUser.uid).limit(100).get(),
+      db.collection('friendships').where('user2', '==', currentUser.uid).limit(100).get()
     ]), { context: 'Loading your friends' });
     if (result === FAILED) return;
     confirmedFriends = [];
     friendshipDocs = {};
+    relationshipStates = {};
+    relationshipDocs = {};
+    relationshipSenders = {};
     const docs = [...result[0].docs, ...result[1].docs];
     docs.forEach(doc => {
       const data = doc.data();
-      if (data.status !== 'accepted') return;
       let other = null;
       if (data.user1 === currentUser.uid) other = data.user2;
       else if (data.user2 === currentUser.uid) other = data.user1;
       if (other) {
-        confirmedFriends.push(other);
-        friendshipDocs[other] = doc.id; // keep the doc id so the pair can be unfriended
+        relationshipStates[other] = data.status;
+        relationshipDocs[other] = doc.id;
+        relationshipSenders[other] = data.senderId;
+        if (data.status === 'accepted') {
+          confirmedFriends.push(other);
+          friendshipDocs[other] = doc.id;
+        }
       }
     });
   }
@@ -1187,7 +1355,7 @@
   async function loadPendingSent() {
     const snap = await guard(() => db.collection("friendships")
       .where("user1", "==", currentUser.uid)
-      .where("status", "==", "pending").get(), { context: 'Loading sent requests' });
+      .where("status", "==", "pending").limit(100).get(), { context: 'Loading sent requests' });
     if (snap === FAILED) return;
     pendingSentRequests = snap.docs.map(d => ({ id: d.id, name: d.data().user2Name || 'Unnamed library' }));
   }
@@ -1222,6 +1390,10 @@
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     }), { context: 'Sending a friend request', success: `Friend request sent to ${targetName}.` });
     if (res === FAILED) return;
+    relationshipStates[targetUid] = 'pending';
+    relationshipDocs[targetUid] = res.id;
+    relationshipSenders[targetUid] = currentUser.uid;
+    if (!document.getElementById('reader-profile-modal').classList.contains('hidden')) openReaderProfile(targetUid);
     if (!document.getElementById('view-friends').classList.contains('hidden')) renderFriendsView();
   }
 
@@ -1286,7 +1458,7 @@
     if (!confirm(`Remove ${friendName}? You'll both lose access to each other's shelves.`)) return;
     const docId = friendshipDocs[friendUid];
     if (!docId) return toast('Could not find that friendship — try reloading.', 'error');
-    const res = await guard(() => db.collection("friendships").doc(docId).delete(), { context: 'Removing a friend', success: `${friendName} removed.` });
+    const res = await guard(() => lendingFunctions.httpsCallable('removeFriend')({ friendshipId: docId }), { context: 'Removing a friend', success: `${friendName} removed.` });
     if (res === FAILED) return;
     renderFriendsView();
   }
@@ -1300,11 +1472,12 @@
   async function viewFriendLibrary(friendUid, friendName) {
     switchTab('search');
     document.getElementById('header-title').textContent = `${friendName}'s Library`;
+    document.getElementById('global-search-input').value = '';
 
     const grid = document.getElementById('search-results-grid');
     grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4">Loading library…</p>';
 
-    const snap = await guard(() => db.collection("books").where("ownerId", "==", friendUid).get(), { context: "Loading that library" });
+    const snap = await guard(() => db.collection("books").where("ownerId", "==", friendUid).where('readerIds', 'array-contains', currentUser.uid).limit(150).get(), { context: "Loading that library" });
     if (snap === FAILED) { grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4">Could not load this library.</p>'; return; }
     grid.innerHTML = '';
 
@@ -1313,96 +1486,76 @@
       return;
     }
 
+    const statusFilter = document.getElementById('search-status-filter').value;
+    const genreFilter = document.getElementById('search-genre-filter').value;
+    let shown = 0;
     snap.forEach(doc => {
       const book = { id: doc.id, ...doc.data() };
+      if ((statusFilter && book.status !== statusFilter) || (genreFilter && book.genre !== genreFilter)) return;
+      shown += 1;
       const actions = book.status === 'Available'
-        ? `<button data-action="borrow" data-id="${esc(doc.id)}" data-title="${esc(book.title)}" data-owner="${esc(friendUid)}" class="text-ink-800 bg-ink-800/10 hover:bg-ink-800/20 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">Request to borrow</button>`
+        ? borrowActionWrapper(doc.id, book.title, friendUid)
         : `<span class="text-xs text-ink-400">Unavailable</span>`;
       grid.insertAdjacentHTML('beforeend', renderBookCard(book, actions));
     });
+    if (!shown) grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4">No books match the selected filters.</p>';
   }
   window.viewFriendLibrary = viewFriendLibrary;
 
   // --- 7. GLOBAL SEARCH ---
   async function performGlobalSearch() {
     const query = document.getElementById('global-search-input').value.trim().toLowerCase();
+    const statusFilter = document.getElementById('search-status-filter').value;
+    const genreFilter = document.getElementById('search-genre-filter').value;
     const grid = document.getElementById('search-results-grid');
-    if (!query) {
-      grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4">Type a book, author, user name, email, or shelf name to search.</p>';
+    if (query.length < 2) {
+      grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4">Enter at least two letters of a book, author, reader, or shelf name.</p>';
       return;
     }
-    grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4">Searching network…</p>';
-
-    const [bookSnap, profileSnap] = await Promise.all([
-      guard(() => db.collection("books").get(), { context: 'Searching books' }),
-      guard(() => db.collection("profiles").get(), { context: 'Searching profiles' })
-    ]);
-    if (bookSnap === FAILED || profileSnap === FAILED) { grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4">Search failed. Please try again.</p>'; return; }
+    grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4">Searching your circle first…</p>';
+    const cacheKey = `${query}|${confirmedFriends.slice().sort().join(',')}`;
+    const cached = searchCache.get(cacheKey);
+    let friendBooks;
+    let discoveryBooks;
+    let profiles;
+    if (cached && Date.now() - cached.createdAt < SEARCH_CACHE_MS) {
+      ({ friendBooks, discoveryBooks, profiles } = cached);
+    } else {
+      const friendSnaps = await Promise.all(confirmedFriends.slice(0, 10).map(uid => guard(() => db.collection('books').where('ownerId', '==', uid).where('readerIds', 'array-contains', currentUser.uid).limit(10).get(), { context: 'Searching friends' })));
+      if (friendSnaps.includes(FAILED)) { grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4">Search failed. Please try again.</p>'; return; }
+      const [bookSnap, profileSnap] = await Promise.all([
+        guard(() => db.collection('bookDiscovery').where('searchTokens', 'array-contains', query).limit(10).get(), { context: 'Searching the network' }),
+        guard(() => db.collection('profiles').where('searchTokens', 'array-contains', query).limit(10).get(), { context: 'Searching readers' })
+      ]);
+      if (bookSnap === FAILED || profileSnap === FAILED) { grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4">Search failed. Please try again.</p>'; return; }
+      friendBooks = friendSnaps.flatMap(snap => snap.docs).map(doc => ({ id: doc.id, ...doc.data() }));
+      discoveryBooks = bookSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      profiles = profileSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      searchCache.set(cacheKey, { createdAt: Date.now(), friendBooks, discoveryBooks, profiles });
+    }
     grid.innerHTML = '';
-    let found = false;
-    let visibleResults = 0;
-    const matchingOwners = new Set();
-
-    const profilesForSearch = profileSnap.docs
-      .filter(doc => doc.id !== currentUser.uid)
-      .sort((a, b) => Number(confirmedFriends.includes(b.id)) - Number(confirmedFriends.includes(a.id)));
-    profilesForSearch.forEach(doc => {
-      const profile = doc.data();
-      const fields = [profile.libraryName, profile.ownerName, profile.ownerEmail, profile.shelfKey].map(v => String(v || '').toLowerCase());
-      const profileMatches = fields.some(v => v.includes(query));
-      if (!profileMatches) return;
-      const isFriend = confirmedFriends.includes(doc.id);
-      if (!isFriend && visibleResults >= 10) return;
-      found = true;
-      visibleResults += 1;
-      matchingOwners.add(doc.id);
+    const shown = new Set();
+    const addBook = (book, isFriend) => {
+      if (shown.has(`book:${book.id}`) || book.ownerId === currentUser.uid) return;
+      if ((statusFilter && book.status !== statusFilter) || (genreFilter && book.genre !== genreFilter)) return;
+      shown.add(`book:${book.id}`);
+      const actions = isFriend && book.status === 'Available'
+        ? borrowActionWrapper(book.id, book.title, book.ownerId)
+        : `<button data-action="open-reader-profile" data-uid="${esc(book.ownerId)}" class="text-rust-600 bg-rust-600/10 hover:bg-rust-600/20 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">View profile</button>`;
+      grid.insertAdjacentHTML('beforeend', renderBookCard(book, actions, `${esc(book.ownerName || 'A reader')}${isFriend ? ' · Friend' : ''}`));
+    };
+    friendBooks
+      .filter(book => searchTokens(book.title, book.author, book.ownerName).includes(query)).forEach(book => addBook(book, true));
+    profiles.forEach(profile => {
+      if (profile.id === currentUser.uid || shown.has(`profile:${profile.id}`)) return;
+      const isFriend = confirmedFriends.includes(profile.id);
+      shown.add(`profile:${profile.id}`);
       const name = profile.libraryName || 'Unnamed library';
-      const email = profile.ownerEmail ? `<p class="text-xs text-ink-400 mt-1">${esc(profile.ownerEmail)}</p>` : '';
-      const actions = isFriend
-        ? `<button data-action="view-shelf" data-uid="${esc(doc.id)}" data-name="${esc(name)}" class="bg-ink-800/10 text-ink-800 hover:bg-ink-800/20 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">View shelf</button>`
-        : `<button data-action="open-reader-profile" data-uid="${esc(doc.id)}" class="text-rust-600 bg-rust-600/10 hover:bg-rust-600/20 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">View profile</button>`;
-      grid.insertAdjacentHTML('beforeend', `
-        <div class="app-panel rounded-xl border border-ink-200 shadow-sm p-4 flex justify-between items-center gap-3">
-          <div class="flex items-center gap-3 min-w-0">
-            ${avatarHtml(profile, name)}
-            <div class="min-w-0">
-            <p class="font-mono text-[10px] uppercase tracking-wider text-rust-600">${isFriend ? 'Friend shelf' : 'Library shelf'}</p>
-            <h3 class="font-display text-lg text-ink-950 truncate">${esc(name)}</h3>
-            ${ratingBadgeHtml(doc.id, 3)}
-            ${email}
-            </div>
-          </div>
-          <div class="shrink-0">${actions}</div>
-        </div>`);
+      const action = isFriend ? `<button data-action="view-shelf" data-uid="${esc(profile.id)}" data-name="${esc(name)}" class="bg-ink-800/10 text-ink-800 px-3 py-1.5 rounded-lg text-xs font-semibold">View shelf</button>` : `<button data-action="open-reader-profile" data-uid="${esc(profile.id)}" class="text-rust-600 bg-rust-600/10 hover:bg-rust-600/20 px-3 py-1.5 rounded-lg text-xs font-semibold">View profile</button>`;
+      grid.insertAdjacentHTML('beforeend', `<div class="app-panel rounded-xl border border-ink-200 shadow-sm p-4 flex justify-between items-center gap-3"><div class="flex items-center gap-3 min-w-0">${avatarHtml(profile, name)}<div class="min-w-0"><p class="font-mono text-[10px] uppercase tracking-wider text-rust-600">${isFriend ? 'Friend shelf' : 'Reader profile'}</p><h3 class="font-display text-lg text-ink-950 truncate">${esc(name)}</h3>${ratingBadgeHtml(profile.id, profile.ratingScore || 3)}</div></div><div class="shrink-0">${action}</div></div>`);
     });
-
-    hydrateRatingBadges(profilesForSearch.map(doc => ({ uid: doc.id, data: doc.data() })));
-
-    const booksForSearch = bookSnap.docs
-      .filter(doc => doc.data().ownerId !== currentUser.uid)
-      .sort((a, b) => Number(confirmedFriends.includes(b.data().ownerId)) - Number(confirmedFriends.includes(a.data().ownerId)));
-    booksForSearch.forEach(doc => {
-      const book = { id: doc.id, ...doc.data() };
-
-      if (matchingOwners.has(book.ownerId) || (book.title || '').toLowerCase().includes(query) || (book.author || '').toLowerCase().includes(query) || (book.ownerName && book.ownerName.toLowerCase().includes(query))) {
-        const isFriend = confirmedFriends.includes(book.ownerId);
-        if (!isFriend && visibleResults >= 10) return;
-        found = true;
-        visibleResults += 1;
-
-        let actions;
-        if (isFriend) {
-          actions = book.status === 'Available'
-            ? `<button data-action="borrow" data-id="${esc(doc.id)}" data-title="${esc(book.title)}" data-owner="${esc(book.ownerId)}" class="text-ink-800 bg-ink-800/10 hover:bg-ink-800/20 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">Request to borrow</button>`
-            : `<span class="text-xs text-ink-400">Unavailable</span>`;
-        } else {
-          actions = `<button data-action="add-friend" data-owner="${esc(book.ownerId)}" data-name="${esc(book.ownerName || 'that library')}" class="text-rust-600 bg-rust-600/10 hover:bg-rust-600/20 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">Add friend</button>`;
-        }
-        const ownerLabel = `${esc(book.ownerName)}${isFriend ? ' · Friend' : ''}`;
-        grid.insertAdjacentHTML('beforeend', renderBookCard(book, actions, ownerLabel));
-      }
-    });
-    if (!found) grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4">No matching books or libraries found.</p>';
+    discoveryBooks.forEach(book => addBook(book, confirmedFriends.includes(book.ownerId)));
+    if (!shown.size) grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4">No matching books or reader profiles found.</p>';
   }
   window.performGlobalSearch = performGlobalSearch;
   document.getElementById('global-search-form').addEventListener('submit', (e) => {
@@ -1413,20 +1566,24 @@
   // --- 8. BORROW & FRIEND REQUEST INBOX ---
   async function sendBorrowRequest(bookId, title, ownerId) {
     if (borrowedBooksCache.length >= 3) return toast('You can borrow up to 3 books at a time. Return one before requesting another.', 'error');
-    const existing = await guard(() => db.collection('requests').where('requesterId', '==', currentUser.uid).where('bookId', '==', bookId).get(), { context: 'Checking your requests' });
+    const existing = await guard(() => db.collection('requests').where('requesterId', '==', currentUser.uid).where('bookId', '==', bookId).limit(100).get(), { context: 'Checking your requests' });
     if (existing === FAILED) return;
     if (existing.docs.some(doc => doc.data().status === 'pending' || doc.data().status === 'approved')) return toast('You already have an active request for this book.', 'info');
     const bookDoc = await guard(() => db.collection('books').doc(bookId).get(), { context: 'Checking book availability' });
     if (bookDoc === FAILED || !bookDoc.exists || bookDoc.data().status !== 'Available') return toast('That book is no longer available.', 'error');
-    await guard(() => db.collection("requests").add({
+    const result = await guard(() => db.collection("requests").add({
       type: 'borrow',
       bookId, title, ownerId,
+      ownerName: bookDoc.data().ownerName || 'your friend',
       requesterId: currentUser.uid,
       requesterName: userProfile.libraryName,
-      requesterEmail: currentUser.email,
       status: 'pending',
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     }), { context: 'Sending a borrow request', success: `Borrow request sent for "${title}".` });
+    if (result !== FAILED) {
+      borrowRequestStates[bookId] = 'pending';
+      refreshBorrowActions();
+    }
   }
   window.sendBorrowRequest = sendBorrowRequest;
   window.sendFriendRequest = sendFriendRequest;
@@ -1460,7 +1617,7 @@
             ${date ? `<p class="text-[11px] text-ink-400 mt-1">${esc(date)}</p>` : ''}
           </div>
         </div>
-        <div class="flex gap-2 shrink-0">${actionsHtml || ''}</div>
+        <div class="flex flex-wrap gap-2 shrink-0">${actionsHtml || ''}</div>
       </div>`;
   }
 
@@ -1468,18 +1625,21 @@
     inboxUnsubscribers.forEach(unsub => unsub && unsub());
     inboxUnsubscribers = [
       db.collection("friendships").where("user2", "==", currentUser.uid)
-        .onSnapshot(snap => {
+        .limit(100).onSnapshot(snap => {
           inboxState.friends = snap.docs.map(doc => ({ id: doc.id, kind: 'friend', ...doc.data() }));
           renderInbox();
         }, listenerError('friend requests')),
       db.collection("requests").where("ownerId", "==", currentUser.uid)
-        .onSnapshot(snap => {
+        .limit(100).onSnapshot(snap => {
           inboxState.ownerRequests = snap.docs.map(doc => ({ id: doc.id, audience: 'owner', ...doc.data() }));
           renderInbox();
         }, listenerError('borrow requests')),
       db.collection("requests").where("requesterId", "==", currentUser.uid)
-        .onSnapshot(snap => {
+        .limit(100).onSnapshot(snap => {
           inboxState.requesterRequests = snap.docs.map(doc => ({ id: doc.id, audience: 'requester', ...doc.data() }));
+          borrowRequestStates = {};
+          inboxState.requesterRequests.filter(req => req.type === 'borrow').forEach(req => { borrowRequestStates[req.bookId] = req.status; });
+          refreshBorrowActions();
           renderInbox();
         }, listenerError('your request updates'))
     ];
@@ -1488,6 +1648,7 @@
   function renderInbox() {
     const inboxBody = document.getElementById('inbox-body');
     const badge = document.getElementById('inbox-badge');
+    const mobileBadge = document.getElementById('mobile-inbox-badge');
     const items = [...inboxState.friends, ...inboxState.ownerRequests, ...inboxState.requesterRequests]
       .filter(item => !(item.audience === 'requester' && item.ownerId === currentUser.uid))
       .sort((a, b) => {
@@ -1504,8 +1665,11 @@
     if (pendingCount) {
       badge.textContent = pendingCount;
       badge.classList.remove('hidden');
+      mobileBadge.textContent = pendingCount;
+      mobileBadge.classList.remove('hidden');
     } else {
       badge.classList.add('hidden');
+      mobileBadge.classList.add('hidden');
     }
     if (!items.length) {
       inboxBody.innerHTML = '<p class="text-ink-400 text-sm">No inbox activity yet.</p>';
@@ -1517,7 +1681,7 @@
         const actions = req.status === 'pending' ? `
           <button data-action="accept-friend" data-id="${esc(req.id)}" class="bg-ink-600/10 text-ink-700 hover:bg-ink-600/20 p-2 rounded-lg" title="Accept">${icon('check','w-4 h-4')}</button>
           <button data-action="decline-friend" data-id="${esc(req.id)}" class="bg-rust-600/10 text-rust-600 hover:bg-rust-600/20 p-2 rounded-lg" title="Decline">${icon('x','w-4 h-4')}</button>` : '';
-        inboxBody.insertAdjacentHTML('beforeend', inboxCard('users', 'Friend request', `<span class="text-rust-600 font-semibold">${esc(req.user1Name)}</span> wants to connect libraries with you.`, actions, req.status, req.createdAt));
+        inboxBody.insertAdjacentHTML('beforeend', inboxCard('users', 'Friend request', `<button data-action="open-reader-profile" data-uid="${esc(req.user1)}" class="text-rust-600 font-semibold hover:underline">${esc(req.user1Name)}</button> wants to connect libraries with you.`, actions, req.status, req.createdAt));
         return;
       }
 
@@ -1543,6 +1707,12 @@
         return;
       }
 
+      if (req.type === 'account-deleted') {
+        const name = req.requesterName || 'A reader';
+        inboxBody.insertAdjacentHTML('beforeend', inboxCard('userMinus', 'Account closed', `<span class="text-rust-600 font-semibold">${esc(name)}</span> deleted their CloudLibrary account. Their shelf and pending requests have been closed.`, '', req.status, req.createdAt));
+        return;
+      }
+
       if (req.audience === 'owner') {
         const actions = req.status === 'pending' ? `
           <button data-action="approve-borrow" data-id="${esc(req.id)}" data-book="${esc(req.bookId || '')}" class="bg-ink-600/10 text-ink-700 hover:bg-ink-600/20 p-2 rounded-lg" title="Approve">${icon('check','w-4 h-4')}</button>
@@ -1552,51 +1722,30 @@
         const owner = req.ownerName || 'The owner';
         const body = req.status === 'pending'
           ? `Your request for "${esc(req.title)}" is waiting for <span class="text-rust-600 font-semibold">${esc(owner)}</span>.`
+          : req.denialReason === 'book-unavailable'
+            ? `"${esc(req.title)}" is currently with another reader. You can try again when it is returned.`
           : `<span class="text-rust-600 font-semibold">${esc(owner)}</span> marked your request for "${esc(req.title)}" as ${esc(req.status)}.`;
-        inboxBody.insertAdjacentHTML('beforeend', inboxCard('book', 'Borrow update', body, '', req.status, req.createdAt));
+        const updateIcon = req.status === 'pending' ? 'clock' : (req.status === 'approved' || req.status === 'returned' ? 'check' : (req.status === 'denied' || req.status === 'lost' || req.status === 'cancelled' ? 'x' : 'book'));
+        inboxBody.insertAdjacentHTML('beforeend', inboxCard(updateIcon, 'Borrow update', body, '', req.status, req.createdAt));
       }
     });
   }
 
-  async function respondFriendRequest(reqId, status) {
-    const res = await guard(() => db.collection("friendships").doc(reqId).update({
-      status,
-      respondedAt: firebase.firestore.FieldValue.serverTimestamp()
-    }), { context: 'Responding to a friend request', success: status === 'accepted' ? 'Friend added — their shelf is now open to you.' : 'Request declined.' });
-    if (res === FAILED) return;
+  async function respondFriendRequest(reqId, status, button) {
+    if (button) { button.disabled = true; button.title = 'Connecting libraries…'; }
+    if (status === 'accepted') toast('Connecting both shelves…', 'info');
+    const res = await guard(() => lendingFunctions.httpsCallable('respondToFriendRequest')({ requestId: reqId, action: status }), { context: 'Responding to a friend request', success: status === 'accepted' ? 'Friend added — both shelves are now open to you.' : 'Request declined.' });
+    if (res === FAILED) { if (button) button.disabled = false; return; }
     await loadFriendsList();
     if (!document.getElementById('view-friends').classList.contains('hidden')) renderFriendsView();
   }
   window.respondFriendRequest = respondFriendRequest;
 
-  async function respondBorrowRequest(reqId, bookId, status) {
-    const reqDoc = await guard(() => db.collection("requests").doc(reqId).get(), { context: 'Loading borrow request' });
-    if (reqDoc === FAILED || !reqDoc.exists) return;
-    const req = reqDoc.data();
-    if (req.ownerId !== currentUser.uid || req.status !== 'pending') return toast('That request has already been handled.', 'error');
-    if (status !== 'approved' || !bookId) {
-      const res = await guard(() => db.collection('requests').doc(reqId).update({ status: 'denied', ownerName: userProfile.libraryName, respondedAt: firebase.firestore.FieldValue.serverTimestamp() }), { context: 'Denying a borrow request', success: 'Request denied.' });
-      return res;
-    }
-    const dueAt = firebase.firestore.Timestamp.fromDate(new Date(Date.now() + 14 * 24 * 60 * 60 * 1000));
-    const res = await guard(() => db.runTransaction(async (transaction) => {
-      const bookRef = db.collection('books').doc(bookId);
-      const borrowerBooksQuery = db.collection('books').where('borrowerId', '==', req.requesterId);
-      const [freshRequest, bookDoc, borrowerBooks] = await Promise.all([transaction.get(reqDoc.ref), transaction.get(bookRef), transaction.get(borrowerBooksQuery)]);
-      if (!freshRequest.exists || freshRequest.data().status !== 'pending') throw new Error('This request was already handled.');
-      if (!bookDoc.exists || bookDoc.data().ownerId !== currentUser.uid || bookDoc.data().status !== 'Available') throw new Error('This book is no longer available.');
-      const activeLoans = borrowerBooks.docs.filter(doc => doc.data().status === 'Lent Out').length;
-      if (activeLoans >= 3) throw new Error('This reader already has 3 borrowed books.');
-      transaction.update(reqDoc.ref, { status: 'approved', ownerName: userProfile.libraryName, respondedAt: firebase.firestore.FieldValue.serverTimestamp(), loanDueAt: dueAt });
-      transaction.update(bookRef, {
-        status: 'Lent Out', borrowerId: req.requesterId, borrowerName: req.requesterName,
-        borrowerEmail: req.requesterEmail || '', lentAt: firebase.firestore.FieldValue.serverTimestamp(),
-        loanDueAt: dueAt, updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-    }), { context: 'Approving a borrow request', success: 'Approved - book is reserved for this reader for 14 days.' });
-    if (res === FAILED) return;
-    ratingCache.delete(currentUser.uid);
-    db.collection('ratingEvents').add({ subjectId: currentUser.uid, ownerId: currentUser.uid, points: 0.1, type: 'notification-action', createdAt: firebase.firestore.FieldValue.serverTimestamp() }).catch(err => console.warn('Could not record notification response', err));
+  async function respondBorrowRequest(reqId, bookId, status, button) {
+    if (button) { button.disabled = true; button.title = status === 'approved' ? 'Approving request…' : 'Denying request…'; }
+    const res = await guard(() => lendingFunctions.httpsCallable('respondToBorrowRequest')({ requestId: reqId, action: status === 'approved' ? 'approved' : 'denied', bookId: bookId || null }), { context: status === 'approved' ? 'Approving a borrow request' : 'Denying a borrow request', success: status === 'approved' ? 'Approved - book is reserved for this reader for 14 days.' : 'Request denied.' });
+    if (res !== FAILED) ratingCache.clear();
+    else if (button) { button.disabled = false; button.title = status === 'approved' ? 'Approve' : 'Deny'; }
   }
   window.respondBorrowRequest = respondBorrowRequest;
 
@@ -1629,12 +1778,14 @@
       case 'view-shelf': viewFriendLibrary(d.uid, d.name); break;
       case 'unfriend': unfriend(d.uid, d.name); break;
       case 'cancel-request': cancelSentRequest(d.id, d.name); break;
-      case 'accept-friend': respondFriendRequest(d.id, 'accepted'); break;
-      case 'decline-friend': respondFriendRequest(d.id, 'declined'); break;
-      case 'approve-borrow': respondBorrowRequest(d.id, d.book || null, 'approved'); break;
-      case 'deny-borrow': respondBorrowRequest(d.id, null, 'denied'); break;
+      case 'accept-friend': respondFriendRequest(d.id, 'accepted', btn); break;
+      case 'decline-friend': respondFriendRequest(d.id, 'declined', btn); break;
+      case 'switch-inbox': switchTab('inbox'); document.getElementById('reader-profile-modal').classList.add('hidden'); break;
+      case 'approve-borrow': respondBorrowRequest(d.id, d.book || null, 'approved', btn); break;
+      case 'deny-borrow': respondBorrowRequest(d.id, null, 'denied', btn); break;
       case 'complete-reminder': completeReminder(d.id); break;
       case 'delete-wish': guard(() => db.collection('wishlists').doc(d.id).delete(), { context: 'Removing wishlist item', success: 'Removed from your wishlist.' }); break;
+      case 'delete-account': deleteAccount(); break;
       case 'open-reader-profile': openReaderProfile(d.uid); break;
       case 'close-reader-profile': document.getElementById('reader-profile-modal').classList.add('hidden'); break;
     }
@@ -1725,56 +1876,7 @@
     document.getElementById('scanner-modal').classList.add('hidden');
   });
 
-  // --- 10. PUBLIC LOGIN-SCREEN STATS ---
-  function animateCount(el, target) {
-    const start = performance.now();
-    const duration = 1100;
-    function step(now) {
-      const progress = Math.min(1, (now - start) / duration);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      el.textContent = Math.round(eased * target).toLocaleString();
-      if (progress < 1) requestAnimationFrame(step);
-    }
-    requestAnimationFrame(step);
-  }
-
-  async function countDocs(ref) {
-    if (typeof ref.count === 'function') {
-      const snap = await ref.count().get();
-      return snap.data().count;
-    }
-    const snap = await ref.get();
-    return snap.size;
-  }
-
-  async function loadPublicStats() {
-    const tiles = [
-      { label: 'Volumes on shelves', ref: db.collection('books') },
-      { label: 'Libraries connected', ref: db.collection('profiles') },
-      { label: 'Friendships formed', ref: db.collection('friendships').where('status', '==', 'accepted') }
-    ];
-    const results = await Promise.allSettled(tiles.map(t => countDocs(t.ref)));
-    const container = document.getElementById('login-stats');
-    container.innerHTML = '';
-    let anySucceeded = false;
-
-    results.forEach((r, i) => {
-      if (r.status !== 'fulfilled') return;
-      anySucceeded = true;
-      const wrap = document.createElement('div');
-      wrap.className = 'animate-fade-up';
-      wrap.style.animationDelay = `${i * 0.12 + 0.2}s`;
-      wrap.innerHTML = `<div class="font-display text-4xl text-paper" data-target="${r.value}">0</div><div class="font-mono text-[10px] uppercase tracking-wider text-ink-300 mt-1">${tiles[i].label}</div>`;
-      container.appendChild(wrap);
-    });
-
-    if (!anySucceeded) {
-      document.getElementById('login-stats-fallback').classList.remove('hidden');
-      return;
-    }
-    container.querySelectorAll('[data-target]').forEach(el => animateCount(el, parseInt(el.dataset.target, 10)));
-  }
-  loadPublicStats().catch(() => document.getElementById('login-stats-fallback').classList.remove('hidden'));
+  // The signed-out page makes no database reads. That keeps casual visits free.
 </script>
 </body>
 </html>
