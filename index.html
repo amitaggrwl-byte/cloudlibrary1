@@ -511,7 +511,12 @@
     }
   }
 
-  async function openReaderProfile(uid) {
+  function closeReaderProfileModal() {
+    document.getElementById('reader-profile-modal').classList.add('hidden');
+    document.getElementById('reader-profile-body').innerHTML = '';
+  }
+
+  async function openReaderProfile(uid, editIntroduction = false) {
     const targetUid = uid === 'self' ? currentUser.uid : uid;
     const modal = document.getElementById('reader-profile-modal');
     const body = document.getElementById('reader-profile-body');
@@ -526,15 +531,18 @@
     const relationship = relationshipStates[targetUid];
     const name = profile.libraryName || 'Unnamed library';
     const actions = isSelf
-      ? `<form id="profile-bio-form" class="mt-5 space-y-3"><label class="block text-xs font-semibold text-ink-700" for="profile-bio-edit">About you</label><textarea id="profile-bio-edit" rows="4" maxlength="280" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-sm text-ink-950 resize-none">${esc(profile.bio || '')}</textarea><button type="submit" class="bg-ink-950 text-paper px-4 py-2.5 rounded-lg text-xs font-semibold">Save introduction</button></form><button data-action="delete-account" class="mt-6 text-xs font-semibold text-rust-600">Delete my account</button>`
+      ? `${editIntroduction
+          ? `<form id="profile-bio-form" class="mt-5 space-y-3"><label class="block text-xs font-semibold text-ink-700" for="profile-bio-edit">About you</label><textarea id="profile-bio-edit" rows="4" maxlength="280" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-sm text-ink-950 resize-none">${esc(profile.bio || '')}</textarea><div class="flex gap-2"><button type="button" data-action="open-reader-profile" data-uid="self" class="bg-ink-100 text-ink-700 px-4 py-2.5 rounded-lg text-xs font-semibold">Cancel</button><button type="submit" class="bg-ink-950 text-paper px-4 py-2.5 rounded-lg text-xs font-semibold">Save introduction</button></div></form>`
+          : `<button data-action="edit-profile-introduction" class="mt-5 inline-flex items-center gap-1.5 bg-ink-800/10 text-ink-800 hover:bg-ink-800/20 px-3 py-2.5 rounded-lg text-xs font-semibold">${icon('pencil', 'w-3.5 h-3.5')}Edit introduction</button>`}
+          <details class="mt-6 border-t border-ink-200 pt-4"><summary class="cursor-pointer text-xs font-semibold text-ink-600 hover:text-ink-950">Account settings</summary><div class="mt-3 rounded-lg border border-rust-200 bg-rust-50/70 p-3"><p class="text-xs leading-relaxed text-ink-600">Deleting your account permanently removes your shelf, cover photos, and pending requests. It is unavailable while you have an active loan.</p><button data-action="delete-account" class="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-rust-700 hover:text-rust-900">${icon('trash', 'w-3.5 h-3.5')}Delete my account</button></div></details>`
       : `<div class="mt-5 flex flex-wrap gap-2">${isFriend ? `<button data-action="view-shelf" data-uid="${esc(targetUid)}" data-name="${esc(name)}" class="bg-ink-800/10 text-ink-800 px-3 py-2.5 rounded-lg text-xs font-semibold">View shelf</button>` : relationship === 'pending' && relationshipSenders[targetUid] === currentUser.uid ? `<span class="text-xs font-semibold text-gold-600 py-2.5">Friend request sent</span><button data-action="cancel-request" data-id="${esc(relationshipDocs[targetUid] || '')}" data-name="${esc(name)}" class="text-xs font-semibold text-rust-600 px-2">Cancel request</button>` : relationship === 'pending' ? `<button data-action="switch-inbox" class="bg-ink-800/10 text-ink-800 px-3 py-2.5 rounded-lg text-xs font-semibold">Review request in Inbox</button>` : `<button data-action="add-friend" data-owner="${esc(targetUid)}" data-name="${esc(name)}" class="bg-rust-600 text-paper px-3 py-2.5 rounded-lg text-xs font-semibold">Add friend</button>`}</div>`;
-    body.innerHTML = `<div class="flex items-center gap-4 pr-8">${avatarHtml(profile, name, 'w-16 h-16')}<div class="min-w-0"><p class="font-mono text-[10px] uppercase tracking-widest text-rust-600">Reader profile</p><h2 class="font-display text-2xl text-ink-950 truncate">${esc(name)}</h2><p class="text-sm text-[#8a6414] font-semibold">${score.toFixed(1)}/10 reader score</p></div></div><div class="grid grid-cols-2 gap-3 mt-5"><div class="bg-ink-800/5 rounded-lg p-3"><p class="font-semibold text-ink-950">${Number(profile.bookCount || 0)}</p><p class="text-xs text-ink-500">books on shelf</p></div><div class="bg-ink-800/5 rounded-lg p-3"><p class="font-semibold text-ink-950">${isFriend ? 'Connected' : 'Not connected'}</p><p class="text-xs text-ink-500">library status</p></div></div><div class="mt-5"><p class="text-xs font-semibold text-ink-700 mb-1">About</p><p class="text-sm text-ink-600 leading-relaxed">${esc(profile.bio || 'No introduction added yet.')}</p></div>${actions}`;
+    body.innerHTML = `<div class="flex items-center gap-4 pr-8">${avatarHtml(profile, name, 'w-16 h-16')}<div class="min-w-0"><p class="font-mono text-[10px] uppercase tracking-widest text-rust-600">Reader profile</p><h2 class="font-display text-2xl text-ink-950 truncate">${esc(name)}</h2><p class="text-sm text-[#8a6414] font-semibold">${score.toFixed(1)}/10 reader score</p></div></div><div class="grid grid-cols-2 gap-3 mt-5"><div class="bg-ink-800/5 rounded-lg p-3"><p class="font-semibold text-ink-950">${Number(profile.bookCount || 0)}</p><p class="text-xs text-ink-500">books on shelf</p></div><div class="bg-ink-800/5 rounded-lg p-3"><p class="font-semibold text-ink-950">${isSelf ? 'Your shelf' : (isFriend ? 'Connected' : 'Not connected')}</p><p class="text-xs text-ink-500">library status</p></div></div><div class="mt-5"><p class="text-xs font-semibold text-ink-700 mb-1">About</p><p class="text-sm text-ink-600 leading-relaxed">${esc(profile.bio || 'No introduction added yet.')}</p></div>${actions}`;
     if (isSelf) document.getElementById('profile-bio-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const bio = document.getElementById('profile-bio-edit').value.trim().slice(0, 280);
       const nextProfile = { ...userProfile, bio };
       const res = await guard(() => db.collection('profiles').doc(currentUser.uid).set(publicProfileData(nextProfile)), { context: 'Saving your introduction', success: 'Profile introduction saved.' });
-      if (res !== FAILED) { userProfile = nextProfile; renderMyReaderScore(); }
+      if (res !== FAILED) { userProfile = nextProfile; renderMyReaderScore(); openReaderProfile('self'); }
     });
   }
   window.openReaderProfile = openReaderProfile;
@@ -790,6 +798,7 @@
       error: 'Return or close every active loan before deleting this account.'
     });
     if (res === FAILED) return;
+    closeReaderProfileModal();
     clearTimeout(inactivityTimer);
     await auth.signOut();
     toast('Your account has been deleted.', 'success');
@@ -813,6 +822,7 @@
       clearTimeout(inactivityTimer);
       currentUser = null;
       userProfile = null;
+      closeReaderProfileModal();
       document.getElementById('login-screen').classList.remove('hidden');
       document.getElementById('app-content').classList.add('hidden');
       isSigningOut = false;
@@ -1786,8 +1796,9 @@
       case 'complete-reminder': completeReminder(d.id); break;
       case 'delete-wish': guard(() => db.collection('wishlists').doc(d.id).delete(), { context: 'Removing wishlist item', success: 'Removed from your wishlist.' }); break;
       case 'delete-account': deleteAccount(); break;
+      case 'edit-profile-introduction': openReaderProfile('self', true); break;
       case 'open-reader-profile': openReaderProfile(d.uid); break;
-      case 'close-reader-profile': document.getElementById('reader-profile-modal').classList.add('hidden'); break;
+      case 'close-reader-profile': closeReaderProfileModal(); break;
     }
   });
 
