@@ -1024,25 +1024,41 @@
     const content = document.getElementById('cloud-ticker-content');
     if (!content) return;
     try {
-      const friendShelves = await Promise.all(confirmedFriends.slice(0, 10).map(uid =>
-        db.collection('books').where('ownerId', '==', uid).where('readerIds', 'array-contains', currentUser.uid).limit(10).get()
-      ));
-      const books = friendShelves.flatMap(snap => snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-      const available = books.filter(book => book.status === 'Available');
-      const genres = {};
-      books.forEach(book => { if (book.genre) genres[book.genre] = (genres[book.genre] || 0) + 1; });
-      const topGenre = Object.keys(genres).sort((a, b) => genres[b] - genres[a])[0] || 'Fiction';
-      tickerItems = [
-        `<div class="ticker-item"><span class="font-mono text-[10px] uppercase tracking-widest text-rust-600 mr-2">Your circle</span><span class="font-display text-base text-ink-950">${available.length} books</span><span class="text-ink-500"> are currently available from friends.</span></div>`,
-        `<div class="ticker-item"><span class="font-mono text-[10px] uppercase tracking-widest text-rust-600 mr-2">Shelf note</span><span class="font-display text-base text-ink-950">${esc(topGenre)}</span><span class="text-ink-500"> is the most common genre in your friends' libraries.</span></div>`
-      ];
-      if (available.length) {
-        const book = available[Math.floor(Math.random() * available.length)];
-        const friend = confirmedFriends.includes(book.ownerId);
-        const action = friend
-          ? `<button data-action="borrow" data-id="${esc(book.id)}" data-title="${esc(book.title)}" data-owner="${esc(book.ownerId)}" class="ml-3 text-xs font-semibold text-rust-600">Request to borrow</button>`
-          : `<button data-action="add-friend" data-owner="${esc(book.ownerId)}" data-name="${esc(book.ownerName || 'that library')}" class="ml-3 text-xs font-semibold text-rust-600">Connect</button>`;
-        tickerItems.splice(1, 0, `<div class="ticker-item"><span class="font-mono text-[10px] uppercase tracking-widest text-rust-600 mr-2">Available now</span><span class="font-display text-base text-ink-950">${esc(book.title)}</span><span class="text-ink-500"> by ${esc(book.author)} is available from ${esc(book.ownerName || 'a reader')}.</span>${action}</div>`);
+      const friendActivityQuery = db.collection('tickerActivities').where('recipientId', '==', currentUser.uid).orderBy('createdAt', 'desc').limit(6).get()
+        .catch(async err => {
+          // A freshly deployed composite index can take a few minutes to build.
+          // Keep the ticker useful with the same small read cap in the meantime.
+          console.warn('Ticker activity index is not ready yet', err);
+          return db.collection('tickerActivities').where('recipientId', '==', currentUser.uid).limit(6).get();
+        });
+      const [friendActivity, newReaders, readerStats, networkStats, latestAdded, latestBorrowed, latestAvailable] = await Promise.all([
+        friendActivityQuery,
+        db.collection('networkTicker').orderBy('createdAt', 'desc').limit(1).get(),
+        db.collection('readerStats').doc(currentUser.uid).get(),
+        db.collection('networkStats').doc('current').get(),
+        db.collection('networkTicker').doc('latest-book-added').get(),
+        db.collection('networkTicker').doc('latest-book-borrowed').get(),
+        db.collection('networkTicker').doc('latest-book-available').get()
+      ]);
+      const items = [
+        ...friendActivity.docs.map(doc => ({ id: doc.id, ...doc.data() })),
+        ...newReaders.docs.map(doc => ({ id: doc.id, ...doc.data() })).filter(item => item.actorId !== currentUser.uid),
+        ...[latestAdded, latestBorrowed, latestAvailable]
+          .filter(doc => doc.exists)
+          .map(doc => ({ id: doc.id, ...doc.data() }))
+      ].sort((a, b) => timestampMillis(b.createdAt) - timestampMillis(a.createdAt)).slice(0, 8);
+      const personal = readerStats.exists ? readerStats.data() : {};
+      const community = networkStats.exists ? networkStats.data() : {};
+      if (Number(personal.totalBorrowed || 0)) items.push({ type: 'your-borrowing-total', totalBorrowed: personal.totalBorrowed });
+      if (Number(personal.mostBorrowedCount || 0)) items.push({ type: 'your-most-borrowed', title: personal.mostBorrowedTitle, count: personal.mostBorrowedCount });
+      if (Number(community.totalLoans || 0)) items.push({ type: 'community-loans', totalLoans: community.totalLoans, activeLoans: community.activeLoans || 0 });
+      if (Number(community.mostBorrowedCount || 0) && community.mostBorrowedTitle) {
+        items.push({ type: 'community-most-borrowed', title: community.mostBorrowedTitle, coverUrl: community.mostBorrowedCoverUrl, count: community.mostBorrowedCount });
+      }
+      if (Number(community.highestMemberBorrowed || 0)) items.push({ type: 'community-record', count: community.highestMemberBorrowed });
+      tickerItems = items.slice(0, 12).map(tickerItemHtml);
+      if (!tickerItems.length) {
+        tickerItems = ['<div class="ticker-item"><span class="font-mono text-[10px] uppercase tracking-widest text-rust-600 mr-2">Your circle</span><span class="text-ink-500">New books, available returns, and wishlist matches will appear here.</span></div>'];
       }
       tickerIndex = 0;
       renderTicker();
@@ -1052,6 +1068,61 @@
       console.warn('Cloud ticker could not load', err);
       content.textContent = 'Community updates are temporarily unavailable. Refresh after signing in.';
     }
+  }
+
+  function tickerItemHtml(item) {
+    const actor = esc(item.actorName || 'A reader');
+    const title = esc(item.title || 'a book');
+    const shelfAction = item.ownerId
+      ? `<button data-action="view-shelf" data-uid="${esc(item.ownerId)}" data-name="${actor}" class="ml-2 text-xs font-semibold text-rust-600">View shelf</button>`
+      : '';
+    const anonymousBookItem = (label, copy) => {
+      const cover = safeUrl(item.coverUrl || '');
+      const bookVisual = cover
+        ? `<img src="${esc(cover)}" alt="" class="h-10 w-7 shrink-0 rounded border border-sage-200 object-cover">`
+        : `<span class="flex h-10 w-7 shrink-0 items-center justify-center rounded border border-sage-200 bg-sage-50 text-sage-700">${icon('book', 15)}</span>`;
+      return `<div class="ticker-item flex items-center gap-3">${bookVisual}<div class="min-w-0"><span class="font-mono text-[10px] uppercase tracking-widest text-rust-600 mr-2">${label}</span><span class="font-display text-base text-ink-950">${title}</span><span class="text-ink-500"> ${copy}</span></div></div>`;
+    };
+    if (item.type === 'public-book-added') return anonymousBookItem('New to CloudLibrary', 'was recently added.');
+    if (item.type === 'public-book-borrowed') return anonymousBookItem('Latest loan', 'was recently borrowed.');
+    if (item.type === 'public-book-available') return anonymousBookItem('Available again', 'is ready for another reader.');
+    if (item.type === 'book-added') {
+      return `<div class="ticker-item"><span class="font-mono text-[10px] uppercase tracking-widest text-rust-600 mr-2">New on a shelf</span><span class="font-display text-base text-ink-950">${title}</span><span class="text-ink-500"> was added by ${actor}.</span>${shelfAction}</div>`;
+    }
+    if (item.type === 'book-available') {
+      return `<div class="ticker-item"><span class="font-mono text-[10px] uppercase tracking-widest text-rust-600 mr-2">Available again</span><span class="font-display text-base text-ink-950">${title}</span><span class="text-ink-500"> is back on ${actor}'s shelf.</span>${shelfAction}</div>`;
+    }
+    if (item.type === 'book-reading') {
+      return `<div class="ticker-item"><span class="font-mono text-[10px] uppercase tracking-widest text-rust-600 mr-2">Shelf update</span><span class="text-ink-500">${actor} added ${title} to their reading shelf.</span>${shelfAction}</div>`;
+    }
+    if (item.type === 'wishlist-match') {
+      return `<div class="ticker-item"><span class="font-mono text-[10px] uppercase tracking-widest text-rust-600 mr-2">Wishlist match</span><span class="text-ink-500">${actor} added </span><span class="font-display text-base text-ink-950">${title}</span><span class="text-ink-500">, a book you wanted.</span>${shelfAction}</div>`;
+    }
+    if (item.type === 'book-borrowed-owner') {
+      return `<div class="ticker-item"><span class="font-mono text-[10px] uppercase tracking-widest text-rust-600 mr-2">Latest loan</span><span class="font-display text-base text-ink-950">${title}</span><span class="text-ink-500"> was borrowed by ${actor}.</span></div>`;
+    }
+    if (item.type === 'book-borrowed-reader') {
+      return `<div class="ticker-item"><span class="font-mono text-[10px] uppercase tracking-widest text-rust-600 mr-2">Latest loan</span><span class="text-ink-500">You borrowed </span><span class="font-display text-base text-ink-950">${title}</span><span class="text-ink-500"> from ${actor}.</span></div>`;
+    }
+    if (item.type === 'your-borrowing-total') {
+      return `<div class="ticker-item"><span class="font-mono text-[10px] uppercase tracking-widest text-rust-600 mr-2">Your record</span><span class="font-display text-base text-ink-950">${Number(item.totalBorrowed)}</span><span class="text-ink-500"> successful book loan${Number(item.totalBorrowed) === 1 ? '' : 's'} tracked so far.</span></div>`;
+    }
+    if (item.type === 'your-most-borrowed') {
+      return `<div class="ticker-item"><span class="font-mono text-[10px] uppercase tracking-widest text-rust-600 mr-2">Your shelf favorite</span><span class="font-display text-base text-ink-950">${title}</span><span class="text-ink-500"> has been borrowed ${Number(item.count)} time${Number(item.count) === 1 ? '' : 's'}.</span></div>`;
+    }
+    if (item.type === 'community-loans') {
+      return `<div class="ticker-item"><span class="font-mono text-[10px] uppercase tracking-widest text-rust-600 mr-2">Community tally</span><span class="font-display text-base text-ink-950">${Number(item.totalLoans)}</span><span class="text-ink-500"> successful loans · ${Number(item.activeLoans)} currently out.</span></div>`;
+    }
+    if (item.type === 'community-record') {
+      return `<div class="ticker-item"><span class="font-mono text-[10px] uppercase tracking-widest text-rust-600 mr-2">Community record</span><span class="font-display text-base text-ink-950">${Number(item.count)} books</span><span class="text-ink-500"> borrowed by one reader. Names stay private.</span></div>`;
+    }
+    if (item.type === 'community-most-borrowed') {
+      return anonymousBookItem('Most borrowed', `has been lent ${Number(item.count)} time${Number(item.count) === 1 ? '' : 's'} across CloudLibrary.`);
+    }
+    if (item.type === 'member-joined') {
+      return `<div class="ticker-item"><span class="font-mono text-[10px] uppercase tracking-widest text-rust-600 mr-2">New reader</span><button data-action="open-reader-profile" data-uid="${esc(item.actorId)}" class="font-display text-base text-ink-950 hover:underline">${actor}</button><span class="text-ink-500"> joined CloudLibrary.</span></div>`;
+    }
+    return `<div class="ticker-item"><span class="text-ink-500">A new CloudLibrary update is waiting for you.</span></div>`;
   }
 
   function renderTicker() {

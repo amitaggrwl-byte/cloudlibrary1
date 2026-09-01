@@ -26,6 +26,15 @@ test.before(async () => {
       ownerId: 'owner', ownerName: 'OwnerShelf', title: 'Locked book', author: 'Author',
       status: 'Available', readerIds: ['reader'], discoveryVersion: 1
     });
+    await store.collection('tickerActivities').doc('alice-book').set({
+      recipientId: 'alice', type: 'book-added', actorId: 'bob', actorName: 'BobShelf',
+      ownerId: 'bob', title: 'Book', createdAt: new Date()
+    });
+    await store.collection('networkTicker').doc('member-bob').set({
+      type: 'member-joined', actorId: 'bob', actorName: 'BobShelf', createdAt: new Date()
+    });
+    await store.collection('readerStats').doc('alice').set({ totalBorrowed: 4, mostBorrowedTitle: 'Book', mostBorrowedCount: 2 });
+    await store.collection('networkStats').doc('current').set({ totalLoans: 9, activeLoans: 2, highestMemberBorrowed: 4 });
   });
 });
 
@@ -117,4 +126,22 @@ test('discovery searches are capped at ten documents', async () => {
   await assertSucceeds(alice.collection('bookDiscovery').where('searchTokens', 'array-contains', 'har').limit(10).get());
   await assertFails(alice.collection('bookDiscovery').where('searchTokens', 'array-contains', 'har').get());
   assert.ok(true);
+});
+
+test('ticker feeds are small and private where book activity is concerned', async () => {
+  const alice = env.authenticatedContext('alice').firestore();
+  const charlie = env.authenticatedContext('charlie').firestore();
+  await assertSucceeds(alice.collection('tickerActivities').where('recipientId', '==', 'alice').orderBy('createdAt', 'desc').limit(6).get());
+  await assertFails(charlie.collection('tickerActivities').doc('alice-book').get());
+  await assertSucceeds(alice.collection('networkTicker').orderBy('createdAt', 'desc').limit(2).get());
+  await assertFails(alice.collection('networkTicker').orderBy('createdAt', 'desc').limit(3).get());
+});
+
+test('ticker statistics keep personal details private and community records anonymous', async () => {
+  const alice = env.authenticatedContext('alice').firestore();
+  const bob = env.authenticatedContext('bob').firestore();
+  await assertSucceeds(alice.collection('readerStats').doc('alice').get());
+  await assertFails(bob.collection('readerStats').doc('alice').get());
+  await assertSucceeds(alice.collection('networkStats').doc('current').get());
+  await assertFails(alice.collection('networkStats').get());
 });

@@ -96,6 +96,38 @@ service cloud.firestore {
         && request.resource.data.ownerId == resource.data.ownerId;
     }
 
+    // Small, server-written ticker records. Book-related activity is visible
+    // only to the specific confirmed friend it was written for.
+    match /tickerActivities/{activityId} {
+      allow get: if signedIn() && resource.data.recipientId == request.auth.uid;
+      allow list: if signedIn() && request.query.limit != null && request.query.limit <= 6
+        && resource.data.recipientId == request.auth.uid;
+      allow write: if false;
+    }
+
+    // New-reader announcements contain only already-public profile details.
+    match /networkTicker/{activityId} {
+      allow get: if signedIn();
+      allow list: if signedIn() && request.query.limit != null && request.query.limit <= 2;
+      allow write: if false;
+    }
+
+    // Aggregates are maintained by trusted Functions. Personal title/count
+    // details are private, while the community record is anonymous.
+    match /readerStats/{userId} {
+      allow get, list: if own(userId);
+      allow write: if false;
+    }
+
+    match /networkStats/{statsId} {
+      allow get: if signedIn();
+      allow list, write: if false;
+    }
+
+    match /bookLoanStats/{bookId} {
+      allow read, write: if false;
+    }
+
     match /friendships/{friendshipId} {
       allow get: if signedIn() && (resource.data.user1 == request.auth.uid || resource.data.user2 == request.auth.uid);
       allow list: if signedIn() && request.query.limit != null && request.query.limit <= 100

@@ -43,6 +43,46 @@ async function acceptedFriendIds(userId) {
   return [...friendIds];
 }
 
+async function writeTickerActivities(recipientIds, eventKey, activity) {
+  const recipients = [...new Set(recipientIds)].filter(Boolean);
+  if (!recipients.length) return;
+  const batch = db.batch();
+  recipients.forEach(recipientId => {
+    batch.set(db.collection('tickerActivities').doc(`${eventKey}-${recipientId}`), {
+      recipientId,
+      ...activity,
+      createdAt: FieldValue.serverTimestamp()
+    });
+  });
+  await batch.commit();
+}
+
+async function writeNewMemberActivity(userId, profile) {
+  await db.collection('networkTicker').doc(`member-${userId}`).set({
+    type: 'member-joined',
+    actorId: userId,
+    actorName: profile.libraryName || 'A new reader',
+    actorPhotoURL: profile.photoURL || '',
+    createdAt: FieldValue.serverTimestamp()
+  });
+}
+
+async function writePublicBookActivity(eventKey, type, book) {
+  const latestActivityIds = {
+    'public-book-added': 'latest-book-added',
+    'public-book-borrowed': 'latest-book-borrowed',
+    'public-book-available': 'latest-book-available'
+  };
+  // Keep one anonymous record per category. This stays small regardless of
+  // how active the community becomes, and never associates a reader with it.
+  await db.collection('networkTicker').doc(latestActivityIds[type] || eventKey).set({
+    type,
+    title: book.title || 'Untitled book',
+    coverUrl: book.coverUrl || '',
+    createdAt: FieldValue.serverTimestamp()
+  });
+}
+
 exports.respondToFriendRequest = onCall(callableRuntime, async request => {
   const uid = requireUser(request);
   const requestId = requireString(request.data?.requestId, 'requestId');
@@ -156,7 +196,7 @@ exports.respondToBorrowRequest = onCall(callableRuntime, async request => {
   const action = request.data?.action;
   if (!['approved', 'denied'].includes(action)) throw new HttpsError('invalid-argument', 'Invalid borrow request action.');
   const requestRef = db.collection('requests').doc(requestId);
-  return db.runTransaction(async tx => {
+  const result = await db.runTransaction(async tx => {
     const requestSnap = await tx.get(requestRef);
     if (!requestSnap.exists) throw new HttpsError('not-found', 'Borrow request no longer exists.');
     const loan = requestSnap.data();
@@ -166,10 +206,15 @@ exports.respondToBorrowRequest = onCall(callableRuntime, async request => {
       return { action };
     }
     const bookRef = db.collection('books').doc(loan.bookId);
-    const [bookSnap, activeLoans, pendingRequests] = await Promise.all([
+    const borrowerStatsRef = db.collection('readerStats').doc(loan.requesterId);
+    const ownerStatsRef = db.collection('readerStats').doc(uid);
+    const bookStatsRef = db.collection('bookLoanStats').doc(loan.bookId);
+    const networkStatsRef = db.collection('networkStats').doc('current');
+    const [bookSnap, activeLoans, pendingRequests, borrowerStatsSnap, ownerStatsSnap, bookStatsSnap, networkStatsSnap] = await Promise.all([
       tx.get(bookRef),
       tx.get(db.collection('books').where('borrowerId', '==', loan.requesterId).where('status', '==', 'Lent Out').limit(4)),
-      tx.get(db.collection('requests').where('bookId', '==', loan.bookId).where('status', '==', 'pending').limit(100))
+      tx.get(db.collection('requests').where('bookId', '==', loan.bookId).where('status', '==', 'pending').limit(100)),
+      tx.get(borrowerStatsRef), tx.get(ownerStatsRef), tx.get(bookStatsRef), tx.get(networkStatsRef)
     ]);
     if (!bookSnap.exists || bookSnap.data().ownerId !== uid || bookSnap.data().status !== 'Available') throw new HttpsError('failed-precondition', 'This book is no longer available.');
     if (!Array.isArray(bookSnap.data().readerIds) || !bookSnap.data().readerIds.includes(loan.requesterId)) throw new HttpsError('permission-denied', 'Only a confirmed friend can borrow this book.');
@@ -181,11 +226,48 @@ exports.respondToBorrowRequest = onCall(callableRuntime, async request => {
       lentAt: FieldValue.serverTimestamp(), loanDueAt: dueAt, activeRequestId: requestId, updatedAt: FieldValue.serverTimestamp()
     });
     tx.set(discoveryRef(loan.bookId), { status: 'Lent Out', updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+    const nextBorrowedTotal = Number(borrowerStatsSnap.data()?.totalBorrowed || 0) + 1;
+    const nextBookLoanCount = Number(bookStatsSnap.data()?.loanCount || 0) + 1;
+    const ownerStats = ownerStatsSnap.data() || {};
+    const ownerMostBorrowed = Math.max(Number(ownerStats.mostBorrowedCount || 0), nextBookLoanCount);
+    const networkStats = networkStatsSnap.data() || {};
+    tx.set(borrowerStatsRef, { totalBorrowed: nextBorrowedTotal, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+    tx.set(bookStatsRef, { ownerId: uid, loanCount: nextBookLoanCount, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+    tx.set(ownerStatsRef, {
+      mostBorrowedTitle: nextBookLoanCount >= Number(ownerStats.mostBorrowedCount || 0) ? bookSnap.data().title || 'Untitled book' : ownerStats.mostBorrowedTitle || '',
+      mostBorrowedCount: ownerMostBorrowed,
+      updatedAt: FieldValue.serverTimestamp()
+    }, { merge: true });
+    tx.set(networkStatsRef, {
+      totalLoans: Number(networkStats.totalLoans || 0) + 1,
+      activeLoans: Number(networkStats.activeLoans || 0) + 1,
+      highestMemberBorrowed: Math.max(Number(networkStats.highestMemberBorrowed || 0), nextBorrowedTotal),
+      mostBorrowedTitle: nextBookLoanCount >= Number(networkStats.mostBorrowedCount || 0) ? bookSnap.data().title || 'Untitled book' : networkStats.mostBorrowedTitle || '',
+      mostBorrowedCoverUrl: nextBookLoanCount >= Number(networkStats.mostBorrowedCount || 0) ? bookSnap.data().coverUrl || '' : networkStats.mostBorrowedCoverUrl || '',
+      mostBorrowedCount: Math.max(Number(networkStats.mostBorrowedCount || 0), nextBookLoanCount),
+      updatedAt: FieldValue.serverTimestamp()
+    }, { merge: true });
     pendingRequests.docs.filter(doc => doc.id !== requestId).forEach(doc => {
       tx.update(doc.ref, { status: 'denied', denialReason: 'book-unavailable', respondedAt: FieldValue.serverTimestamp() });
     });
-    return { action, dueAt: dueAt.toDate().toISOString() };
+    return {
+      action, dueAt: dueAt.toDate().toISOString(), ownerId: uid,
+      ownerName: bookSnap.data().ownerName || 'A friend', borrowerId: loan.requesterId,
+      borrowerName: loan.requesterName || 'Reader', title: bookSnap.data().title || 'Untitled book', coverUrl: bookSnap.data().coverUrl || ''
+    };
   });
+  if (result.action === 'approved') {
+    await Promise.all([
+      writeTickerActivities([result.ownerId], `borrowed-owner-${requestId}`, {
+        type: 'book-borrowed-owner', actorId: result.borrowerId, actorName: result.borrowerName, title: result.title
+      }),
+      writeTickerActivities([result.borrowerId], `borrowed-reader-${requestId}`, {
+        type: 'book-borrowed-reader', actorId: result.ownerId, actorName: result.ownerName, title: result.title
+      }),
+      writePublicBookActivity(`borrowed-${requestId}`, 'public-book-borrowed', result)
+    ]).catch(err => console.error('Could not write borrow activity', err));
+  }
+  return result;
 });
 
 exports.closeLoan = onCall(callableRuntime, async request => {
@@ -194,15 +276,17 @@ exports.closeLoan = onCall(callableRuntime, async request => {
   const outcome = request.data?.outcome;
   if (!['returned', 'lost'].includes(outcome)) throw new HttpsError('invalid-argument', 'Invalid loan outcome.');
   const bookRef = db.collection('books').doc(bookId);
-  return db.runTransaction(async tx => {
+  const result = await db.runTransaction(async tx => {
     const bookSnap = await tx.get(bookRef);
     if (!bookSnap.exists) throw new HttpsError('not-found', 'Book no longer exists.');
     const book = bookSnap.data();
     if (book.ownerId !== uid || book.status !== 'Lent Out' || !book.borrowerId) throw new HttpsError('failed-precondition', 'This book is not an active loan.');
     const requestRef = book.activeRequestId ? db.collection('requests').doc(book.activeRequestId) : null;
-    const [profileSnap, requestSnap] = await Promise.all([
+    const networkStatsRef = db.collection('networkStats').doc('current');
+    const [profileSnap, requestSnap, networkStatsSnap] = await Promise.all([
       tx.get(db.collection('profiles').doc(book.borrowerId)),
-      requestRef ? tx.get(requestRef) : Promise.resolve(null)
+      requestRef ? tx.get(requestRef) : Promise.resolve(null),
+      tx.get(networkStatsRef)
     ]);
     const now = Date.now();
     const heldFor = now - (book.lentAt?.toMillis?.() || now);
@@ -223,9 +307,24 @@ exports.closeLoan = onCall(callableRuntime, async request => {
       lentAt: FieldValue.delete(), loanDueAt: FieldValue.delete(), activeRequestId: FieldValue.delete(), updatedAt: FieldValue.serverTimestamp()
     });
     tx.set(discoveryRef(bookId), { status: outcome === 'lost' ? 'Lost' : 'Available', updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+    const networkStats = networkStatsSnap.data() || {};
+    tx.set(networkStatsRef, {
+      activeLoans: Math.max(0, Number(networkStats.activeLoans || 0) - 1),
+      updatedAt: FieldValue.serverTimestamp()
+    }, { merge: true });
     if (requestSnap?.exists) tx.update(requestRef, { status: outcome === 'lost' ? 'lost' : 'returned', returnRatingPoints: points, returnedAt: FieldValue.serverTimestamp() });
-    return { outcome, points };
+    return { outcome, points, ownerId: book.ownerId, ownerName: book.ownerName || 'A friend', title: book.title || 'Untitled book', coverUrl: book.coverUrl || '', requestId: book.activeRequestId || '' };
   });
+  if (outcome === 'returned') {
+    const friends = await acceptedFriendIds(result.ownerId);
+    await writeTickerActivities(friends, `available-${bookId}-${result.requestId || 'returned'}`, {
+      type: 'book-available', actorId: result.ownerId, actorName: result.ownerName,
+      ownerId: result.ownerId, title: result.title
+    }).catch(err => console.error('Could not write return activity', err));
+    await writePublicBookActivity(`available-${bookId}-${result.requestId || 'returned'}`, 'public-book-available', result)
+      .catch(err => console.error('Could not write public return activity', err));
+  }
+  return result;
 });
 
 async function refreshBookCount(ownerId) {
@@ -248,11 +347,16 @@ async function notifyWishers(bookId, book) {
   wishes.docs.forEach(wish => {
     const data = wish.data();
     if (book.readerIds.includes(data.userId)) {
-      batch.set(db.collection('requests').doc(), {
+      batch.set(db.collection('requests').doc(`wishlist-${bookId}-${wish.id}`), {
         type: 'wishlist-match', bookId, title: book.title || 'Untitled book',
         ownerId: book.ownerId, ownerName: book.ownerName || 'A friend',
         requesterId: data.userId, requesterName: data.userName || 'Friend',
         status: 'completed', createdAt: FieldValue.serverTimestamp()
+      });
+      batch.set(db.collection('tickerActivities').doc(`wishlist-${bookId}-${wish.id}-${data.userId}`), {
+        recipientId: data.userId, type: 'wishlist-match', actorId: book.ownerId,
+        actorName: book.ownerName || 'A friend', ownerId: book.ownerId,
+        title: book.title || 'Untitled book', createdAt: FieldValue.serverTimestamp()
       });
     }
   });
@@ -264,9 +368,18 @@ exports.onBookCreated = onDocumentCreated({ ...runtime, document: 'books/{bookId
   return acceptedFriendIds(book.ownerId).then(readerIds => Promise.all([
     event.data.ref.update({ readerIds }),
     refreshBookCount(book.ownerId),
-    notifyWishers(event.params.bookId, { ...book, readerIds })
+    notifyWishers(event.params.bookId, { ...book, readerIds }),
+    writeTickerActivities(readerIds, `added-${event.params.bookId}`, {
+      type: book.status === 'Available' ? 'book-added' : 'book-reading',
+      actorId: book.ownerId, actorName: book.ownerName || 'A friend',
+      ownerId: book.ownerId, title: book.title || 'Untitled book'
+    }),
+    writePublicBookActivity(`added-${event.params.bookId}`, 'public-book-added', book)
   ]));
 });
+exports.onProfileCreated = onDocumentCreated({ ...runtime, document: 'profiles/{userId}' }, event =>
+  writeNewMemberActivity(event.params.userId, event.data.data())
+);
 exports.onBookDeleted = onDocumentDeleted({ ...runtime, document: 'books/{bookId}' }, event => {
   const book = event.data.data();
   return Promise.all([
