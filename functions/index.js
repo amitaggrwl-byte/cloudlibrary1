@@ -89,6 +89,41 @@ exports.removeFriend = onCall(callableRuntime, async request => {
   });
 });
 
+exports.cleanUpMyInbox = onCall(callableRuntime, async request => {
+  const uid = requireUser(request);
+  const [owned, requested, incomingFriendships] = await Promise.all([
+    db.collection('requests').where('ownerId', '==', uid).limit(100).get(),
+    db.collection('requests').where('requesterId', '==', uid).limit(100).get(),
+    db.collection('friendships').where('user2', '==', uid).limit(100).get()
+  ]);
+  const pendingRequests = [...owned.docs, ...requested.docs].filter(doc => doc.data().status === 'pending');
+  const pendingFriendships = incomingFriendships.docs.filter(doc => doc.data().status === 'pending');
+  const profileIds = new Set();
+  pendingRequests.forEach(doc => {
+    const data = doc.data();
+    profileIds.add(data.ownerId === uid ? data.requesterId : data.ownerId);
+  });
+  pendingFriendships.forEach(doc => profileIds.add(doc.data().user1));
+  const profiles = await Promise.all([...profileIds].map(id => db.collection('profiles').doc(id).get()));
+  const missingProfiles = new Set(profiles.filter(doc => !doc.exists).map(doc => doc.id));
+  const batch = db.batch();
+  let cleaned = 0;
+  pendingRequests.forEach(doc => {
+    const data = doc.data();
+    const otherId = data.ownerId === uid ? data.requesterId : data.ownerId;
+    if (!missingProfiles.has(otherId)) return;
+    cleaned += 1;
+    batch.update(doc.ref, { status: 'cancelled', cancellationReason: 'account-deleted', respondedAt: FieldValue.serverTimestamp() });
+  });
+  pendingFriendships.forEach(doc => {
+    if (!missingProfiles.has(doc.data().user1)) return;
+    cleaned += 1;
+    batch.delete(doc.ref);
+  });
+  if (cleaned) await batch.commit();
+  return { cleaned };
+});
+
 exports.respondToBorrowRequest = onCall(callableRuntime, async request => {
   const uid = requireUser(request);
   const requestId = requireString(request.data?.requestId, 'requestId');

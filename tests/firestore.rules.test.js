@@ -42,6 +42,7 @@ function profile(name) {
     ratingAdjustment: 0,
     bookCount: 0,
     timelyReturns: 0,
+    memberSince: new Date(),
     searchTokens: [name.toLowerCase()],
     updatedAt: new Date()
   };

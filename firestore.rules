@@ -14,7 +14,7 @@ service cloud.firestore {
     function publicProfileFields(data) {
       return data.keys().hasOnly([
         'libraryName', 'shelfKey', 'ownerName', 'photoURL', 'bio',
-        'ratingScore', 'ratingAdjustment', 'bookCount', 'timelyReturns',
+        'ratingScore', 'ratingAdjustment', 'bookCount', 'timelyReturns', 'memberSince',
         'searchTokens', 'updatedAt'
       ]);
     }
@@ -27,6 +27,7 @@ service cloud.firestore {
         && request.resource.data.ratingAdjustment == resource.data.ratingAdjustment
         && request.resource.data.bookCount == resource.data.bookCount
         && request.resource.data.timelyReturns == resource.data.timelyReturns
+        && request.resource.data.memberSince == resource.data.memberSince
       );
     }
     function canReadBook() {
@@ -48,7 +49,8 @@ service cloud.firestore {
         && request.resource.data.ratingScore == 3
         && request.resource.data.ratingAdjustment == 0
         && request.resource.data.bookCount == 0
-        && request.resource.data.timelyReturns == 0;
+        && request.resource.data.timelyReturns == 0
+        && request.resource.data.memberSince is timestamp;
       allow update: if own(userId) && validShelfName(request.resource.data)
         && publicProfileFields(request.resource.data) && profileEditableFields();
       allow delete: if own(userId);

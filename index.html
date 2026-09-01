@@ -142,10 +142,7 @@
 
   <!-- Navigation Bar -->
   <nav class="flex items-center justify-between bg-white p-3 sm:p-4 rounded-xl border border-ink-200 shadow-sm gap-3">
-    <div class="flex items-center gap-2.5 min-w-0 shrink">
-      <span id="brand-mark" class="brand-mark shrink-0" aria-hidden="true"></span>
-      <div class="min-w-0"><span class="brand-wordmark block text-[22px] sm:text-2xl text-ink-950 truncate">CloudLibrary</span><button type="button" data-action="open-reader-profile" data-uid="self" id="user-info" title="View your reader profile" class="block max-w-[140px] sm:max-w-[220px] truncate text-left text-[11px] font-semibold text-rust-600 hover:text-ink-950"></button></div>
-    </div>
+    <div class="flex items-center gap-2.5 min-w-0 shrink"><span id="brand-mark" class="brand-mark shrink-0" aria-hidden="true"></span><span class="brand-wordmark block text-[22px] sm:text-2xl text-ink-950 truncate">CloudLibrary</span></div>
     <div id="nav-tabs" class="hidden md:flex items-center gap-1 min-w-0">
       <button onclick="switchTab('library')" id="tab-library" class="tab-btn active flex items-center justify-center gap-1.5 min-w-0 text-sm px-3 py-2 rounded-lg font-semibold transition-colors"></button>
       <button onclick="switchTab('add')" id="tab-add" class="tab-btn flex items-center justify-center gap-1.5 min-w-0 text-sm px-3 py-2 rounded-lg text-ink-500 hover:text-ink-950 transition-colors"></button>
@@ -154,6 +151,7 @@
       <button onclick="switchTab('inbox')" id="tab-inbox" class="tab-btn flex items-center justify-center gap-1.5 min-w-0 text-sm px-3 py-2 rounded-lg text-ink-500 hover:text-ink-950 transition-colors"></button>
     </div>
     <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+      <button type="button" data-action="open-reader-profile" data-uid="self" id="user-info" title="View your reader profile" class="flex items-center gap-1.5 min-w-0 text-left text-ink-700 hover:text-ink-950"><img id="nav-profile-photo" alt="" referrerpolicy="no-referrer" class="hidden w-7 h-7 rounded-full object-cover border border-ink-200"><span id="nav-profile-fallback" class="w-7 h-7 rounded-full bg-ink-800 text-paper font-display text-xs flex items-center justify-center"></span><span id="nav-profile-name" class="max-w-[76px] sm:max-w-[130px] truncate text-xs sm:text-sm font-semibold"></span></button>
       <button type="button" id="copy-share-button" onclick="copyShareLink()" title="Copy share link" class="p-2 text-ink-500 hover:text-ink-950"></button>
       <button onclick="signOut()" class="text-xs sm:text-sm text-ink-500 hover:text-ink-950 transition-colors font-medium">Sign Out</button>
     </div>
@@ -334,10 +332,11 @@
     <div class="app-panel p-6 rounded-xl border border-ink-200 shadow-sm">
       <p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-1">Notifications</p>
       <h2 class="font-display text-xl text-ink-950 mb-1">Inbox</h2>
-      <p class="text-sm text-ink-500 mb-4">Completed requests stay here with their final status.</p>
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-4"><p class="text-sm text-ink-500">Completed requests stay here with their final status.</p><div class="flex items-center gap-2"><select id="inbox-filter" class="bg-paper border border-ink-200 rounded-lg px-2.5 py-2 text-xs text-ink-700"><option value="all">All activity</option><option value="pending">Needs action</option><option value="borrow">Borrowing</option><option value="friend">Friends</option><option value="completed">Completed</option></select><button data-action="cleanup-inbox" class="text-xs font-semibold text-ink-600 hover:text-ink-950">Clean up</button></div></div>
       <div id="inbox-body" class="space-y-3">
         <p class="text-ink-400 text-sm">No pending notifications.</p>
       </div>
+      <button id="inbox-show-more" class="hidden mt-4 w-full border border-ink-200 bg-ink-800/5 hover:bg-ink-800/10 text-ink-700 py-2.5 rounded-lg text-xs font-semibold">Show more</button>
     </div>
   </div>
 
@@ -536,7 +535,8 @@
           : `<button data-action="edit-profile-introduction" class="mt-5 inline-flex items-center gap-1.5 bg-ink-800/10 text-ink-800 hover:bg-ink-800/20 px-3 py-2.5 rounded-lg text-xs font-semibold">${icon('pencil', 'w-3.5 h-3.5')}Edit introduction</button>`}
           <details class="mt-6 border-t border-ink-200 pt-4"><summary class="cursor-pointer text-xs font-semibold text-ink-600 hover:text-ink-950">Account settings</summary><div class="mt-3 rounded-lg border border-rust-200 bg-rust-50/70 p-3"><p class="text-xs leading-relaxed text-ink-600">Deleting your account permanently removes your shelf, cover photos, and pending requests. It is unavailable while you have an active loan.</p><button data-action="delete-account" class="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-rust-700 hover:text-rust-900">${icon('trash', 'w-3.5 h-3.5')}Delete my account</button></div></details>`
       : `<div class="mt-5 flex flex-wrap gap-2">${isFriend ? `<button data-action="view-shelf" data-uid="${esc(targetUid)}" data-name="${esc(name)}" class="bg-ink-800/10 text-ink-800 px-3 py-2.5 rounded-lg text-xs font-semibold">View shelf</button>` : relationship === 'pending' && relationshipSenders[targetUid] === currentUser.uid ? `<span class="text-xs font-semibold text-gold-600 py-2.5">Friend request sent</span><button data-action="cancel-request" data-id="${esc(relationshipDocs[targetUid] || '')}" data-name="${esc(name)}" class="text-xs font-semibold text-rust-600 px-2">Cancel request</button>` : relationship === 'pending' ? `<button data-action="switch-inbox" class="bg-ink-800/10 text-ink-800 px-3 py-2.5 rounded-lg text-xs font-semibold">Review request in Inbox</button>` : `<button data-action="add-friend" data-owner="${esc(targetUid)}" data-name="${esc(name)}" class="bg-rust-600 text-paper px-3 py-2.5 rounded-lg text-xs font-semibold">Add friend</button>`}</div>`;
-    body.innerHTML = `<div class="flex items-center gap-4 pr-8">${avatarHtml(profile, name, 'w-16 h-16')}<div class="min-w-0"><p class="font-mono text-[10px] uppercase tracking-widest text-rust-600">Reader profile</p><h2 class="font-display text-2xl text-ink-950 truncate">${esc(name)}</h2><p class="text-sm text-[#8a6414] font-semibold">${score.toFixed(1)}/10 reader score</p></div></div><div class="grid grid-cols-2 gap-3 mt-5"><div class="bg-ink-800/5 rounded-lg p-3"><p class="font-semibold text-ink-950">${Number(profile.bookCount || 0)}</p><p class="text-xs text-ink-500">books on shelf</p></div><div class="bg-ink-800/5 rounded-lg p-3"><p class="font-semibold text-ink-950">${isSelf ? 'Your shelf' : (isFriend ? 'Connected' : 'Not connected')}</p><p class="text-xs text-ink-500">library status</p></div></div><div class="mt-5"><p class="text-xs font-semibold text-ink-700 mb-1">About</p><p class="text-sm text-ink-600 leading-relaxed">${esc(profile.bio || 'No introduction added yet.')}</p></div>${actions}`;
+    const memberSince = formatDate(profile.memberSince) || 'Recently';
+    body.innerHTML = `<div class="flex items-center gap-4 pr-8">${avatarHtml(profile, name, 'w-16 h-16')}<div class="min-w-0"><p class="font-mono text-[10px] uppercase tracking-widest text-rust-600">Reader profile</p><h2 class="font-display text-2xl text-ink-950 truncate">${esc(name)}</h2><p class="text-sm text-[#8a6414] font-semibold">${score.toFixed(1)}/10 reader score</p><p class="text-[11px] text-ink-500 mt-1">Member since ${esc(memberSince)}</p></div></div><div class="grid grid-cols-2 gap-3 mt-5"><div class="bg-ink-800/5 rounded-lg p-3"><p class="font-semibold text-ink-950">${Number(profile.bookCount || 0)}</p><p class="text-xs text-ink-500">books on shelf</p></div><div class="bg-ink-800/5 rounded-lg p-3"><p class="font-semibold text-ink-950">${isSelf ? 'Your shelf' : (isFriend ? 'Connected' : 'Not connected')}</p><p class="text-xs text-ink-500">library status</p></div></div><div class="mt-5"><p class="text-xs font-semibold text-ink-700 mb-1">About</p><p class="text-sm text-ink-600 leading-relaxed">${esc(profile.bio || 'No introduction added yet.')}</p></div>${actions}`;
     if (isSelf) document.getElementById('profile-bio-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       const bio = document.getElementById('profile-bio-edit').value.trim().slice(0, 280);
@@ -750,6 +750,9 @@
   let bookSubmissionInProgress = false;
   let editCoverFile = null;
   let inboxState = { friends: [], ownerRequests: [], requesterRequests: [] };
+  let inboxVisibleCount = 10;
+  let inboxFilter = 'all';
+  const INBOX_QUERY_LIMIT = 10;
   let inboxUnsubscribers = [];
   let relationshipStates = {};
   let relationshipDocs = {};
@@ -861,7 +864,13 @@
   }
 
   async function initApp() {
-    document.getElementById('user-info').textContent = userProfile.libraryName;
+    const photo = safeUrl(userProfile.photoURL);
+    const navPhoto = document.getElementById('nav-profile-photo');
+    const navFallback = document.getElementById('nav-profile-fallback');
+    document.getElementById('nav-profile-name').textContent = userProfile.libraryName;
+    navFallback.textContent = String(userProfile.libraryName || '?').charAt(0).toUpperCase();
+    if (photo) { navPhoto.src = photo; navPhoto.classList.remove('hidden'); navFallback.classList.add('hidden'); }
+    else { navPhoto.classList.add('hidden'); navFallback.classList.remove('hidden'); }
     document.getElementById('app-content').classList.remove('hidden');
     await loadFriendsList();
     fetchMyBooks();
@@ -1190,6 +1199,7 @@
       ratingAdjustment: Number(profile.ratingAdjustment || 0),
       bookCount: Number(profile.bookCount || 0),
       timelyReturns: Number(profile.timelyReturns || 0),
+      memberSince: profile.memberSince || firebase.firestore.FieldValue.serverTimestamp(),
       searchTokens: searchTokens(profile.libraryName, profile.ownerName, profile.shelfKey),
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     };
@@ -1615,7 +1625,7 @@
   function inboxCard(iconName, title, bodyHtml, actionsHtml, status, dateValue) {
     const date = formatDate(dateValue);
     return `
-      <div class="bg-paper/80 p-4 rounded-xl border border-ink-200 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+      <div class="bg-paper/80 p-3 rounded-xl border border-ink-200 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
         <div class="flex gap-3 items-start">
           <div class="w-9 h-9 rounded-full bg-ink-800/10 text-ink-800 flex items-center justify-center shrink-0">${icon(iconName, 'w-4 h-4')}</div>
           <div>
@@ -1635,17 +1645,17 @@
     inboxUnsubscribers.forEach(unsub => unsub && unsub());
     inboxUnsubscribers = [
       db.collection("friendships").where("user2", "==", currentUser.uid)
-        .limit(100).onSnapshot(snap => {
+        .limit(INBOX_QUERY_LIMIT).onSnapshot(snap => {
           inboxState.friends = snap.docs.map(doc => ({ id: doc.id, kind: 'friend', ...doc.data() }));
           renderInbox();
         }, listenerError('friend requests')),
       db.collection("requests").where("ownerId", "==", currentUser.uid)
-        .limit(100).onSnapshot(snap => {
+        .limit(INBOX_QUERY_LIMIT).onSnapshot(snap => {
           inboxState.ownerRequests = snap.docs.map(doc => ({ id: doc.id, audience: 'owner', ...doc.data() }));
           renderInbox();
         }, listenerError('borrow requests')),
       db.collection("requests").where("requesterId", "==", currentUser.uid)
-        .limit(100).onSnapshot(snap => {
+        .limit(INBOX_QUERY_LIMIT).onSnapshot(snap => {
           inboxState.requesterRequests = snap.docs.map(doc => ({ id: doc.id, audience: 'requester', ...doc.data() }));
           borrowRequestStates = {};
           inboxState.requesterRequests.filter(req => req.type === 'borrow').forEach(req => { borrowRequestStates[req.bookId] = req.status; });
@@ -1659,7 +1669,7 @@
     const inboxBody = document.getElementById('inbox-body');
     const badge = document.getElementById('inbox-badge');
     const mobileBadge = document.getElementById('mobile-inbox-badge');
-    const items = [...inboxState.friends, ...inboxState.ownerRequests, ...inboxState.requesterRequests]
+    const allItems = [...inboxState.friends, ...inboxState.ownerRequests, ...inboxState.requesterRequests]
       .filter(item => !(item.audience === 'requester' && item.ownerId === currentUser.uid))
       .sort((a, b) => {
         const aTime = a.createdAt && typeof a.createdAt.toMillis === 'function' ? a.createdAt.toMillis() : 0;
@@ -1668,7 +1678,7 @@
       });
 
     inboxBody.innerHTML = '';
-    const pendingCount = items.filter(item =>
+    const pendingCount = allItems.filter(item =>
       item.status === 'pending' &&
       (item.kind === 'friend' || item.audience === 'owner' || item.type === 'return-reminder')
     ).length;
@@ -1681,12 +1691,21 @@
       badge.classList.add('hidden');
       mobileBadge.classList.add('hidden');
     }
+    const items = allItems.filter(item => {
+      if (inboxFilter === 'pending') return item.status === 'pending';
+      if (inboxFilter === 'borrow') return item.type === 'borrow' || item.type === 'return-reminder';
+      if (inboxFilter === 'friend') return item.kind === 'friend';
+      if (inboxFilter === 'completed') return item.status !== 'pending';
+      return true;
+    });
+    const showMore = document.getElementById('inbox-show-more');
     if (!items.length) {
       inboxBody.innerHTML = '<p class="text-ink-400 text-sm">No inbox activity yet.</p>';
+      showMore.classList.add('hidden');
       return;
     }
 
-    items.forEach(req => {
+    items.slice(0, inboxVisibleCount).forEach(req => {
       if (req.kind === 'friend') {
         const actions = req.status === 'pending' ? `
           <button data-action="accept-friend" data-id="${esc(req.id)}" class="bg-ink-600/10 text-ink-700 hover:bg-ink-600/20 p-2 rounded-lg" title="Accept">${icon('check','w-4 h-4')}</button>
@@ -1739,7 +1758,18 @@
         inboxBody.insertAdjacentHTML('beforeend', inboxCard(updateIcon, 'Borrow update', body, '', req.status, req.createdAt));
       }
     });
+    showMore.classList.toggle('hidden', items.length <= inboxVisibleCount);
   }
+
+  document.getElementById('inbox-filter').addEventListener('change', (event) => {
+    inboxFilter = event.target.value;
+    inboxVisibleCount = 10;
+    renderInbox();
+  });
+  document.getElementById('inbox-show-more').addEventListener('click', () => {
+    inboxVisibleCount += 10;
+    renderInbox();
+  });
 
   async function respondFriendRequest(reqId, status, button) {
     if (button) { button.disabled = true; button.title = 'Connecting libraries…'; }
@@ -1766,6 +1796,13 @@
     }), { context: 'Completing reminder', success: 'Reminder marked completed.' });
   }
   window.completeReminder = completeReminder;
+
+  async function cleanUpInbox() {
+    const result = await guard(() => lendingFunctions.httpsCallable('cleanUpMyInbox')({}), { context: 'Cleaning up inbox' });
+    if (result === FAILED) return;
+    const cleaned = Number(result.data?.cleaned || 0);
+    toast(cleaned ? `${cleaned} unavailable request${cleaned === 1 ? '' : 's'} cleaned up.` : 'No unavailable pending requests found.', 'success');
+  }
 
   // --- DELEGATED ACTIONS ---
   // Dynamic buttons carry data-action attributes instead of inline onclick handlers.
@@ -1794,6 +1831,7 @@
       case 'approve-borrow': respondBorrowRequest(d.id, d.book || null, 'approved', btn); break;
       case 'deny-borrow': respondBorrowRequest(d.id, null, 'denied', btn); break;
       case 'complete-reminder': completeReminder(d.id); break;
+      case 'cleanup-inbox': cleanUpInbox(); break;
       case 'delete-wish': guard(() => db.collection('wishlists').doc(d.id).delete(), { context: 'Removing wishlist item', success: 'Removed from your wishlist.' }); break;
       case 'delete-account': deleteAccount(); break;
       case 'edit-profile-introduction': openReaderProfile('self', true); break;
