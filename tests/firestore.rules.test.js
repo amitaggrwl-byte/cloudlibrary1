@@ -19,12 +19,18 @@ test.before(async () => {
     const store = context.firestore();
     await store.collection('books').doc('book-1').set({
       ownerId: 'alice', ownerName: 'AliceShelf', title: 'Book', author: 'Author',
-      status: 'Available', readerIds: ['bob'], discoveryVersion: 1
+      status: 'Available', discoveryVersion: 1
+    });
+    await store.collection('friendships').doc('alice__bob').set({ user1: 'alice', user2: 'bob', status: 'accepted' });
+    await store.collection('friendships').doc('owner__reader').set({ user1: 'owner', user2: 'reader', status: 'accepted' });
+    await store.collection('books').doc('legacy-book').set({
+      ownerId: 'alice', ownerName: 'AliceShelf', title: 'Legacy book', author: 'Author',
+      status: 'Available', readerIds: ['charlie']
     });
     await store.collection('profiles').doc('owner').set(profile('OwnerShelf'));
     await store.collection('books').doc('locked-book').set({
       ownerId: 'owner', ownerName: 'OwnerShelf', title: 'Locked book', author: 'Author',
-      status: 'Available', readerIds: ['reader'], discoveryVersion: 1
+      status: 'Available', discoveryVersion: 1
     });
     await store.collection('tickerActivities').doc('alice-book').set({
       recipientId: 'alice', type: 'book-added', actorId: 'bob', actorName: 'BobShelf',
@@ -52,6 +58,7 @@ function profile(name) {
     bookCount: 0,
     timelyReturns: 0,
     memberSince: new Date(),
+    circleTags: [],
     searchTokens: [name.toLowerCase()],
     updatedAt: new Date()
   };
@@ -82,8 +89,16 @@ test('a full book is readable by the owner and confirmed reader only', async () 
   await assertSucceeds(env.authenticatedContext('alice').firestore().collection('books').doc('book-1').get());
   await assertSucceeds(env.authenticatedContext('bob').firestore().collection('books').doc('book-1').get());
   await assertFails(env.authenticatedContext('charlie').firestore().collection('books').doc('book-1').get());
-  await assertSucceeds(env.authenticatedContext('bob').firestore().collection('books').where('ownerId', '==', 'alice').where('readerIds', 'array-contains', 'bob').limit(10).get());
+  await assertSucceeds(env.authenticatedContext('bob').firestore().collection('books').where('ownerId', '==', 'alice').limit(10).get());
   await assertFails(env.authenticatedContext('charlie').firestore().collection('books').where('ownerId', '==', 'alice').limit(10).get());
+});
+
+test('existing server-written book access keeps working during friendship migration', async () => {
+  const charlie = env.authenticatedContext('charlie').firestore();
+  await assertSucceeds(charlie.collection('books').doc('legacy-book').get());
+  await assertSucceeds(charlie.collection('requests').doc('legacy-borrow').set({
+    type: 'borrow', bookId: 'legacy-book', ownerId: 'alice', requesterId: 'charlie', status: 'pending'
+  }));
 });
 
 test('the browser cannot lend a book or change a score directly', async () => {
@@ -94,13 +109,21 @@ test('the browser cannot lend a book or change a score directly', async () => {
   await assertFails(owner.collection('books').doc('self-shared').set({ ownerId: 'owner', title: 'Private', status: 'Available', readerIds: ['stranger'] }));
 });
 
+test('a confirmed friendship, not copied book access, authorizes a borrow request', async () => {
+  const bob = env.authenticatedContext('bob').firestore();
+  const charlie = env.authenticatedContext('charlie').firestore();
+  const request = { type: 'borrow', bookId: 'book-1', ownerId: 'alice', requesterId: 'bob', status: 'pending' };
+  await assertSucceeds(bob.collection('requests').doc('bob-borrow').set(request));
+  await assertFails(charlie.collection('requests').doc('charlie-borrow').set({ ...request, requesterId: 'charlie' }));
+});
+
 test('an owner can delete an available book but not an active loan', async () => {
   const owner = env.authenticatedContext('owner').firestore();
   await assertSucceeds(owner.collection('books').doc('locked-book').delete());
   await env.withSecurityRulesDisabled(async context => {
     await context.firestore().collection('books').doc('active-loan').set({
       ownerId: 'owner', ownerName: 'OwnerShelf', title: 'On loan', author: 'Author',
-      status: 'Lent Out', borrowerId: 'reader', readerIds: ['reader']
+      status: 'Lent Out', borrowerId: 'reader'
     });
   });
   await assertFails(owner.collection('books').doc('active-loan').delete());
@@ -126,6 +149,30 @@ test('discovery searches are capped at ten documents', async () => {
   await assertSucceeds(alice.collection('bookDiscovery').where('searchTokens', 'array-contains', 'har').limit(10).get());
   await assertFails(alice.collection('bookDiscovery').where('searchTokens', 'array-contains', 'har').get());
   assert.ok(true);
+});
+
+test('discovery cards are server-written and cannot carry private fields', async () => {
+  const alice = env.authenticatedContext('alice').firestore();
+  await assertFails(alice.collection('bookDiscovery').doc('private-card').set({
+    bookId: 'private-card', ownerId: 'alice', title: 'Book', coverUrl: '', status: 'Available', searchTokens: ['book'],
+    parentEmail: 'parent@example.com'
+  }));
+});
+
+test('a return reminder must belong to an active loan', async () => {
+  const owner = env.authenticatedContext('owner').firestore();
+  await assertFails(owner.collection('requests').doc('bad-reminder').set({
+    type: 'return-reminder', ownerId: 'owner', requesterId: 'stranger', bookId: 'locked-book', status: 'pending'
+  }));
+  await env.withSecurityRulesDisabled(async context => {
+    await context.firestore().collection('books').doc('active-reminder-book').set({
+      ownerId: 'owner', ownerName: 'OwnerShelf', title: 'On loan', author: 'Author',
+      status: 'Lent Out', borrowerId: 'reader'
+    });
+  });
+  await assertSucceeds(owner.collection('requests').doc('good-reminder').set({
+    type: 'return-reminder', ownerId: 'owner', requesterId: 'reader', bookId: 'active-reminder-book', status: 'pending'
+  }));
 });
 
 test('ticker feeds are small and private where book activity is concerned', async () => {

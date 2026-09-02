@@ -9,8 +9,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/app.css">
 
-<script src="https://cdn.tailwindcss.com"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
@@ -18,26 +18,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-functions-compat.js"></script>
-
-<script>
-  tailwind.config = {
-    theme: {
-      extend: {
-        colors: {
-          paper: { DEFAULT: '#f6efe0', dark: '#eadfc6' },
-          ink: { 50:'#eef2ef',100:'#dce6df',200:'#b9cdbf',300:'#93b09c',400:'#6c9078',500:'#4a7460',600:'#375a48',700:'#2b4638',800:'#1f342c',900:'#152420',950:'#0f1813' },
-          rust: { 100:'#f4e3da',200:'#e7c2ae',300:'#e0a488',400:'#cf7f57',500:'#c1653f',600:'#b5563a',700:'#8f4230' },
-          gold: { 100:'#f7ecc9',300:'#e6c765',400:'#d9b94f',500:'#c9a227',600:'#a9861d' }
-        },
-        fontFamily: {
-          display: ['Fraunces', 'serif'],
-          body: ['Archivo', 'sans-serif'],
-          mono: ['"IBM Plex Mono"', 'monospace']
-        }
-      }
-    }
-  }
-</script>
 
 <style>
   body {
@@ -68,8 +48,10 @@
   .tab-btn.active:hover,
   .tab-btn.active:focus-visible { background: #152420; color: #f6efe0 !important; }
   .tab-btn:focus-visible { outline: 3px solid #e6c765; outline-offset: 2px; }
-  .brand-mark { width: 38px; height: 38px; display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; background: #152420; color: #f6efe0; box-shadow: inset 0 0 0 1px rgba(246,239,224,.22), 0 4px 10px rgba(21,36,32,.12); }
-  .brand-wordmark { font-family: 'Fraunces', serif; font-weight: 600; line-height: 1; }
+  .brand-mark { width: 38px; height: 38px; display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; background: #152420; color: #f6efe0; box-shadow: inset 0 0 0 1px rgba(246,239,224,.22), 0 4px 10px rgba(21,36,32,.12); position: relative; overflow: hidden; }
+  .brand-mark::after { content: ''; position: absolute; right: 7px; top: 7px; bottom: 7px; width: 3px; border-radius: 3px; background: #c1653f; }
+  .brand-wordmark { font-family: 'Fraunces', serif; font-weight: 600; line-height: 1; letter-spacing: 0; }
+  .brand-wordmark .brand-library { color: #b5563a; font-style: italic; }
   .mobile-nav { padding-bottom: max(10px, env(safe-area-inset-bottom)); }
   .app-panel { background: rgba(255,255,255,.86); backdrop-filter: blur(12px); }
   .loan-note { background: linear-gradient(135deg, rgba(244,227,218,.8), rgba(247,236,201,.55)); }
@@ -96,24 +78,33 @@
     </div>
 
     <div class="relative z-10 animate-fade-up">
-      <p class="font-mono text-xs uppercase tracking-[0.25em] text-ink-300 mb-6">Est. by readers, kept by friends</p>
-      <h1 class="font-display text-5xl lg:text-6xl leading-[1.05] max-w-md">A library that only grows when friendships do.</h1>
-      <p class="mt-5 text-ink-300 max-w-sm text-[15px] leading-relaxed">Some books are better borrowed than bought. Name a shelf, invite a friend, and see what they're reading.</p>
+      <div class="flex items-center gap-3 mb-8"><span class="brand-mark">&#9633;</span><span class="brand-wordmark text-2xl">Cloud<span class="brand-library">Library</span></span></div>
+      <p class="font-mono text-xs uppercase tracking-[0.25em] text-ink-300 mb-6">A shared library for real-world friends</p>
+      <h1 class="font-display text-5xl lg:text-6xl leading-[1.05] max-w-md">The next great book may already be nearby.</h1>
+      <p class="mt-5 text-ink-300 max-w-sm text-[15px] leading-relaxed">Build a shelf, discover readers you know, and keep good books moving.</p>
     </div>
 
-    <p class="relative z-10 font-display italic text-ink-300 text-lg mt-12 border-t border-ink-700 pt-8">Every book on this network is on loan from someone who loves it.</p>
+    <div class="relative z-10 grid grid-cols-3 gap-3 mt-12 border-t border-ink-700 pt-8 max-w-md"><div class="h-16 rounded-sm bg-rust-500"></div><div class="h-24 rounded-sm bg-gold-500 -mt-8"></div><div class="h-20 rounded-sm bg-ink-500 -mt-4"></div></div>
   </div>
 
   <div class="relative flex items-center justify-center p-6 md:p-10">
-    <div class="w-full max-w-sm bg-white/70 md:-ml-10 md:bg-white p-8 rounded-2xl border border-ink-200 shadow-2xl shadow-ink-950/10 animate-fade-up">
-      <p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-2">CloudLibrary</p>
-      <h2 class="font-display text-3xl text-ink-950 mb-2">Find your way back in.</h2>
-      <p class="text-ink-500 text-sm mb-8 leading-relaxed">Sign in to open your shelf and see what your friends are lending.</p>
+    <div class="md:hidden absolute inset-x-0 top-0 h-52 bg-ink-950 overflow-hidden"><div class="relative z-10 flex items-center gap-3 px-7 pt-7 text-paper"><span class="brand-mark">&#9633;</span><span class="brand-wordmark text-2xl">Cloud<span class="brand-library">Library</span></span></div><div class="absolute bottom-0 left-7 right-7 flex items-end gap-2 h-24 opacity-90"><span class="h-16 w-8 rounded-t-sm bg-rust-500"></span><span class="h-24 w-9 rounded-t-sm bg-gold-500"></span><span class="h-20 w-8 rounded-t-sm bg-ink-500"></span><span class="h-14 w-7 rounded-t-sm bg-rust-300"></span><span class="h-20 w-9 rounded-t-sm bg-paper/80"></span><span class="h-16 w-8 rounded-t-sm bg-gold-300"></span></div></div>
+    <div class="relative z-10 mt-32 md:mt-0 w-full max-w-sm bg-white/95 md:-ml-10 md:bg-white p-8 rounded-2xl border border-ink-200 shadow-2xl shadow-ink-950/10 animate-fade-up">
+      <div class="hidden md:flex items-center gap-3 mb-6"><span class="brand-mark">&#9633;</span><div><p class="font-mono text-[11px] uppercase tracking-widest text-rust-600">CloudLibrary</p><p class="text-xs text-ink-400 mt-1">A library between friends</p></div></div>
+      <h2 id="login-title" class="font-display text-3xl text-ink-950 mb-2">Open your shelf.</h2>
+      <p id="login-copy" class="text-ink-500 text-sm mb-8 leading-relaxed">New readers can make a shelf in a minute. Returning readers pick up where they left off.</p>
       <button onclick="signIn()" class="w-full flex items-center justify-center gap-3 bg-ink-950 hover:bg-ink-900 text-paper font-semibold py-3.5 px-4 rounded-xl transition-colors">
         <svg viewBox="0 0 48 48" class="w-5 h-5"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59A14.5 14.5 0 0 1 9.5 24c0-1.59.27-3.13.76-4.59l-7.98-6.19A23.94 23.94 0 0 0 0 24c0 3.87.92 7.53 2.56 10.78z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.46-9.9l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
         Continue with Google
       </button>
-      <p class="text-[11px] text-ink-400 mt-6 text-center leading-relaxed">No spam, no ads — just your friends' bookshelves.</p>
+      <div id="demo-login-controls" class="hidden mt-4 pt-4 border-t border-ink-200">
+        <label for="demo-user" class="block text-xs font-semibold text-ink-600 mb-2">Local demo reader</label>
+        <select id="demo-user" class="w-full bg-paper border border-ink-200 rounded-lg px-3 py-2.5 text-sm text-ink-950">
+          <option value="alex">Alex</option><option value="bella">Bella</option><option value="carlos">Carlos</option>
+        </select>
+        <p class="mt-2 text-[11px] leading-relaxed text-ink-400">Demo mode uses local Firebase emulators only.</p>
+      </div>
+      <p class="text-[11px] text-ink-400 mt-6 text-center leading-relaxed">No ads. No public contact details. Just books shared with people you know.</p>
     </div>
   </div>
 </div>
@@ -138,11 +129,21 @@
   </div>
 </div>
 
+<div id="help-modal" class="hidden fixed inset-0 bg-ink-950/80 z-50 flex flex-col justify-center items-center p-4">
+  <div class="bg-paper p-6 rounded-2xl w-full max-w-md border border-ink-200 shadow-2xl max-h-[90vh] overflow-y-auto relative">
+    <button type="button" data-action="close-help" title="Close help" class="absolute top-4 right-4 p-2 text-ink-500 hover:text-ink-950">&times;</button>
+    <p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-1">Help</p>
+    <h2 class="font-display text-2xl text-ink-950">Need a hand?</h2>
+    <div class="mt-4 space-y-2 text-sm text-ink-600"><p><span class="font-semibold text-ink-800">Add:</span> scan an ISBN, take a cover photo, or use Quick add for a stack.</p><p><span class="font-semibold text-ink-800">Borrow:</span> connect as friends first, then request an available book.</p><p><span class="font-semibold text-ink-800">Return:</span> the owner closes the loan when the book comes back.</p></div>
+    <form id="feedback-form" class="mt-6 space-y-3 border-t border-ink-200 pt-5"><label class="block text-xs font-semibold text-ink-700" for="feedback-message">Report a problem or share an idea</label><select id="feedback-category" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-sm text-ink-950"><option value="bug">Something is not working</option><option value="idea">Suggestion</option><option value="question">Question</option></select><textarea id="feedback-message" required maxlength="1000" rows="4" placeholder="What happened? What did you expect?" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-sm text-ink-950 resize-none"></textarea><button type="submit" class="w-full bg-ink-950 text-paper py-3 rounded-lg text-sm font-semibold">Send feedback</button></form>
+  </div>
+</div>
+
 <div id="app-content" class="max-w-6xl mx-auto space-y-8 hidden p-4 pb-24 md:p-8">
 
   <!-- Navigation Bar -->
   <nav class="flex items-center justify-between bg-white p-3 sm:p-4 rounded-xl border border-ink-200 shadow-sm gap-3">
-    <div class="flex items-center gap-2.5 min-w-0 shrink"><span id="brand-mark" class="brand-mark shrink-0" aria-hidden="true"></span><span class="brand-wordmark block text-[22px] sm:text-2xl text-ink-950 truncate">CloudLibrary</span></div>
+    <div class="flex items-center gap-2.5 min-w-0 shrink"><span id="brand-mark" class="brand-mark shrink-0" aria-hidden="true"></span><span class="brand-wordmark block text-[22px] sm:text-2xl text-ink-950 truncate">Cloud<span class="brand-library">Library</span></span></div>
     <div id="nav-tabs" class="hidden md:flex items-center gap-1 min-w-0">
       <button onclick="switchTab('library')" id="tab-library" class="tab-btn active flex items-center justify-center gap-1.5 min-w-0 text-sm px-3 py-2 rounded-lg font-semibold transition-colors"></button>
       <button onclick="switchTab('add')" id="tab-add" class="tab-btn flex items-center justify-center gap-1.5 min-w-0 text-sm px-3 py-2 rounded-lg text-ink-500 hover:text-ink-950 transition-colors"></button>
@@ -153,6 +154,7 @@
     <div class="flex items-center gap-2 sm:gap-3 shrink-0">
       <button type="button" data-action="open-reader-profile" data-uid="self" id="user-info" title="View your reader profile" class="flex items-center gap-1.5 min-w-0 text-left text-ink-700 hover:text-ink-950"><img id="nav-profile-photo" alt="" referrerpolicy="no-referrer" class="hidden w-7 h-7 rounded-full object-cover border border-ink-200"><span id="nav-profile-fallback" class="w-7 h-7 rounded-full bg-ink-800 text-paper font-display text-xs flex items-center justify-center"></span><span id="nav-profile-name" class="max-w-[76px] sm:max-w-[130px] truncate text-xs sm:text-sm font-semibold"></span></button>
       <button type="button" id="copy-share-button" onclick="copyShareLink()" title="Copy share link" class="p-2 text-ink-500 hover:text-ink-950"></button>
+      <button type="button" data-action="open-help" title="Help and feedback" class="p-2 text-ink-500 hover:text-ink-950 font-bold">?</button>
       <button onclick="signOut()" class="text-xs sm:text-sm text-ink-500 hover:text-ink-950 transition-colors font-medium">Sign Out</button>
     </div>
   </nav>
@@ -225,6 +227,19 @@
 
         <button type="submit" id="add-book-submit" class="w-full bg-rust-600 hover:bg-rust-700 disabled:opacity-60 disabled:cursor-not-allowed text-paper font-semibold py-3 px-4 rounded-lg transition-colors">Add to shelf</button>
       </form>
+      <details class="mt-5 border-t border-ink-200 pt-4">
+        <summary class="cursor-pointer text-sm font-semibold text-ink-700">Quick add a stack or series</summary>
+        <form id="quick-add-form" class="mt-3 space-y-3">
+          <textarea id="quick-book-lines" rows="6" placeholder="One book per line: Title | Author" class="w-full bg-paper border border-ink-200 rounded-lg p-3 text-sm text-ink-950 resize-y focus:outline-none focus:ring-2 focus:ring-ink-700"></textarea>
+          <div class="grid grid-cols-2 gap-2"><input id="series-title" type="text" placeholder="Series title" class="min-w-0 bg-paper border border-ink-200 rounded-lg p-2.5 text-sm text-ink-950"><input id="series-author" type="text" placeholder="Series author" class="min-w-0 bg-paper border border-ink-200 rounded-lg p-2.5 text-sm text-ink-950"></div>
+          <div class="grid grid-cols-[1fr_1fr_auto] gap-2"><input id="series-start" type="number" min="1" value="1" aria-label="First book number" class="min-w-0 bg-paper border border-ink-200 rounded-lg p-2.5 text-sm text-ink-950"><input id="series-end" type="number" min="1" value="3" aria-label="Last book number" class="min-w-0 bg-paper border border-ink-200 rounded-lg p-2.5 text-sm text-ink-950"><button type="button" id="generate-series" class="text-xs font-semibold text-ink-700 bg-ink-800/10 hover:bg-ink-800/20 px-3 rounded-lg">Add series</button></div>
+          <div class="grid grid-cols-2 gap-3">
+            <select id="quick-genre" class="w-full bg-paper border border-ink-200 rounded-lg p-2.5 text-sm text-ink-950"></select>
+            <select id="quick-condition" class="w-full bg-paper border border-ink-200 rounded-lg p-2.5 text-sm text-ink-950"></select>
+          </div>
+          <button type="submit" id="quick-add-submit" class="w-full bg-ink-950 hover:bg-ink-900 disabled:opacity-60 disabled:cursor-not-allowed text-paper font-semibold py-2.5 px-4 rounded-lg text-sm transition-colors">Add listed books</button>
+        </form>
+      </details>
     </div>
 
     <div id="library-panel" class="lg:col-span-3 space-y-6">
@@ -362,6 +377,8 @@
       <button id="inbox-show-more" class="hidden mt-4 w-full border border-ink-200 bg-ink-800/5 hover:bg-ink-800/10 text-ink-700 py-2.5 rounded-lg text-xs font-semibold">Show more</button>
     </div>
   </div>
+
+  <footer id="community-stats" class="app-panel rounded-xl border border-ink-200 shadow-sm px-4 py-3 text-center text-xs text-ink-600"></footer>
 
 </div>
 
@@ -540,6 +557,22 @@
     document.getElementById('reader-profile-body').innerHTML = '';
   }
 
+  function openHelp() { document.getElementById('help-modal').classList.remove('hidden'); }
+  function closeHelp() { document.getElementById('help-modal').classList.add('hidden'); }
+
+  document.getElementById('feedback-form').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const message = document.getElementById('feedback-message').value.trim();
+    if (!message) return;
+    const result = await guard(() => db.collection('feedback').add({
+      reporterId: currentUser.uid, reporterShelf: userProfile.libraryName || '',
+      category: document.getElementById('feedback-category').value, message,
+      page: PAGE_VIEWS.find(view => !document.getElementById(`view-${view}`).classList.contains('hidden')) || 'library',
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }), { context: 'Sending feedback', success: 'Thank you. Your feedback was sent.' });
+    if (result !== FAILED) { event.target.reset(); closeHelp(); }
+  });
+
   async function openReaderProfile(uid, editIntroduction = false) {
     const targetUid = uid === 'self' ? currentUser.uid : uid;
     const modal = document.getElementById('reader-profile-modal');
@@ -558,17 +591,56 @@
       ? `${editIntroduction
           ? `<form id="profile-bio-form" class="mt-5 space-y-3"><label class="block text-xs font-semibold text-ink-700" for="profile-bio-edit">About you</label><textarea id="profile-bio-edit" rows="4" maxlength="280" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-sm text-ink-950 resize-none">${esc(profile.bio || '')}</textarea><div class="flex gap-2"><button type="button" data-action="open-reader-profile" data-uid="self" class="bg-ink-100 text-ink-700 px-4 py-2.5 rounded-lg text-xs font-semibold">Cancel</button><button type="submit" class="bg-ink-950 text-paper px-4 py-2.5 rounded-lg text-xs font-semibold">Save introduction</button></div></form>`
           : `<button data-action="edit-profile-introduction" class="mt-5 inline-flex items-center gap-1.5 bg-ink-800/10 text-ink-800 hover:bg-ink-800/20 px-3 py-2.5 rounded-lg text-xs font-semibold">${icon('pencil', 'w-3.5 h-3.5')}Edit introduction</button>`}
-          <details class="mt-6 border-t border-ink-200 pt-4"><summary class="cursor-pointer text-xs font-semibold text-ink-600 hover:text-ink-950">Account settings</summary><div class="mt-3 rounded-lg border border-rust-200 bg-rust-50/70 p-3"><p class="text-xs leading-relaxed text-ink-600">Deleting your account permanently removes your shelf, cover photos, and pending requests. It is unavailable while you have an active loan.</p><button data-action="delete-account" class="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-rust-700 hover:text-rust-900">${icon('trash', 'w-3.5 h-3.5')}Delete my account</button></div></details>`
+          <button data-action="manage-circles" class="mt-5 ml-2 inline-flex items-center gap-1.5 bg-gold-100 text-ink-800 hover:bg-gold-300/50 px-3 py-2.5 rounded-lg text-xs font-semibold">${icon('users', 'w-3.5 h-3.5')}Manage circles</button><div id="circle-manager" class="hidden mt-4"></div>
+          <details class="mt-6 border-t border-ink-200 pt-4"><summary class="cursor-pointer text-xs font-semibold text-ink-600 hover:text-ink-950">How your reader score works</summary><div class="mt-3 text-xs leading-relaxed text-ink-600 space-y-1"><p>Everyone starts at 3.0. Listing books can add up to 1.5 points.</p><p>Returning on time after 48 hours adds 0.5. A late return loses 0.5. A lost book loses 2 points.</p><p>Quick returns do not change the score.</p></div></details><details class="mt-4 border-t border-ink-200 pt-4"><summary class="cursor-pointer text-xs font-semibold text-ink-600 hover:text-ink-950">Account settings</summary><div class="mt-3 rounded-lg border border-rust-200 bg-rust-50/70 p-3"><p class="text-xs leading-relaxed text-ink-600">Deleting your account permanently removes your shelf, cover photos, and pending requests. It is unavailable while you have an active loan.</p><button data-action="delete-account" class="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-rust-700 hover:text-rust-900">${icon('trash', 'w-3.5 h-3.5')}Delete my account</button></div></details>`
       : `<div class="mt-5 flex flex-wrap gap-2">${isFriend ? `<button data-action="view-shelf" data-uid="${esc(targetUid)}" data-name="${esc(name)}" class="bg-ink-800/10 text-ink-800 px-3 py-2.5 rounded-lg text-xs font-semibold">View shelf</button>` : relationship === 'pending' && relationshipSenders[targetUid] === currentUser.uid ? `<span class="text-xs font-semibold text-gold-600 py-2.5">Friend request sent</span><button data-action="cancel-request" data-id="${esc(relationshipDocs[targetUid] || '')}" data-name="${esc(name)}" class="text-xs font-semibold text-rust-600 px-2">Cancel request</button>` : relationship === 'pending' ? `<button data-action="switch-inbox" class="bg-ink-800/10 text-ink-800 px-3 py-2.5 rounded-lg text-xs font-semibold">Review request in Inbox</button>` : `<button data-action="add-friend" data-owner="${esc(targetUid)}" data-name="${esc(name)}" class="bg-rust-600 text-paper px-3 py-2.5 rounded-lg text-xs font-semibold">Add friend</button>`}</div>`;
     const memberSince = formatDate(profile.memberSince) || 'Recently';
-    body.innerHTML = `<div class="flex items-center gap-4 pr-8">${avatarHtml(profile, name, 'w-16 h-16')}<div class="min-w-0"><p class="font-mono text-[10px] uppercase tracking-widest text-rust-600">Reader profile</p><h2 class="font-display text-2xl text-ink-950 truncate">${esc(name)}</h2><p class="text-sm text-[#8a6414] font-semibold">${score.toFixed(1)}/10 reader score</p><p class="text-[11px] text-ink-500 mt-1">Member since ${esc(memberSince)}</p></div></div><div class="grid grid-cols-2 gap-3 mt-5"><div class="bg-ink-800/5 rounded-lg p-3"><p class="font-semibold text-ink-950">${Number(profile.bookCount || 0)}</p><p class="text-xs text-ink-500">books on shelf</p></div><div class="bg-ink-800/5 rounded-lg p-3"><p class="font-semibold text-ink-950">${isSelf ? 'Your shelf' : (isFriend ? 'Connected' : 'Not connected')}</p><p class="text-xs text-ink-500">library status</p></div></div><div class="mt-5"><p class="text-xs font-semibold text-ink-700 mb-1">About</p><p class="text-sm text-ink-600 leading-relaxed">${esc(profile.bio || 'No introduction added yet.')}</p></div>${actions}`;
-    if (isSelf) document.getElementById('profile-bio-form').addEventListener('submit', async (e) => {
+    const circles = Array.isArray(profile.circleTags) && profile.circleTags.length
+      ? `<div class="mt-4 flex flex-wrap gap-1.5">${profile.circleTags.map(tag => `<span class="bg-gold-100 text-ink-700 rounded-full px-2 py-1 text-[10px] font-semibold">${esc(tag)}</span>`).join('')}</div>` : '';
+    body.innerHTML = `<div class="flex items-center gap-4 pr-8">${avatarHtml(profile, name, 'w-16 h-16')}<div class="min-w-0"><p class="font-mono text-[10px] uppercase tracking-widest text-rust-600">Reader profile</p><h2 class="font-display text-2xl text-ink-950 truncate">${esc(name)}</h2><p class="text-sm text-[#8a6414] font-semibold">${score.toFixed(1)}/10 reader score</p><p class="text-[11px] text-ink-500 mt-1">Member since ${esc(memberSince)}</p></div></div><div class="grid grid-cols-2 gap-3 mt-5"><div class="bg-ink-800/5 rounded-lg p-3"><p class="font-semibold text-ink-950">${Number(profile.bookCount || 0)}</p><p class="text-xs text-ink-500">books on shelf</p></div><div class="bg-ink-800/5 rounded-lg p-3"><p class="font-semibold text-ink-950">${isSelf ? 'Your shelf' : (isFriend ? 'Connected' : 'Not connected')}</p><p class="text-xs text-ink-500">library status</p></div></div>${circles}<div class="mt-5"><p class="text-xs font-semibold text-ink-700 mb-1">About</p><p class="text-sm text-ink-600 leading-relaxed">${esc(profile.bio || 'No introduction added yet.')}</p></div>${actions}`;
+    const bioForm = document.getElementById('profile-bio-form');
+    if (bioForm) bioForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const bio = document.getElementById('profile-bio-edit').value.trim().slice(0, 280);
       const nextProfile = { ...userProfile, bio };
       const res = await guard(() => db.collection('profiles').doc(currentUser.uid).set(publicProfileData(nextProfile)), { context: 'Saving your introduction', success: 'Profile introduction saved.' });
       if (res !== FAILED) { userProfile = nextProfile; renderMyReaderScore(); openReaderProfile('self'); }
     });
+  }
+
+  async function manageCircles() {
+    const panel = document.getElementById('circle-manager');
+    if (!panel) return;
+    panel.classList.remove('hidden');
+    panel.innerHTML = '<p class="text-xs text-ink-400">Loading approved circles…</p>';
+    const [circles, memberships, settings] = await Promise.all([
+      guard(() => db.collection('circles').limit(50).get(), { context: 'Loading circles' }),
+      guard(() => db.collection('circleMemberships').where('userId', '==', currentUser.uid).limit(20).get(), { context: 'Loading your circles' }),
+      guard(() => lendingFunctions.httpsCallable('getCircleSettings')(), { context: 'Loading circle settings' })
+    ]);
+    if (circles === FAILED || memberships === FAILED || settings === FAILED) return;
+    const joined = new Set(memberships.docs.map(doc => doc.data().circleId));
+    const items = circles.docs.map(doc => ({ id: doc.id, ...doc.data() })).filter(circle => circle.active === true);
+    const circleLimit = Number(settings.data?.circleLimit || 5);
+    const starterButton = settings.data?.isAdmin
+      ? `<button data-action="install-starter-circles" class="mt-3 text-xs font-semibold text-rust-700 hover:text-rust-900">Add starter circles</button>`
+      : '';
+    panel.innerHTML = `<p class="text-xs text-ink-500 mb-2">Choose up to ${esc(circleLimit)} approved circles. You can leave one whenever you like.</p><div class="space-y-2">${items.map(circle => `<div class="flex items-center justify-between gap-2 rounded-lg border border-ink-200 bg-white px-3 py-2"><div class="min-w-0"><p class="text-xs font-semibold text-ink-800 truncate">${esc(circle.name || 'Circle')}</p><p class="text-[10px] text-ink-400">${esc(circle.category || 'Community')}</p></div><button data-action="${joined.has(circle.id) ? 'leave-circle' : 'join-circle'}" data-id="${esc(circle.id)}" class="shrink-0 text-xs font-semibold ${joined.has(circle.id) ? 'text-rust-600' : 'text-ink-700'}">${joined.has(circle.id) ? 'Leave' : 'Join'}</button></div>`).join('') || '<p class="text-xs text-ink-400">No circles are available yet.</p>'}</div>${starterButton}`;
+  }
+
+  async function changeCircle(action, circleId) {
+    const callable = action === 'join-circle' ? 'joinCircle' : 'leaveCircle';
+    const result = await guard(() => lendingFunctions.httpsCallable(callable)({ circleId }), { context: 'Updating circles', success: action === 'join-circle' ? 'Circle added to your profile.' : 'Circle removed from your profile.' });
+    if (result === FAILED) return;
+    const profile = await guard(() => db.collection('profiles').doc(currentUser.uid).get(), { context: 'Refreshing your profile' });
+    if (profile !== FAILED && profile.exists) userProfile = profile.data();
+    renderMyReaderScore();
+    openReaderProfile('self');
+  }
+
+  async function installStarterCircles() {
+    const result = await guard(() => lendingFunctions.httpsCallable('installStarterCircles')(), { context: 'Adding starter circles', success: 'Starter circles are ready.' });
+    if (result !== FAILED) manageCircles();
   }
   window.openReaderProfile = openReaderProfile;
 
@@ -591,7 +663,7 @@
   function fillOptions(selectEl, values, placeholder) {
     selectEl.innerHTML = `<option value="">${placeholder}</option>` + values.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join('');
   }
-  [['genre',GENRES,'Genre…'],['condition',CONDITIONS,'Condition…'],['edit-genre',GENRES,'Genre'],['edit-condition',CONDITIONS,'Condition']].forEach(([id, values, ph]) => {
+  [['genre',GENRES,'Genre…'],['condition',CONDITIONS,'Condition…'],['edit-genre',GENRES,'Genre'],['edit-condition',CONDITIONS,'Condition'],['quick-genre',GENRES,'Genre…'],['quick-condition',CONDITIONS,'Condition…']].forEach(([id, values, ph]) => {
     fillOptions(document.getElementById(id), values, ph);
   });
   fillOptions(document.getElementById('search-genre-filter'), GENRES, 'Any genre');
@@ -611,6 +683,25 @@
       btn.classList.toggle('text-ink-300', !active);
     });
   }
+
+  const BOOK_DRAFT_KEY = 'cloudlibrary-book-draft-v1';
+  const BOOK_DRAFT_FIELDS = ['title', 'author', 'genre', 'condition', 'isbn', 'publishedYear', 'coverUrl', 'description', 'rating-add', 'status'];
+  function saveBookDraft() {
+    const draft = Object.fromEntries(BOOK_DRAFT_FIELDS.map(id => [id, document.getElementById(id).value]));
+    localStorage.setItem(BOOK_DRAFT_KEY, JSON.stringify(draft));
+  }
+  function restoreBookDraft() {
+    try {
+      const draft = JSON.parse(localStorage.getItem(BOOK_DRAFT_KEY) || 'null');
+      if (!draft || !Object.values(draft).some(Boolean)) return;
+      BOOK_DRAFT_FIELDS.forEach(id => { if (draft[id] != null) document.getElementById(id).value = draft[id]; });
+      setRating('add', Number(draft['rating-add']) || 0);
+      toast('Your unfinished book entry was restored.', 'info');
+    } catch (err) { localStorage.removeItem(BOOK_DRAFT_KEY); }
+  }
+  document.getElementById('book-form').addEventListener('input', saveBookDraft);
+  document.getElementById('book-form').addEventListener('change', saveBookDraft);
+  restoreBookDraft();
 
   function starsRow(rating) {
     rating = Number(rating) || 0;
@@ -762,6 +853,20 @@
   const auth = firebase.auth();
   const storage = firebase.storage();
   const lendingFunctions = firebase.app().functions('asia-south1');
+  const isLocalDemo = ['localhost', '127.0.0.1'].includes(window.location.hostname)
+    && new URLSearchParams(window.location.search).has('demo');
+  const inviteTarget = new URLSearchParams(window.location.search).get('user');
+  if (inviteTarget) {
+    document.getElementById('login-title').textContent = 'You have been invited.';
+    document.getElementById('login-copy').textContent = 'Sign in to meet the reader who invited you and connect your libraries.';
+  }
+  if (isLocalDemo) {
+    db.useEmulator('127.0.0.1', 8080);
+    auth.useEmulator('http://127.0.0.1:9099');
+    storage.useEmulator('127.0.0.1', 9199);
+    lendingFunctions.useEmulator('127.0.0.1', 5001);
+    document.getElementById('demo-login-controls').classList.remove('hidden');
+  }
   const googleProvider = new firebase.auth.GoogleAuthProvider();
   // Firebase signs out of CloudLibrary only; this makes Google ask which
   // browser account should sign in instead of silently reusing the last one.
@@ -813,7 +918,13 @@
   });
 
   // --- 2. AUTHENTICATION & PROFILE CHECK ---
-  function signIn() { authPersistenceReady.then(() => auth.signInWithPopup(googleProvider)); }
+  function signIn() {
+    authPersistenceReady.then(() => {
+      if (!isLocalDemo) return auth.signInWithPopup(googleProvider);
+      const reader = document.getElementById('demo-user').value;
+      return auth.signInWithEmailAndPassword(`${reader}@cloudlibrary.demo`, 'cloudlibrary-demo');
+    });
+  }
   function signOut() {
     isSigningOut = true;
     clearTimeout(inactivityTimer);
@@ -909,6 +1020,10 @@
     listenToInbox();
     initCloudTicker();
     renderMyReaderScore();
+    if (inviteTarget && inviteTarget !== currentUser.uid) {
+      window.history.replaceState({}, '', window.location.pathname);
+      setTimeout(() => openReaderProfile(inviteTarget), 250);
+    }
   }
 
   // --- 3. TABS NAVIGATION ---
@@ -1049,6 +1164,7 @@
       ].sort((a, b) => timestampMillis(b.createdAt) - timestampMillis(a.createdAt)).slice(0, 8);
       const personal = readerStats.exists ? readerStats.data() : {};
       const community = networkStats.exists ? networkStats.data() : {};
+      renderCommunityStats(community);
       if (Number(personal.totalBorrowed || 0)) items.push({ type: 'your-borrowing-total', totalBorrowed: personal.totalBorrowed });
       if (Number(personal.mostBorrowedCount || 0)) items.push({ type: 'your-most-borrowed', title: personal.mostBorrowedTitle, count: personal.mostBorrowedCount });
       if (Number(community.totalLoans || 0)) items.push({ type: 'community-loans', totalLoans: community.totalLoans, activeLoans: community.activeLoans || 0 });
@@ -1068,6 +1184,22 @@
       console.warn('Cloud ticker could not load', err);
       content.textContent = 'Community updates are temporarily unavailable. Refresh after signing in.';
     }
+  }
+
+  function renderCommunityStats(stats) {
+    const panel = document.getElementById('community-stats');
+    if (!panel) return;
+    const facts = [
+      [Number(stats.totalBooks || 0), 'books on CloudLibrary'],
+      [Number(stats.totalMembers || 0), 'readers building shelves'],
+      [Number(stats.totalFriendships || 0), 'library friendships'],
+      [Number(stats.totalLoans || 0), 'books borrowed'],
+      [Number(stats.totalReturns || 0), 'books returned'],
+      [Number(stats.totalCircles || 0), 'circles to explore']
+    ].filter(([value]) => value > 0);
+    if (!facts.length) { panel.textContent = 'A new community library is taking shape.'; return; }
+    const [value, label] = facts[Math.floor(Math.random() * facts.length)];
+    panel.innerHTML = `<span class="font-display text-base text-ink-950">${value.toLocaleString()}</span><span class="ml-1.5">${esc(label)}</span>`;
   }
 
   function tickerItemHtml(item) {
@@ -1237,6 +1369,12 @@
     submitButton.disabled = true;
     submitButton.textContent = 'Adding to shelf…';
     const fields = collectBookFields('');
+    if (looksLikeShelfDuplicate(fields) && !confirm('A book with this title is already on your shelf. Add another copy anyway?')) {
+      bookSubmissionInProgress = false;
+      submitButton.disabled = false;
+      submitButton.textContent = 'Add to shelf';
+      return;
+    }
     const bookRef = db.collection('books').doc();
     if (inlineCoverFile) {
       const uploaded = await guard(() => uploadCoverPhoto(bookRef.id, inlineCoverFile), { context: 'Uploading cover photo' });
@@ -1248,13 +1386,8 @@
       }
       fields.coverUrl = uploaded;
     }
-    const book = { ...fields, ownerId: currentUser.uid, ownerName: userProfile.libraryName, readerIds: [], createdAt: firebase.firestore.FieldValue.serverTimestamp() };
-    const res = await guard(() => {
-      const batch = db.batch();
-      batch.set(bookRef, book);
-      batch.set(db.collection('bookDiscovery').doc(bookRef.id), discoveryBookData(bookRef.id, book));
-      return batch.commit();
-    }, { context: 'Adding a book', success: `"${fields.title}" added to your shelf.` });
+    const book = { ...fields, ownerId: currentUser.uid, ownerName: userProfile.libraryName, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
+    const res = await guard(() => bookRef.set(book), { context: 'Adding a book', success: `"${fields.title}" added to your shelf.` });
     if (res === FAILED) {
       bookSubmissionInProgress = false;
       submitButton.disabled = false;
@@ -1262,6 +1395,7 @@
       return;
     }
     e.target.reset();
+    localStorage.removeItem(BOOK_DRAFT_KEY);
     inlineCoverFile = null;
     document.getElementById('cover-file-label').textContent = 'Add cover photo';
     document.getElementById('clear-cover-photo').classList.add('hidden');
@@ -1271,8 +1405,63 @@
     submitButton.textContent = 'Add to shelf';
   });
 
+  document.getElementById('quick-add-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const lines = document.getElementById('quick-book-lines').value.split('\n')
+      .map(line => line.trim()).filter(Boolean).slice(0, 20);
+    if (!lines.length) return toast('Add at least one book title.', 'info');
+    const books = lines.map(line => {
+      const [rawTitle, ...authorParts] = line.split('|');
+      return { title: rawTitle.trim(), author: authorParts.join('|').trim() || 'Unknown author' };
+    }).filter(book => book.title);
+    if (!books.length) return toast('Each line needs a book title.', 'info');
+    const duplicates = books.filter(looksLikeShelfDuplicate);
+    if (duplicates.length && !confirm(`${duplicates.length} listed book${duplicates.length === 1 ? ' looks' : 's look'} like ${duplicates.length === 1 ? 'a copy' : 'copies'} already on your shelf. Add them anyway?`)) return;
+    const button = document.getElementById('quick-add-submit');
+    button.disabled = true;
+    button.textContent = `Adding ${books.length} books…`;
+    const genre = document.getElementById('quick-genre').value;
+    const condition = document.getElementById('quick-condition').value;
+    const result = await guard(() => {
+      const batch = db.batch();
+      books.forEach(({ title, author }) => {
+        const ref = db.collection('books').doc();
+        batch.set(ref, {
+          title, author, genre, condition, isbn: '', publishedYear: null, coverUrl: '', description: '', rating: 0,
+          status: 'Available', ownerId: currentUser.uid, ownerName: userProfile.libraryName,
+          quietImport: true, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      });
+      return batch.commit();
+    }, { context: 'Quick-adding books', success: `${books.length} books added to your shelf.` });
+    if (result !== FAILED) e.target.reset();
+    button.disabled = false;
+    button.textContent = 'Add listed books';
+  });
+
+  document.getElementById('generate-series').addEventListener('click', () => {
+    const title = document.getElementById('series-title').value.trim();
+    const author = document.getElementById('series-author').value.trim() || 'Unknown author';
+    const first = Number(document.getElementById('series-start').value);
+    const last = Number(document.getElementById('series-end').value);
+    if (!title || !Number.isInteger(first) || !Number.isInteger(last) || first < 1 || last < first || last - first > 19) {
+      return toast('Enter a title and a range of up to 20 books.', 'info');
+    }
+    const lines = Array.from({ length: last - first + 1 }, (_, index) => `${title} · Book ${first + index} | ${author}`);
+    const field = document.getElementById('quick-book-lines');
+    field.value = [field.value.trim(), ...lines].filter(Boolean).join('\n');
+    field.focus();
+  });
+
   function normalizedTitle(title) {
     return String(title || '').trim().toLowerCase().replace(/\s+/g, ' ');
+  }
+
+  function looksLikeShelfDuplicate(book) {
+    const title = normalizedTitle(book.title);
+    const author = normalizedTitle(book.author);
+    return Object.values(myBooksCache).some(existing => normalizedTitle(existing.title) === title
+      && (!author || normalizedTitle(existing.author) === author));
   }
 
   function searchTokens(...values) {
@@ -1283,21 +1472,6 @@
       });
     });
     return [...tokens];
-  }
-
-  function discoveryBookData(bookId, book) {
-    return {
-      bookId,
-      ownerId: book.ownerId,
-      ownerName: book.ownerName || '',
-      title: book.title || '',
-      author: book.author || '',
-      genre: book.genre || '',
-      coverUrl: book.coverUrl || '',
-      status: book.status || 'Available',
-      searchTokens: searchTokens(book.title, book.author, book.ownerName),
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    };
   }
 
   function publicProfileData(profile) {
@@ -1312,6 +1486,7 @@
       bookCount: Number(profile.bookCount || 0),
       timelyReturns: Number(profile.timelyReturns || 0),
       memberSince: profile.memberSince || firebase.firestore.FieldValue.serverTimestamp(),
+      circleTags: Array.isArray(profile.circleTags) ? profile.circleTags.slice(0, 20) : [],
       searchTokens: searchTokens(profile.libraryName, profile.ownerName, profile.shelfKey),
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     };
@@ -1436,20 +1611,14 @@
       if (uploaded === FAILED) return;
       fields.coverUrl = uploaded;
     }
-    const existing = myBooksCache[id] || {};
-    const res = await guard(() => {
-      const batch = db.batch();
-      batch.update(db.collection('books').doc(id), fields);
-      batch.set(db.collection('bookDiscovery').doc(id), discoveryBookData(id, { ...existing, ...fields }));
-      return batch.commit();
-    }, { context: 'Updating a book', success: 'Changes saved.' });
+    const res = await guard(() => db.collection('books').doc(id).update(fields), { context: 'Updating a book', success: 'Changes saved.' });
     if (res === FAILED) return;
     editCoverFile = null;
     closeEditModal();
   });
 
   // --- 6. FRIENDS SYSTEM ---
-  async function loadFriendsList() {
+  async function loadFriendsList(allowMigration = true) {
     // Firestore rules can prove access only when the query includes the current
     // user as one side of the friendship. A status-only query is denied even
     // after the other person accepts the request.
@@ -1458,12 +1627,22 @@
       db.collection('friendships').where('user2', '==', currentUser.uid).limit(100).get()
     ]), { context: 'Loading your friends' });
     if (result === FAILED) return;
+    const docs = [...result[0].docs, ...result[1].docs];
+    const legacyIds = docs
+      .filter(doc => {
+        const data = doc.data();
+        return data.user1 && data.user2 && doc.id !== friendshipIdFor(data.user1, data.user2);
+      })
+      .map(doc => doc.id);
+    if (allowMigration && legacyIds.length) {
+      const migrated = await guard(() => lendingFunctions.httpsCallable('normalizeMyFriendships')({ friendshipIds: legacyIds }), { context: 'Updating your connections' });
+      if (migrated !== FAILED) return loadFriendsList(false);
+    }
     confirmedFriends = [];
     friendshipDocs = {};
     relationshipStates = {};
     relationshipDocs = {};
     relationshipSenders = {};
-    const docs = [...result[0].docs, ...result[1].docs];
     docs.forEach(doc => {
       const data = doc.data();
       let other = null;
@@ -1500,6 +1679,10 @@
     return !q1.empty || !q2.empty;
   }
 
+  function friendshipIdFor(firstUserId, secondUserId) {
+    return [firstUserId, secondUserId].sort().join('__');
+  }
+
   async function sendFriendRequest(targetUid, targetName) {
     if (targetUid === currentUser.uid) return;
     const exists = await guard(() => friendshipExists(currentUser.uid, targetUid), { context: 'Checking for an existing friendship' });
@@ -1509,7 +1692,8 @@
       return;
     }
 
-    const res = await guard(() => db.collection("friendships").add({
+    const friendshipId = friendshipIdFor(currentUser.uid, targetUid);
+    const res = await guard(() => db.collection('friendships').doc(friendshipId).set({
       user1: currentUser.uid,
       user1Name: userProfile.libraryName,
       user2: targetUid,
@@ -1520,7 +1704,7 @@
     }), { context: 'Sending a friend request', success: `Friend request sent to ${targetName}.` });
     if (res === FAILED) return;
     relationshipStates[targetUid] = 'pending';
-    relationshipDocs[targetUid] = res.id;
+    relationshipDocs[targetUid] = friendshipId;
     relationshipSenders[targetUid] = currentUser.uid;
     if (!document.getElementById('reader-profile-modal').classList.contains('hidden')) openReaderProfile(targetUid);
     if (!document.getElementById('view-friends').classList.contains('hidden')) renderFriendsView();
@@ -1633,7 +1817,7 @@
 
     const [profileDoc, snap] = await Promise.all([
       guard(() => db.collection('profiles').doc(friendUid).get(), { context: 'Loading reader profile' }),
-      guard(() => db.collection('books').where('ownerId', '==', friendUid).where('readerIds', 'array-contains', currentUser.uid).limit(150).get(), { context: 'Loading that library' })
+      guard(() => db.collection('books').where('ownerId', '==', friendUid).limit(150).get(), { context: 'Loading that library' })
     ]);
     if (snap === FAILED) {
       header.innerHTML = `<button data-action="back-to-friends" class="text-xs font-semibold text-ink-700">${icon('arrowLeft', 'w-4 h-4 inline')} Back to friends</button>`;
@@ -1669,14 +1853,20 @@
     if (cached && Date.now() - cached.createdAt < SEARCH_CACHE_MS) {
       ({ friendBooks, discoveryBooks, profiles } = cached);
     } else {
-      const friendSnaps = await Promise.all(confirmedFriends.slice(0, 10).map(uid => guard(() => db.collection('books').where('ownerId', '==', uid).where('readerIds', 'array-contains', currentUser.uid).limit(10).get(), { context: 'Searching friends' })));
-      if (friendSnaps.includes(FAILED)) { grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4">Search failed. Please try again.</p>'; return; }
-      const [bookSnap, profileSnap] = await Promise.all([
+      // One indexed query keeps friend-first search bounded. The previous
+      // implementation read ten books from each friend (up to 100 reads).
+      const friendBookQuery = confirmedFriends.length
+        ? guard(() => db.collection('bookDiscovery')
+          .where('ownerId', 'in', confirmedFriends.slice(0, 30))
+          .where('searchTokens', 'array-contains', query).limit(10).get(), { context: 'Searching friends' })
+        : Promise.resolve({ docs: [] });
+      const [friendBookSnap, bookSnap, profileSnap] = await Promise.all([
+        friendBookQuery,
         guard(() => db.collection('bookDiscovery').where('searchTokens', 'array-contains', query).limit(10).get(), { context: 'Searching the network' }),
         guard(() => db.collection('profiles').where('searchTokens', 'array-contains', query).limit(10).get(), { context: 'Searching readers' })
       ]);
-      if (bookSnap === FAILED || profileSnap === FAILED) { grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4">Search failed. Please try again.</p>'; return; }
-      friendBooks = friendSnaps.flatMap(snap => snap.docs).map(doc => ({ id: doc.id, ...doc.data() }));
+      if (friendBookSnap === FAILED || bookSnap === FAILED || profileSnap === FAILED) { grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4">Search failed. Please try again.</p>'; return; }
+      friendBooks = friendBookSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       discoveryBooks = bookSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       profiles = profileSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       searchCache.set(cacheKey, { createdAt: Date.now(), friendBooks, discoveryBooks, profiles });
@@ -1692,8 +1882,7 @@
         : `<button data-action="open-reader-profile" data-uid="${esc(book.ownerId)}" class="text-rust-600 bg-rust-600/10 hover:bg-rust-600/20 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">View profile</button>`;
       grid.insertAdjacentHTML('beforeend', renderBookCard(book, actions, `${esc(book.ownerName || 'A reader')}${isFriend ? ' · Friend' : ''}`));
     };
-    friendBooks
-      .filter(book => searchTokens(book.title, book.author, book.ownerName).includes(query)).forEach(book => addBook(book, true));
+    friendBooks.forEach(book => addBook(book, true));
     profiles.forEach(profile => {
       if (profile.id === currentUser.uid || shown.has(`profile:${profile.id}`)) return;
       const isFriend = confirmedFriends.includes(profile.id);
@@ -1981,6 +2170,12 @@
       case 'delete-wish': guard(() => db.collection('wishlists').doc(d.id).delete(), { context: 'Removing wishlist item', success: 'Removed from your wishlist.' }); break;
       case 'delete-account': deleteAccount(); break;
       case 'edit-profile-introduction': openReaderProfile('self', true); break;
+      case 'manage-circles': manageCircles(); break;
+      case 'join-circle': changeCircle('join-circle', d.id); break;
+      case 'leave-circle': changeCircle('leave-circle', d.id); break;
+      case 'install-starter-circles': installStarterCircles(); break;
+      case 'open-help': openHelp(); break;
+      case 'close-help': closeHelp(); break;
       case 'open-reader-profile': openReaderProfile(d.uid); break;
       case 'close-reader-profile': closeReaderProfileModal(); break;
     }
@@ -1997,7 +2192,7 @@
   window.copyShareLink = function () {
     const shareUrl = `${window.location.origin}${window.location.pathname}?user=${currentUser.uid}`;
     navigator.clipboard.writeText(shareUrl)
-      .then(() => toast('Share link copied to your clipboard.', 'success'))
+      .then(() => toast('Invite link copied. Your friend can sign in and connect with you.', 'success'))
       .catch(() => toast('Could not copy automatically. Link: ' + shareUrl, 'info'));
   };
 

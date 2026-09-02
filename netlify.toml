@@ -26,3 +26,7 @@
   # flag, add SECRETS_SCAN_SMART_DETECTION_OMIT_VALUES in the Netlify UI with
   # the Firebase apiKey as its value, to safelist just that one string.
   SECRETS_SCAN_SMART_DETECTION_ENABLED = "false"
+
+[build]
+  command = "npm run build"
+  publish = "."

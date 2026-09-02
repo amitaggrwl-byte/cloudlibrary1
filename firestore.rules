@@ -15,7 +15,7 @@ service cloud.firestore {
       return data.keys().hasOnly([
         'libraryName', 'shelfKey', 'ownerName', 'photoURL', 'bio',
         'ratingScore', 'ratingAdjustment', 'bookCount', 'timelyReturns', 'memberSince',
-        'searchTokens', 'updatedAt'
+        'searchTokens', 'circleTags', 'updatedAt'
       ]);
     }
     function profileEditableFields() {
@@ -28,14 +28,52 @@ service cloud.firestore {
         && request.resource.data.bookCount == resource.data.bookCount
         && request.resource.data.timelyReturns == resource.data.timelyReturns
         && request.resource.data.memberSince == resource.data.memberSince
+        && (
+          (!resource.data.keys().hasAll(['circleTags']) && request.resource.data.circleTags == [])
+          || request.resource.data.circleTags == resource.data.circleTags
+        )
       );
+    }
+    function friendshipKey(firstUserId, secondUserId) {
+      return firstUserId < secondUserId
+        ? firstUserId + '__' + secondUserId
+        : secondUserId + '__' + firstUserId;
+    }
+    function areConfirmedFriends(firstUserId, secondUserId) {
+      return firstUserId != secondUserId
+        && exists(/databases/$(database)/documents/friendships/$(friendshipKey(firstUserId, secondUserId)))
+        && get(/databases/$(database)/documents/friendships/$(friendshipKey(firstUserId, secondUserId))).data.status == 'accepted';
+    }
+    function hasLegacyBookAccess(data, userId) {
+      return data.keys().hasAll(['readerIds']) && userId in data.readerIds;
     }
     function canReadBook() {
       return signedIn() && (
         resource.data.ownerId == request.auth.uid
         || resource.data.borrowerId == request.auth.uid
-        || request.auth.uid in resource.data.readerIds
+        || hasLegacyBookAccess(resource.data, request.auth.uid)
+        || areConfirmedFriends(resource.data.ownerId, request.auth.uid)
       );
+    }
+    function validBookCreate(data) {
+      return data.keys().hasOnly([
+          'title', 'author', 'genre', 'isbn', 'publishedYear', 'condition',
+          'coverUrl', 'description', 'rating', 'status', 'ownerId', 'ownerName',
+          'quietImport', 'createdAt'
+        ])
+        && data.ownerId == request.auth.uid
+        && data.status in ['Available', 'Reading'];
+    }
+    function validReturnReminder(data) {
+      return data.bookId is string
+        && data.requesterId is string
+        && data.requesterId != request.auth.uid
+        && data.ownerId == request.auth.uid
+        && data.status == 'pending'
+        && exists(/databases/$(database)/documents/books/$(data.bookId))
+        && get(/databases/$(database)/documents/books/$(data.bookId)).data.ownerId == request.auth.uid
+        && get(/databases/$(database)/documents/books/$(data.bookId)).data.status == 'Lent Out'
+        && get(/databases/$(database)/documents/books/$(data.bookId)).data.borrowerId == data.requesterId;
     }
 
     // Public discovery profiles contain no email address or other contact data.
@@ -50,6 +88,7 @@ service cloud.firestore {
         && request.resource.data.ratingAdjustment == 0
         && request.resource.data.bookCount == 0
         && request.resource.data.timelyReturns == 0
+        && request.resource.data.circleTags == []
         && request.resource.data.memberSince is timestamp;
       allow update: if own(userId) && validShelfName(request.resource.data)
         && publicProfileFields(request.resource.data) && profileEditableFields();
@@ -69,10 +108,7 @@ service cloud.firestore {
     match /books/{bookId} {
       allow get: if canReadBook();
       allow list: if canReadBook() && request.query.limit != null && request.query.limit <= 150;
-      allow create: if signedIn()
-        && request.resource.data.ownerId == request.auth.uid
-        && request.resource.data.status in ['Available', 'Reading']
-        && request.resource.data.readerIds == [];
+      allow create: if signedIn() && validBookCreate(request.resource.data);
       allow update: if signedIn()
         && resource.data.ownerId == request.auth.uid
         && request.resource.data.ownerId == resource.data.ownerId
@@ -91,9 +127,7 @@ service cloud.firestore {
     match /bookDiscovery/{bookId} {
       allow get: if signedIn();
       allow list: if signedIn() && request.query.limit != null && request.query.limit <= 10;
-      allow create: if signedIn() && request.resource.data.ownerId == request.auth.uid;
-      allow update, delete: if signedIn() && resource.data.ownerId == request.auth.uid
-        && request.resource.data.ownerId == resource.data.ownerId;
+      allow write: if false;
     }
 
     // Small, server-written ticker records. Book-related activity is visible
@@ -122,6 +156,21 @@ service cloud.firestore {
     match /networkStats/{statsId} {
       allow get: if signedIn();
       allow list, write: if false;
+    }
+
+    // Circles are created and maintained by the app administrator. Readers
+    // may only join or leave through trusted Functions, which enforce the cap.
+    match /circles/{circleId} {
+      allow get: if signedIn();
+      allow list: if signedIn() && request.query.limit != null && request.query.limit <= 50;
+      allow write: if false;
+    }
+
+    match /circleMemberships/{membershipId} {
+      allow get: if signedIn() && resource.data.userId == request.auth.uid;
+      allow list: if signedIn() && request.query.limit != null && request.query.limit <= 20
+        && resource.data.userId == request.auth.uid;
+      allow write: if false;
     }
 
     match /bookLoanStats/{bookId} {
@@ -155,13 +204,12 @@ service cloud.firestore {
           && request.resource.data.ownerId != request.auth.uid
           && get(/databases/$(database)/documents/books/$(request.resource.data.bookId)).data.ownerId == request.resource.data.ownerId
           && get(/databases/$(database)/documents/books/$(request.resource.data.bookId)).data.status == 'Available'
-          && request.auth.uid in get(/databases/$(database)/documents/books/$(request.resource.data.bookId)).data.readerIds)
+          && (
+            hasLegacyBookAccess(get(/databases/$(database)/documents/books/$(request.resource.data.bookId)).data, request.auth.uid)
+            || areConfirmedFriends(request.resource.data.ownerId, request.auth.uid)
+          ))
         || (request.resource.data.type == 'return-reminder'
-          && request.resource.data.ownerId == request.auth.uid
-          && request.resource.data.status == 'pending')
-        || (request.resource.data.type == 'wishlist-match'
-          && request.resource.data.ownerId == request.auth.uid
-          && request.resource.data.status == 'completed')
+          && validReturnReminder(request.resource.data))
       );
       allow update: if signedIn() && resource.data.type == 'return-reminder'
         && resource.data.status == 'pending'
@@ -187,6 +235,17 @@ service cloud.firestore {
     // Ratings are written only by Firebase Functions; no browser writes are allowed.
     match /ratingEvents/{eventId} {
       allow read, write: if false;
+    }
+
+    match /feedback/{feedbackId} {
+      allow create: if signedIn()
+        && request.resource.data.reporterId == request.auth.uid
+        && request.resource.data.reporterShelf is string
+        && request.resource.data.category in ['bug', 'idea', 'question']
+        && request.resource.data.message is string && request.resource.data.message.size() > 0
+        && request.resource.data.message.size() <= 1000
+        && request.resource.data.page is string;
+      allow read, update, delete: if false;
     }
   }
 }
