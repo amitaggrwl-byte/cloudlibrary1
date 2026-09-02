@@ -50,14 +50,15 @@
   .tab-btn:focus-visible { outline: 3px solid #e6c765; outline-offset: 2px; }
   .brand-mark { width: 38px; height: 38px; display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; background: #152420; color: #f6efe0; box-shadow: inset 0 0 0 1px rgba(246,239,224,.22), 0 4px 10px rgba(21,36,32,.12); position: relative; overflow: hidden; }
   .brand-mark::after { content: ''; position: absolute; right: 7px; top: 7px; bottom: 7px; width: 3px; border-radius: 3px; background: #c1653f; }
-  .brand-wordmark { font-family: 'Fraunces', serif; font-weight: 600; line-height: 1; letter-spacing: 0; }
+  .brand-wordmark { font-family: 'Fraunces', serif; font-weight: 600; line-height: 1.15; letter-spacing: 0; }
   .brand-wordmark .brand-library { color: #b5563a; font-style: italic; }
   .mobile-nav { padding-bottom: max(10px, env(safe-area-inset-bottom)); }
   .app-panel { background: rgba(255,255,255,.86); backdrop-filter: blur(12px); }
   .loan-note { background: linear-gradient(135deg, rgba(244,227,218,.8), rgba(247,236,201,.55)); }
   #cloud-ticker-card { background: linear-gradient(110deg, rgba(255,255,255,.92), rgba(247,236,201,.62), rgba(230,199,101,.18)); }
   @keyframes tickerIn { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: translateX(0); } }
-  .ticker-item { animation: tickerIn .42s cubic-bezier(.16,1,.3,1) both; }
+  .ticker-item { animation: tickerIn .42s cubic-bezier(.16,1,.3,1) both; line-height: 1.3; }
+  .ticker-icon { width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border-radius: 7px; background: rgba(21,36,32,.08); color: #385c4b; flex: 0 0 auto; }
 
   @keyframes toastIn { from { opacity: 0; transform: translateY(12px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
   .toast-item { animation: toastIn .28s cubic-bezier(.16,1,.3,1) both; }
@@ -134,7 +135,7 @@
     <button type="button" data-action="close-help" title="Close help" class="absolute top-4 right-4 p-2 text-ink-500 hover:text-ink-950">&times;</button>
     <p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-1">Help</p>
     <h2 class="font-display text-2xl text-ink-950">Need a hand?</h2>
-    <div class="mt-4 space-y-4 text-sm text-ink-600 leading-relaxed"><section><h3 class="font-semibold text-ink-800">About CloudLibrary</h3><p>A small, real-life book-sharing community created by Amit Agarwal. Readers discover books, connect with people they know, and keep lending simple.</p></section><section><h3 class="font-semibold text-ink-800">Adding books</h3><p>Scan an ISBN, take a cover photo, or add several titles at once. For a series, prepare the list first, replace any placeholder book titles, then add the confirmed list to your shelf.</p></section><section><h3 class="font-semibold text-ink-800">Borrowing</h3><p>You must be confirmed friends. Readers can hold up to three active books, keep up to five pending requests, and ask at most two friends for the same title at once. A loan is due after 14 days.</p></section><section><h3 class="font-semibold text-ink-800">Returns and scores</h3><p>Returning on time after at least 48 hours earns points. Late returns and lost books reduce the reader score. Your profile has a score ledger explaining each change.</p></section><section><h3 class="font-semibold text-ink-800">Privacy and safety</h3><p>Email addresses are never shown. Only confirmed friends can open a full shelf or request a book. Report a bug, question, or idea below.</p></section></div>
+    <div class="mt-4 space-y-2 text-sm text-ink-600 leading-relaxed"><details open class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">About CloudLibrary</summary><p class="mt-2">A small, real-life book-sharing community created by Amit Agarwal. Readers discover books, connect with people they know, and keep lending simple.</p></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Add books, step by step</summary><ol class="mt-2 space-y-1 list-decimal pl-5"><li>For one book, enter title and author; series name and number are optional.</li><li>Scan an ISBN to fill details, then check them before saving.</li><li>Add a cover from your camera or device if you want one.</li><li>For many books, use one line per book: <span class="font-mono text-xs">Book title | Author</span>.</li><li>For a series, choose numbers, select <strong>Prepare list</strong>, replace placeholders, then select <strong>Add listed books</strong>.</li></ol></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Borrow, return, and save books</summary><ul class="mt-2 space-y-1 list-disc pl-5"><li>Only confirmed friends can borrow from one another.</li><li>You can have three active loans, five pending requests, and two pending requests for one title.</li><li>Loans are due in 14 days. Save an interesting result from Search to revisit it later.</li></ul></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Reader score</summary><ul class="mt-2 space-y-1 list-disc pl-5"><li>Everyone starts at 3.0.</li><li>Each listed book adds 0.15, up to 1.5 points.</li><li>An on-time return after 48 hours adds 0.5; a late return loses 0.5; a lost book loses 2.0.</li><li>Quick returns do not change the score. Your profile ledger records score changes.</li></ul></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Privacy, circles, and feedback</summary><p class="mt-2">Email addresses are never shown. Use circles to add real-life context, and send a bug, question, or idea below. Admin replies will appear in Inbox.</p></details></div>
     <form id="feedback-form" class="mt-6 space-y-3 border-t border-ink-200 pt-5"><label class="block text-xs font-semibold text-ink-700" for="feedback-message">Report a problem or share an idea</label><select id="feedback-category" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-sm text-ink-950"><option value="bug">Something is not working</option><option value="idea">Suggestion</option><option value="question">Question</option></select><textarea id="feedback-message" required maxlength="1000" rows="4" placeholder="What happened? What did you expect?" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-sm text-ink-950 resize-none"></textarea><button type="submit" class="w-full bg-ink-950 text-paper py-3 rounded-lg text-sm font-semibold">Send feedback</button></form>
   </div>
 </div>
@@ -144,7 +145,7 @@
   <!-- Navigation Bar -->
   <nav class="bg-white p-3 sm:p-4 rounded-xl border border-ink-200 shadow-sm">
     <div class="flex items-center justify-between gap-3">
-      <div class="flex items-center gap-2.5 min-w-0 shrink"><span id="brand-mark" class="brand-mark shrink-0" aria-hidden="true"></span><span class="brand-wordmark block text-[22px] sm:text-2xl text-ink-950 truncate">Cloud<span class="brand-library">Library</span></span></div>
+      <div class="flex items-center gap-2.5 shrink-0"><span id="brand-mark" class="brand-mark shrink-0" aria-hidden="true"></span><span class="brand-wordmark block whitespace-nowrap pb-px text-[21px] sm:text-2xl text-ink-950">Cloud<span class="brand-library">Library</span></span></div>
       <div class="flex items-center gap-2 sm:gap-3 shrink-0">
         <button type="button" data-action="open-reader-profile" data-uid="self" id="user-info" title="View your reader profile" class="flex items-center gap-1.5 min-w-0 text-left text-ink-700 hover:text-ink-950"><img id="nav-profile-photo" alt="" referrerpolicy="no-referrer" class="hidden w-7 h-7 rounded-full object-cover border border-ink-200"><span id="nav-profile-fallback" class="w-7 h-7 rounded-full bg-ink-800 text-paper font-display text-xs flex items-center justify-center"></span><span id="nav-profile-name" class="max-w-[76px] sm:max-w-[130px] truncate text-xs sm:text-sm font-semibold"></span></button>
         <button type="button" id="copy-share-button" onclick="copyShareLink()" title="Copy share link" class="p-2 text-ink-500 hover:text-ink-950"></button>
@@ -158,15 +159,17 @@
       <button onclick="switchTab('friends')" id="tab-friends" class="tab-btn flex items-center justify-center gap-1.5 min-w-0 text-sm px-3 py-2 rounded-lg text-ink-500 hover:text-ink-950 transition-colors"></button>
       <button onclick="switchTab('search')" id="tab-search" class="tab-btn flex items-center justify-center gap-1.5 min-w-0 text-sm px-3 py-2 rounded-lg text-ink-500 hover:text-ink-950 transition-colors"></button>
       <button onclick="switchTab('inbox')" id="tab-inbox" class="tab-btn flex items-center justify-center gap-1.5 min-w-0 text-sm px-3 py-2 rounded-lg text-ink-500 hover:text-ink-950 transition-colors"></button>
+      <button onclick="openReaderProfile('self')" id="tab-profile" class="tab-btn flex items-center justify-center gap-1.5 min-w-0 text-sm px-3 py-2 rounded-lg text-ink-500 hover:text-ink-950 transition-colors"></button>
     </div>
   </nav>
 
-  <nav class="mobile-nav md:hidden fixed inset-x-0 bottom-0 z-40 bg-white/95 backdrop-blur border-t border-ink-200 px-2 pt-2 grid grid-cols-5 gap-1 shadow-[0_-8px_24px_rgba(21,36,32,.10)]">
+  <nav class="mobile-nav md:hidden fixed inset-x-0 bottom-0 z-40 bg-white/95 backdrop-blur border-t border-ink-200 px-2 pt-2 grid grid-cols-6 gap-1 shadow-[0_-8px_24px_rgba(21,36,32,.10)]">
     <button onclick="switchTab('library')" id="tab-mobile-library" class="tab-btn active flex flex-col items-center justify-center gap-1 min-w-0 py-2 rounded-lg text-[10px] font-semibold transition-colors"></button>
     <button onclick="switchTab('add')" id="tab-mobile-add" class="tab-btn flex flex-col items-center justify-center gap-1 min-w-0 py-2 rounded-lg text-[10px] font-semibold text-ink-500 transition-colors"></button>
     <button onclick="switchTab('friends')" id="tab-mobile-friends" class="tab-btn flex flex-col items-center justify-center gap-1 min-w-0 py-2 rounded-lg text-[10px] font-semibold text-ink-500 transition-colors"></button>
     <button onclick="switchTab('search')" id="tab-mobile-search" class="tab-btn flex flex-col items-center justify-center gap-1 min-w-0 py-2 rounded-lg text-[10px] font-semibold text-ink-500 transition-colors"></button>
     <button onclick="switchTab('inbox')" id="tab-mobile-inbox" class="tab-btn flex flex-col items-center justify-center gap-1 min-w-0 py-2 rounded-lg text-[10px] font-semibold text-ink-500 transition-colors"></button>
+    <button onclick="openReaderProfile('self')" id="tab-mobile-profile" class="tab-btn flex flex-col items-center justify-center gap-1 min-w-0 py-2 rounded-lg text-[10px] font-semibold text-ink-500 transition-colors"></button>
   </nav>
 
   <!-- Header -->
@@ -247,8 +250,8 @@
     </div>
 
     <div id="library-panel" class="lg:col-span-3 space-y-6">
-      <div id="cloud-ticker-card" class="app-panel p-5 rounded-xl border border-ink-200 shadow-sm overflow-hidden">
-        <div class="flex items-center justify-between gap-3 mb-3">
+      <div id="cloud-ticker-card" class="app-panel px-4 py-3 rounded-xl border border-ink-200 shadow-sm overflow-hidden">
+        <div class="flex items-center justify-between gap-3 mb-1.5">
           <div class="flex items-center gap-2 min-w-0">
             <span class="w-2 h-2 rounded-full bg-rust-500 animate-pulse shrink-0"></span>
             <p class="font-mono text-[11px] uppercase tracking-widest text-rust-600">Cloud ticker</p>
@@ -258,7 +261,7 @@
             <button type="button" onclick="nextTicker()" title="Next update" class="p-1.5 rounded-lg text-ink-500 hover:bg-ink-100">&#8594;</button>
           </div>
         </div>
-        <div id="cloud-ticker-content" class="min-h-[46px] flex items-center text-sm text-ink-600">Loading library activity…</div>
+        <div id="cloud-ticker-content" class="min-h-[32px] flex items-center text-xs sm:text-sm text-ink-600">Loading library activity…</div>
       </div>
       <div id="borrowed-panel" class="app-panel p-5 rounded-xl border border-ink-200 shadow-sm">
         <div class="flex items-center justify-between mb-3">
@@ -269,18 +272,6 @@
         </div>
         <div id="borrowed-books-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
         <p id="borrowed-empty-state" class="text-sm text-ink-400">No borrowed books yet.</p>
-      </div>
-      <div id="borrow-history-panel" class="flex justify-end"><button type="button" data-action="view-history" class="text-xs font-semibold text-ink-600 hover:text-ink-950">View borrowing history</button></div>
-      <div id="wishlist-panel" class="app-panel p-5 rounded-xl border border-ink-200 shadow-sm">
-        <div class="mb-3">
-          <p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-1">Looking to borrow</p>
-          <h2 class="font-display text-xl text-ink-950">My wishlist</h2>
-        </div>
-        <form id="wishlist-form" class="flex gap-2 mb-3">
-          <input id="wishlist-title" required type="text" placeholder="Book title" class="min-w-0 flex-1 bg-paper border border-ink-200 rounded-lg px-3 py-2.5 text-sm text-ink-950 focus:outline-none focus:ring-2 focus:ring-ink-700">
-          <button type="submit" class="bg-ink-950 hover:bg-ink-900 text-paper px-4 rounded-lg text-xs font-semibold">Add</button>
-        </form>
-        <div id="wishlist-list" class="space-y-2"></div>
       </div>
       <div>
         <div class="flex items-center justify-between mb-3">
@@ -306,6 +297,16 @@
   <div id="view-history" class="hidden max-w-3xl mx-auto space-y-4">
     <div class="flex items-center justify-between gap-3"><div><p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-1">Reading record</p><h2 class="font-display text-2xl text-ink-950">Borrowing history</h2><p class="text-sm text-ink-500 mt-1">Your latest borrowing activity, kept separate from today’s shelf.</p></div><button type="button" data-action="back-to-library" class="text-xs font-semibold text-ink-600 hover:text-ink-950">Back to library</button></div>
     <div id="borrow-history-list" class="space-y-3"></div>
+  </div>
+
+  <div id="view-profile" class="hidden max-w-3xl mx-auto space-y-4">
+    <div><p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-1">Your account</p><h2 class="font-display text-2xl text-ink-950">Reader profile & settings</h2><p class="text-sm text-ink-500 mt-1">Manage your public reader profile, circles, score, and account.</p></div>
+    <div id="own-profile-page" class="app-panel rounded-xl border border-ink-200 shadow-sm p-4 sm:p-6"></div>
+  </div>
+
+  <div id="view-admin" class="hidden max-w-3xl mx-auto space-y-4">
+    <div class="flex items-center justify-between gap-3"><div><p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-1">Community administration</p><h2 class="font-display text-2xl text-ink-950">Admin console</h2></div><button data-action="back-to-profile" class="text-xs font-semibold text-ink-600 hover:text-ink-950">Back to profile</button></div>
+    <div id="admin-dashboard" class="app-panel rounded-xl border border-ink-200 shadow-sm p-4 sm:p-6"></div>
   </div>
 
   <!-- TAB 2: FRIENDS -->
@@ -381,7 +382,6 @@
     </div>
   </div>
 
-  <footer id="community-stats" class="app-panel rounded-xl border border-ink-200 shadow-sm px-4 py-3 text-center text-xs text-ink-600"></footer>
 
 </div>
 
@@ -449,6 +449,7 @@
     book: '<path d="M4 5.2A2.3 2.3 0 0 1 6.3 3H19v16H6.3A2.3 2.3 0 0 1 4 16.7z"/><path d="M4 5.2v11.5A2.3 2.3 0 0 0 6.3 19H19"/>',
     bookOpen: '<path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H11a2 2 0 0 1 2 2v15a2 2 0 0 0-2-2H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H13v15a2 2 0 0 1 2-2h2.5a2.5 2.5 0 0 1 2 2.5z"/>',
     users: '<circle cx="8.5" cy="8" r="3"/><circle cx="16.5" cy="10" r="2.3"/><path d="M2.8 20c0-3 2.5-5.2 5.7-5.2s5.7 2.2 5.7 5.2"/><path d="M14.8 15.2c2.3.3 3.9 2 3.9 4.3"/>',
+    user: '<circle cx="12" cy="8" r="3.5"/><path d="M5.5 20c.5-4 3.1-6.2 6.5-6.2s6 2.2 6.5 6.2"/>',
     search: '<circle cx="10.5" cy="10.5" r="6.5"/><path d="M20 20l-4.5-4.5"/>',
     bell: '<path d="M6 9a6 6 0 1 1 12 0c0 4 1.5 5.5 1.5 5.5H4.5S6 13 6 9Z"/><path d="M9.5 17.2a2.5 2.5 0 0 0 5 0"/>',
     plus: '<path d="M12 5v14M5 12h14"/>',
@@ -476,11 +477,13 @@
   document.getElementById('tab-friends').innerHTML = icon('users') + '<span>Friends</span>';
   document.getElementById('tab-search').innerHTML = icon('search') + '<span>Search</span>';
   document.getElementById('tab-inbox').innerHTML = icon('bell') + '<span>Inbox</span><span id="inbox-badge" class="hidden bg-rust-500 text-paper rounded-full px-1.5 py-0.5 text-[10px] font-mono">0</span>';
+  document.getElementById('tab-profile').innerHTML = icon('user') + '<span>Profile</span>';
   document.getElementById('tab-mobile-library').innerHTML = icon('book', 'w-5 h-5') + '<span>Library</span>';
   document.getElementById('tab-mobile-add').innerHTML = icon('plus', 'w-5 h-5') + '<span>Add</span>';
   document.getElementById('tab-mobile-friends').innerHTML = icon('users', 'w-5 h-5') + '<span>Friends</span>';
   document.getElementById('tab-mobile-search').innerHTML = icon('search', 'w-5 h-5') + '<span>Search</span>';
   document.getElementById('tab-mobile-inbox').innerHTML = icon('bell', 'w-5 h-5') + '<span>Inbox <span id="mobile-inbox-badge" class="hidden inline-flex items-center justify-center min-w-4 h-4 ml-0.5 bg-rust-500 text-paper rounded-full px-1 text-[9px] font-mono">0</span></span>';
+  document.getElementById('tab-mobile-profile').innerHTML = icon('user', 'w-5 h-5') + '<span>Profile</span>';
   document.getElementById('start-scan-btn').innerHTML = icon('camera') + '<span>Scan</span>';
   document.getElementById('copy-share-button').innerHTML = icon('link');
   document.getElementById('owner-controls').querySelector('button').innerHTML = icon('link') + '<span>Copy share link</span>';
@@ -580,8 +583,10 @@
   async function openReaderProfile(uid, editIntroduction = false) {
     const targetUid = uid === 'self' ? currentUser.uid : uid;
     const modal = document.getElementById('reader-profile-modal');
-    const body = document.getElementById('reader-profile-body');
-    modal.classList.remove('hidden');
+    const isSelfPage = targetUid === currentUser.uid;
+    const body = document.getElementById(isSelfPage ? 'own-profile-page' : 'reader-profile-body');
+    if (isSelfPage) { closeReaderProfileModal(); switchTab('profile'); }
+    else modal.classList.remove('hidden');
     body.innerHTML = '<p class="text-sm text-ink-400">Loading reader profile…</p>';
     const profileDoc = await guard(() => db.collection('profiles').doc(targetUid).get(), { context: 'Loading reader profile' });
     if (profileDoc === FAILED || !profileDoc.exists) { body.innerHTML = '<p class="text-sm text-ink-400">This reader profile is unavailable.</p>'; return; }
@@ -595,13 +600,12 @@
       ? `${editIntroduction
           ? `<form id="profile-bio-form" class="mt-5 space-y-3"><label class="block text-xs font-semibold text-ink-700" for="profile-bio-edit">About you</label><textarea id="profile-bio-edit" rows="4" maxlength="280" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-sm text-ink-950 resize-none">${esc(profile.bio || '')}</textarea><div class="flex gap-2"><button type="button" data-action="open-reader-profile" data-uid="self" class="bg-ink-100 text-ink-700 px-4 py-2.5 rounded-lg text-xs font-semibold">Cancel</button><button type="submit" class="bg-ink-950 text-paper px-4 py-2.5 rounded-lg text-xs font-semibold">Save introduction</button></div></form>`
           : `<button data-action="edit-profile-introduction" class="mt-5 inline-flex items-center gap-1.5 bg-ink-800/10 text-ink-800 hover:bg-ink-800/20 px-3 py-2.5 rounded-lg text-xs font-semibold">${icon('pencil', 'w-3.5 h-3.5')}Edit introduction</button>`}
-          <button data-action="manage-circles" class="mt-5 ml-2 inline-flex items-center gap-1.5 bg-gold-100 text-ink-800 hover:bg-gold-300/50 px-3 py-2.5 rounded-lg text-xs font-semibold">${icon('users', 'w-3.5 h-3.5')}Manage circles</button><div id="circle-manager" class="hidden mt-4"></div>
-          <details class="mt-6 border-t border-ink-200 pt-4"><summary class="cursor-pointer text-xs font-semibold text-ink-600 hover:text-ink-950">How your reader score works</summary><div class="mt-3 text-xs leading-relaxed text-ink-600 space-y-1"><p>Everyone starts at 3.0. Listing books can add up to 1.5 points.</p><p>Returning on time after 48 hours adds 0.5. A late return loses 0.5. A lost book loses 2 points.</p><p>Quick returns do not change the score.</p></div></details><details class="mt-4 border-t border-ink-200 pt-4"><summary class="cursor-pointer text-xs font-semibold text-ink-600 hover:text-ink-950">Account settings</summary><div class="mt-3 rounded-lg border border-rust-200 bg-rust-50/70 p-3"><p class="text-xs leading-relaxed text-ink-600">Deleting your account permanently removes your shelf, cover photos, and pending requests. It is unavailable while you have an active loan.</p><button data-action="delete-account" class="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-rust-700 hover:text-rust-900">${icon('trash', 'w-3.5 h-3.5')}Delete my account</button></div></details>`
+          <button data-action="manage-circles" class="mt-5 ml-2 inline-flex items-center gap-1.5 bg-gold-100 text-ink-800 hover:bg-gold-300/50 px-3 py-2.5 rounded-lg text-xs font-semibold">${icon('users', 'w-3.5 h-3.5')}Manage circles</button><div id="circle-manager" class="hidden mt-4"></div><details class="mt-6 border-t border-ink-200 pt-4"><summary class="cursor-pointer text-xs font-semibold text-ink-600 hover:text-ink-950">Account settings</summary><div class="mt-3 rounded-lg border border-rust-200 bg-rust-50/70 p-3"><p class="text-xs leading-relaxed text-ink-600">Deleting your account permanently removes your shelf, cover photos, saved books, and pending requests. It is unavailable while you have an active loan.</p><button data-action="delete-account" class="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-rust-700 hover:text-rust-900">${icon('trash', 'w-3.5 h-3.5')}Delete my account</button></div></details>`
       : `<div class="mt-5 flex flex-wrap gap-2">${isFriend ? `<button data-action="view-shelf" data-uid="${esc(targetUid)}" data-name="${esc(name)}" class="bg-ink-800/10 text-ink-800 px-3 py-2.5 rounded-lg text-xs font-semibold">View shelf</button>` : relationship === 'pending' && relationshipSenders[targetUid] === currentUser.uid ? `<span class="text-xs font-semibold text-gold-600 py-2.5">Friend request sent</span><button data-action="cancel-request" data-id="${esc(relationshipDocs[targetUid] || '')}" data-name="${esc(name)}" class="text-xs font-semibold text-rust-600 px-2">Cancel request</button>` : relationship === 'pending' ? `<button data-action="switch-inbox" class="bg-ink-800/10 text-ink-800 px-3 py-2.5 rounded-lg text-xs font-semibold">Review request in Inbox</button>` : `<button data-action="add-friend" data-owner="${esc(targetUid)}" data-name="${esc(name)}" class="bg-rust-600 text-paper px-3 py-2.5 rounded-lg text-xs font-semibold">Add friend</button>`}</div>`;
     const memberSince = formatDate(profile.memberSince) || 'Founding member';
     const circles = Array.isArray(profile.circleTags) && profile.circleTags.length
       ? `<div class="mt-4 flex flex-wrap gap-1.5">${profile.circleTags.map(tag => `<span class="bg-gold-100 text-ink-700 rounded-full px-2 py-1 text-[10px] font-semibold">${esc(tag)}</span>`).join('')}</div>` : '';
-    body.innerHTML = `<div class="flex items-center gap-4 pr-8">${avatarHtml(profile, name, 'w-16 h-16')}<div class="min-w-0"><p class="font-mono text-[10px] uppercase tracking-widest text-rust-600">Reader profile</p><h2 class="font-display text-2xl text-ink-950 truncate">${esc(name)}</h2><p class="text-sm text-[#8a6414] font-semibold">${score.toFixed(1)}/10 reader score</p><p class="text-[11px] text-ink-500 mt-1">${esc(memberSince)}</p></div></div><div class="grid grid-cols-3 gap-2 mt-5"><div class="bg-ink-800/5 rounded-lg p-3"><p class="font-semibold text-ink-950">${Number(profile.bookCount || 0)}</p><p class="text-[10px] text-ink-500">books listed</p></div><div class="bg-ink-800/5 rounded-lg p-3"><p class="font-semibold text-ink-950">${Number(profile.totalLent || 0)}</p><p class="text-[10px] text-ink-500">books lent</p></div><div class="bg-ink-800/5 rounded-lg p-3"><p class="font-semibold text-ink-950">${Number(profile.timelyReturns || 0)}</p><p class="text-[10px] text-ink-500">timely returns</p></div></div>${circles}<div class="mt-5"><p class="text-xs font-semibold text-ink-700 mb-1">About</p><p class="text-sm text-ink-600 leading-relaxed">${esc(profile.bio || 'No introduction added yet.')}</p></div>${actions}${isSelf ? `<details class="mt-4 border-t border-ink-200 pt-4"><summary class="cursor-pointer text-xs font-semibold text-ink-600 hover:text-ink-950">Reader score ledger</summary><div id="rating-ledger-list" class="mt-3 space-y-2"><p class="text-xs text-ink-400">Loading score changes…</p></div></details>` : ''}`;
+    body.innerHTML = `<div class="flex items-center gap-4 pr-8">${avatarHtml(profile, name, 'w-16 h-16')}<div class="min-w-0"><p class="font-mono text-[10px] uppercase tracking-widest text-rust-600">Reader profile</p><h2 class="font-display text-2xl text-ink-950 truncate">${esc(name)}</h2><p class="text-sm text-[#8a6414] font-semibold">${score.toFixed(1)}/10 reader score</p><p class="text-[11px] text-ink-500 mt-1">${esc(memberSince)}</p></div></div><div class="grid grid-cols-3 gap-2 mt-5"><div class="bg-ink-800/5 rounded-lg p-3"><p class="font-semibold text-ink-950">${Number(profile.bookCount || 0)}</p><p class="text-[10px] text-ink-500">books listed</p></div><div class="bg-ink-800/5 rounded-lg p-3"><p class="font-semibold text-ink-950">${Number(profile.totalLent || 0)}</p><p class="text-[10px] text-ink-500">books lent</p></div><div class="bg-ink-800/5 rounded-lg p-3"><p class="font-semibold text-ink-950">${Number(profile.timelyReturns || 0)}</p><p class="text-[10px] text-ink-500">timely returns</p></div></div>${circles}<div class="mt-5"><p class="text-xs font-semibold text-ink-700 mb-1">About</p><p class="text-sm text-ink-600 leading-relaxed">${esc(profile.bio || 'No introduction added yet.')}</p></div>${actions}${isSelf ? `<details class="mt-4 border-t border-ink-200 pt-4"><summary class="cursor-pointer text-xs font-semibold text-ink-600 hover:text-ink-950">Reader score ledger</summary><div id="rating-ledger-list" class="mt-3 space-y-2"><p class="text-xs text-ink-400">Loading score changes…</p></div></details><details id="borrow-history-details" class="mt-4 border-t border-ink-200 pt-4"><summary class="cursor-pointer text-xs font-semibold text-ink-600 hover:text-ink-950">Borrowing history</summary><div class="mt-2 flex items-center gap-2"><select id="borrow-history-filter" class="rounded-lg border border-ink-200 bg-white px-2 py-1.5 text-xs"><option value="all">All activity</option><option value="returned">Returned</option><option value="lost">Lost</option></select><span class="text-[11px] text-ink-400">Latest five entries</span></div><div id="profile-borrow-history-list" class="mt-3 space-y-2"><p class="text-xs text-ink-400">Open to load your latest history.</p></div></details><details class="mt-4 border-t border-ink-200 pt-4"><summary class="cursor-pointer text-xs font-semibold text-ink-600 hover:text-ink-950">Saved books</summary><div id="saved-books-list" class="mt-3 space-y-2"><p class="text-xs text-ink-400">Loading saved books…</p></div></details>` : ''}`;
     const bioForm = document.getElementById('profile-bio-form');
     if (bioForm) bioForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -610,7 +614,12 @@
       const res = await guard(() => db.collection('profiles').doc(currentUser.uid).set(publicProfileData(nextProfile)), { context: 'Saving your introduction', success: 'Profile introduction saved.' });
       if (res !== FAILED) { userProfile = nextProfile; renderMyReaderScore(); openReaderProfile('self'); }
     });
-    if (isSelf) renderRatingLedger();
+    if (isSelf) {
+      renderRatingLedger();
+      renderSavedBooks();
+      document.getElementById('borrow-history-details')?.addEventListener('toggle', event => { if (event.target.open) loadBorrowHistory(); });
+      document.getElementById('borrow-history-filter')?.addEventListener('change', renderBorrowHistory);
+    }
   }
 
   async function renderRatingLedger() {
@@ -639,8 +648,17 @@
     const starterButton = settings.data?.isAdmin
       ? `<button data-action="install-starter-circles" class="mt-3 text-xs font-semibold text-rust-700 hover:text-rust-900">Add starter circles</button>`
       : '';
-    const adminButton = settings.data?.isAdmin ? `<button data-action="open-admin-dashboard" class="mt-3 ml-3 text-xs font-semibold text-ink-700 hover:text-ink-950">Review feedback and admin roles</button>` : '';
-    panel.innerHTML = `<p class="text-xs text-ink-500 mb-2">Choose up to ${esc(circleLimit)} approved circles. You can leave one whenever you like.</p><div class="space-y-2">${items.map(circle => `<div class="flex items-center justify-between gap-2 rounded-lg border border-ink-200 bg-white px-3 py-2"><div class="min-w-0"><p class="text-xs font-semibold text-ink-800 truncate">${esc(circle.name || 'Circle')}</p><p class="text-[10px] text-ink-400">${esc(circle.category || 'Community')}</p></div><button data-action="${joined.has(circle.id) ? 'leave-circle' : 'join-circle'}" data-id="${esc(circle.id)}" class="shrink-0 text-xs font-semibold ${joined.has(circle.id) ? 'text-rust-600' : 'text-ink-700'}">${joined.has(circle.id) ? 'Leave' : 'Join'}</button></div>`).join('') || '<p class="text-xs text-ink-400">No circles are available yet.</p>'}</div>${starterButton}${adminButton}`;
+    const adminButton = settings.data?.isAdmin ? `<button data-action="open-admin-page" class="mt-3 ml-3 text-xs font-semibold text-ink-700 hover:text-ink-950">Open admin console</button>` : '';
+    const emptyMessage = settings.data?.isConfigured
+      ? 'No approved circles are available yet.'
+      : 'Circles have not been set up yet. A CloudLibrary admin needs to publish the approved starter circles first.';
+    const byCategory = items.reduce((groups, circle) => {
+      const category = circle.category || 'Community';
+      groups[category] = [...(groups[category] || []), circle];
+      return groups;
+    }, {});
+    const groupedItems = Object.entries(byCategory).sort(([a], [b]) => a.localeCompare(b)).map(([category, circles]) => `<details class="rounded-lg border border-ink-200 bg-white/70" ${category === 'School' ? 'open' : ''}><summary class="cursor-pointer px-3 py-2 text-xs font-semibold text-ink-700">${esc(category)} <span class="font-normal text-ink-400">(${circles.length})</span></summary><div class="space-y-1 border-t border-ink-100 p-2">${circles.sort((a, b) => String(a.name).localeCompare(String(b.name))).map(circle => `<div class="flex items-center justify-between gap-2 px-1 py-1.5"><p class="min-w-0 truncate text-xs text-ink-800">${esc(circle.name || 'Circle')}</p><button data-action="${joined.has(circle.id) ? 'leave-circle' : 'join-circle'}" data-id="${esc(circle.id)}" class="shrink-0 text-xs font-semibold ${joined.has(circle.id) ? 'text-rust-600' : 'text-ink-700'}">${joined.has(circle.id) ? 'Leave' : 'Join'}</button></div>`).join('')}</div></details>`).join('');
+    panel.innerHTML = `<p class="text-xs text-ink-500 mb-2">Choose up to ${esc(circleLimit)} approved circles. You can leave one whenever you like.</p><div class="space-y-2">${groupedItems || `<p class="text-xs text-ink-400">${emptyMessage}</p>`}</div>${starterButton}${adminButton}`;
   }
 
   async function changeCircle(action, circleId) {
@@ -650,7 +668,7 @@
     const profile = await guard(() => db.collection('profiles').doc(currentUser.uid).get(), { context: 'Refreshing your profile' });
     if (profile !== FAILED && profile.exists) userProfile = profile.data();
     renderMyReaderScore();
-    openReaderProfile('self');
+    manageCircles();
   }
 
   async function installStarterCircles() {
@@ -658,7 +676,8 @@
     if (result !== FAILED) manageCircles();
   }
   async function openAdminDashboard() {
-    const panel = document.getElementById('circle-manager');
+    switchTab('admin');
+    const panel = document.getElementById('admin-dashboard');
     if (!panel) return;
     panel.classList.remove('hidden');
     panel.innerHTML = '<p class="text-xs text-ink-400">Loading feedback and roles…</p>';
@@ -666,11 +685,26 @@
     if (result === FAILED) return;
     const data = result.data || {};
     const feedback = Array.isArray(data.feedback) ? data.feedback : [];
-    panel.innerHTML = `<div class="mt-4 border-t border-ink-200 pt-4"><p class="text-xs font-semibold text-ink-700">Community admins</p><p class="text-xs text-ink-500 mt-1">${(data.admins || []).map(admin => esc(admin.name)).join(', ') || 'No admin profiles found.'}</p><p class="text-xs font-semibold text-ink-700 mt-4">Feedback</p><div class="mt-2 space-y-2">${feedback.length ? feedback.map(item => `<div class="border border-ink-200 rounded-lg p-2.5"><div class="flex items-center justify-between gap-2"><p class="text-xs font-semibold text-ink-800">${esc(item.category || 'feedback')} · ${esc(item.reporterShelf || 'Reader')}</p><button data-action="resolve-feedback" data-id="${esc(item.id)}" data-status="${item.status === 'resolved' ? 'open' : 'resolved'}" class="text-[10px] font-semibold ${item.status === 'resolved' ? 'text-ink-500' : 'text-rust-600'}">${item.status === 'resolved' ? 'Reopen' : 'Resolve'}</button></div><p class="text-xs text-ink-600 mt-1 whitespace-pre-wrap">${esc(item.message || '')}</p></div>`).join('') : '<p class="text-xs text-ink-400">No feedback yet.</p>'}</div></div>`;
+    const circles = Array.isArray(data.circles) ? data.circles : [];
+    panel.innerHTML = `<div class="mt-4 border-t border-ink-200 pt-4"><p class="text-xs font-semibold text-ink-700">Community admins</p><p class="text-xs text-ink-500 mt-1">${(data.admins || []).map(admin => esc(admin.name)).join(', ') || 'No admin profiles found.'}</p><form id="create-circle-form" class="mt-4 grid grid-cols-[1fr_120px_auto] gap-2"><input id="new-circle-name" required maxlength="60" placeholder="New circle name" class="min-w-0 rounded-lg border border-ink-200 bg-white px-2.5 py-2 text-xs"><select id="new-circle-category" required class="min-w-0 rounded-lg border border-ink-200 bg-white px-2.5 py-2 text-xs"><option value="School">School</option><option value="Grade">Grade</option><option value="Locality">Locality</option><option value="Genre">Genre</option><option value="Club">Club</option><option value="Fan group">Fan group</option></select><button class="rounded-lg bg-ink-800 px-3 text-xs font-semibold text-paper">Add</button></form><p class="mt-2 text-[10px] text-ink-400">Archiving hides a circle from new joins; existing members may leave it themselves.</p><div class="mt-2 space-y-1.5">${circles.map(circle => `<div class="flex items-center justify-between gap-2 rounded-lg border border-ink-200 px-2.5 py-2"><p class="min-w-0 truncate text-xs text-ink-700">${esc(circle.name || 'Circle')} <span class="text-ink-400">· ${esc(circle.category || 'Community')}</span></p>${circle.active ? `<button data-action="archive-circle" data-id="${esc(circle.id)}" class="shrink-0 text-[10px] font-semibold text-rust-600">Archive</button>` : '<span class="shrink-0 text-[10px] text-ink-400">Archived</span>'}</div>`).join('') || '<p class="text-xs text-ink-400">No circles yet.</p>'}</div><p class="text-xs font-semibold text-ink-700 mt-4">Feedback</p><div class="mt-2 space-y-2">${feedback.length ? feedback.map(item => `<div class="border border-ink-200 rounded-lg p-2.5"><div class="flex items-center justify-between gap-2"><p class="text-xs font-semibold text-ink-800">${esc(item.category || 'feedback')} · ${esc(item.reporterShelf || 'Reader')}</p><button data-action="resolve-feedback" data-id="${esc(item.id)}" data-status="${item.status === 'resolved' ? 'open' : 'resolved'}" class="text-[10px] font-semibold ${item.status === 'resolved' ? 'text-ink-500' : 'text-rust-600'}">${item.status === 'resolved' ? 'Reopen' : 'Resolve'}</button></div><p class="text-xs text-ink-600 mt-1 whitespace-pre-wrap">${esc(item.message || '')}</p></div>`).join('') : '<p class="text-xs text-ink-400">No feedback yet.</p>'}</div></div>`;
+    panel.insertAdjacentHTML('afterbegin', '<button data-action="rebuild-discovery" class="mb-3 text-xs font-semibold text-ink-700 hover:text-rust-700">Refresh book and series search index</button>');
+    document.getElementById('create-circle-form')?.addEventListener('submit', async event => {
+      event.preventDefault();
+      const result = await guard(() => lendingFunctions.httpsCallable('createCircle')({ name: document.getElementById('new-circle-name').value, category: document.getElementById('new-circle-category').value }), { context: 'Adding circle', success: 'Circle added.' });
+      if (result !== FAILED) openAdminDashboard();
+    });
   }
   async function resolveFeedback(feedbackId, status) {
     const result = await guard(() => lendingFunctions.httpsCallable('resolveFeedback')({ feedbackId, status }), { context: 'Updating feedback', success: status === 'resolved' ? 'Feedback marked resolved.' : 'Feedback reopened.' });
     if (result !== FAILED) openAdminDashboard();
+  }
+  async function archiveCircle(circleId) {
+    const result = await guard(() => lendingFunctions.httpsCallable('archiveCircle')({ circleId }), { context: 'Archiving circle', success: 'Circle archived.' });
+    if (result !== FAILED) openAdminDashboard();
+  }
+  async function rebuildDiscoveryIndex() {
+    const result = await guard(() => lendingFunctions.httpsCallable('rebuildDiscoveryIndex')({}), { context: 'Refreshing search index', success: 'Book and series search index refreshed.' });
+    if (result !== FAILED) searchCache.clear();
   }
   window.openReaderProfile = openReaderProfile;
 
@@ -934,13 +968,14 @@
   let friendshipDocs = {};        // friendUid -> friendship document id (needed to unfriend)
   let pendingSentRequests = [];   // outgoing requests the user can still cancel
   let myBooksCache = {};
+  let searchBookCache = {};
   let borrowedBooksCache = [];
   let borrowRequestStates = {};
   let inlineCoverFile = null;
   let bookSubmissionInProgress = false;
   let bulkSubmissionInProgress = false;
   let editCoverFile = null;
-  let inboxState = { friends: [], ownerRequests: [], requesterRequests: [] };
+  let inboxState = { friends: [], ownerRequests: [], requesterRequests: [], feedback: [] };
   let inboxVisibleCount = 10;
   let inboxFilter = 'all';
   const INBOX_QUERY_LIMIT = 10;
@@ -1072,8 +1107,7 @@
     await loadFriendsList();
     fetchMyBooks();
     fetchBorrowedBooks();
-    fetchBorrowHistory();
-    fetchWishlist();
+    fetchSavedBooks();
     listenToInbox();
     initCloudTicker();
     renderMyReaderScore();
@@ -1084,8 +1118,8 @@
   }
 
   // --- 3. TABS NAVIGATION ---
-  const PRIMARY_TABS = ['library', 'add', 'friends', 'search', 'inbox'];
-  const PAGE_VIEWS = [...PRIMARY_TABS, 'friend-shelf', 'history'];
+  const PRIMARY_TABS = ['library', 'add', 'friends', 'search', 'inbox', 'profile'];
+  const PAGE_VIEWS = [...PRIMARY_TABS, 'friend-shelf', 'history', 'admin'];
 
   function switchTab(tabName) {
     PAGE_VIEWS.forEach(t => {
@@ -1098,13 +1132,13 @@
       }
     });
     document.getElementById(`view-${tabName}`).classList.remove('hidden');
-    const activeTab = PRIMARY_TABS.includes(tabName) ? tabName : (tabName === 'history' ? 'library' : 'friends');
+    const activeTab = PRIMARY_TABS.includes(tabName) ? tabName : (tabName === 'history' ? 'library' : tabName === 'admin' ? 'profile' : 'friends');
     document.getElementById(`tab-${activeTab}`).classList.add('active');
     document.getElementById(`tab-${activeTab}`).classList.remove('text-ink-500');
     document.getElementById(`tab-mobile-${activeTab}`).classList.add('active');
     document.getElementById(`tab-mobile-${activeTab}`).classList.remove('text-ink-500');
 
-    const titles = { library: 'My Library', add: 'Add a book', friends: 'Friends', search: 'Search Libraries', inbox: 'Inbox', 'friend-shelf': 'Friend shelf', history: 'Borrowing history' };
+    const titles = { library: 'My Library', add: 'Add a book', friends: 'Friends', search: 'Search Libraries', inbox: 'Inbox', profile: 'Reader profile', admin: 'Admin console', 'friend-shelf': 'Friend shelf', history: 'Borrowing history' };
     document.getElementById('header-title').textContent = titles[tabName] || 'CloudLibrary';
     if (tabName === 'friends') renderFriendsView();
   }
@@ -1114,8 +1148,8 @@
     const url = safeUrl(book.coverUrl);
     const initial = (book.title || '?').trim().charAt(0).toUpperCase();
     const colorClass = GENRE_COLORS[book.genre] || 'bg-ink-400';
-    const placeholder = `<div class="w-16 h-20 rounded-md ${colorClass} flex items-center justify-center font-display text-2xl text-paper shrink-0 ${url ? 'hidden' : ''}">${esc(initial)}</div>`;
-    const img = url ? `<img src="${esc(url)}" loading="lazy" onerror="bookImgFallback(this)" class="w-16 h-20 rounded-md object-cover shrink-0 border border-ink-200">` : '';
+    const placeholder = `<div class="w-14 h-[4.5rem] rounded-md ${colorClass} flex items-center justify-center font-display text-xl text-paper shrink-0 ${url ? 'hidden' : ''}">${esc(initial)}</div>`;
+    const img = url ? `<img src="${esc(url)}" loading="lazy" onerror="bookImgFallback(this)" class="w-14 h-[4.5rem] rounded-md object-cover shrink-0 border border-ink-200">` : '';
     return img + placeholder;
   }
 
@@ -1153,23 +1187,23 @@
 
   function renderBookCard(book, actionsHtml, ownerLabel, mode) {
     return `
-      <div class="book-card app-panel rounded-xl border border-ink-200 shadow-sm p-4 flex gap-4">
+      <div class="book-card app-panel rounded-xl border border-ink-200 shadow-sm p-3 flex gap-3">
         ${bookCoverHtml(book)}
         <div class="flex-1 min-w-0">
           <div class="flex items-start justify-between gap-2">
             <div class="min-w-0">
-              <h3 class="font-display text-lg text-ink-950 leading-snug truncate">${esc(book.title)}</h3>
+              <h3 class="font-display text-base text-ink-950 leading-snug truncate">${esc(book.title)}</h3>
               <p class="text-xs text-ink-500 font-mono">${esc(book.author)}</p>
               ${book.seriesName ? `<p class="text-[11px] text-rust-600 font-semibold mt-0.5 truncate">${esc(book.seriesName)}${book.seriesNumber ? ` · Book ${esc(book.seriesNumber)}` : ''}</p>` : ''}
             </div>
             ${statusBadge(book.status)}
           </div>
           ${ownerLabel ? `<p class="text-xs text-rust-600 font-semibold mt-1">${ownerLabel}</p>` : ''}
-          <div class="flex flex-wrap gap-1.5 mt-2">${bookMetaChips(book)}</div>
+          <div class="flex flex-wrap gap-1.5 mt-1.5">${bookMetaChips(book)}</div>
           ${starsRow(book.rating)}
-          ${book.description ? `<p class="text-xs text-ink-500 mt-2 line-clamp-2">${esc(book.description)}</p>` : ''}
+          ${book.description ? `<p class="text-xs text-ink-500 mt-1.5 line-clamp-2">${esc(book.description)}</p>` : ''}
           ${loanDetailsHtml(book, mode)}
-          <div class="flex flex-wrap items-center gap-2 mt-3">${actionsHtml}</div>
+          <div class="flex flex-wrap items-center gap-2 mt-2">${actionsHtml}</div>
         </div>
       </div>`;
   }
@@ -1354,8 +1388,8 @@
     [...grouped.entries()].sort(([a], [b]) => a.localeCompare(b)).forEach(([seriesName, seriesBooks]) => {
       const available = seriesBooks.filter(book => book.status === 'Available').length;
       const details = document.createElement('details');
-      details.className = 'col-span-full border border-ink-200 bg-white/55 rounded-xl overflow-hidden';
-      details.innerHTML = `<summary class="cursor-pointer list-none flex items-center justify-between gap-3 px-4 py-3"><span class="min-w-0"><span class="font-display text-lg text-ink-950 block truncate">${esc(seriesName)}</span><span class="text-xs text-ink-500">${seriesBooks.length} books · ${available} available</span></span><span class="text-xs font-semibold text-ink-700">View series</span></summary><div class="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-ink-200 p-4">${seriesBooks.sort((a, b) => Number(a.seriesNumber || 0) - Number(b.seriesNumber || 0) || String(a.title).localeCompare(String(b.title))).map(book => renderBookCard(book, ownBookActions(book))).join('')}</div>`;
+      details.className = 'app-panel border border-ink-200 shadow-sm rounded-xl overflow-hidden';
+      details.innerHTML = `<summary class="cursor-pointer list-none flex items-center justify-between gap-3 px-3 py-3"><span class="min-w-0"><span class="font-display text-base text-ink-950 block truncate">${esc(seriesName)}</span><span class="text-xs text-ink-500">${seriesBooks.length} books · ${available} available</span></span><span class="text-xs font-semibold text-ink-700">View series</span></summary><div class="grid grid-cols-1 gap-3 border-t border-ink-200 p-3">${seriesBooks.sort((a, b) => Number(a.seriesNumber || 0) - Number(b.seriesNumber || 0) || String(a.title).localeCompare(String(b.title))).map(book => renderBookCard(book, ownBookActions(book))).join('')}</div>`;
       grid.appendChild(details);
     });
     standalone.sort((a, b) => String(a.title).localeCompare(String(b.title))).forEach(book => grid.insertAdjacentHTML('beforeend', renderBookCard(book, ownBookActions(book))));
@@ -1392,20 +1426,30 @@
     }, listenerError('borrowed books'));
   }
 
-  function fetchBorrowHistory() {
-    db.collection('requests').where('requesterId', '==', currentUser.uid).orderBy('createdAt', 'desc').limit(20).onSnapshot((snapshot) => {
-      const history = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+  let borrowHistoryCache = [];
+  function renderBorrowHistory() {
+    const list = document.getElementById('profile-borrow-history-list');
+    if (!list) return;
+    const history = borrowHistoryCache;
+    if (!history.length) {
+      list.innerHTML = '<p class="text-sm text-ink-400">Borrowed books will appear here after your first request.</p>';
+      return;
+    }
+    list.innerHTML = history.map(req => {
+      const lender = req.ownerName && req.ownerName !== 'your friend' ? req.ownerName : 'Lender name unavailable';
+      return `<div class="bg-paper/70 border border-ink-200 rounded-lg px-3 py-2 flex items-center justify-between gap-3"><div class="min-w-0"><p class="font-semibold text-xs text-ink-950 truncate">${esc(req.title || 'Untitled book')}</p><p class="text-[11px] text-ink-500">Borrowed from <span class="font-semibold text-ink-700">${esc(lender)}</span>${req.returnedAt ? ` · returned ${esc(formatDate(req.returnedAt))}` : ''}${req.lostAt ? ` · reported lost ${esc(formatDate(req.lostAt))}` : ''}</p></div>${requestStatusPill(req.status)}</div>`;
+    }).join('');
+  }
+
+  let borrowHistoryLoaded = false;
+  function loadBorrowHistory() {
+    if (borrowHistoryLoaded) { renderBorrowHistory(); return; }
+    borrowHistoryLoaded = true;
+    db.collection('requests').where('requesterId', '==', currentUser.uid).orderBy('createdAt', 'desc').limit(5).onSnapshot((snapshot) => {
+      borrowHistoryCache = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
         .filter(req => req.type === 'borrow')
         .sort((a, b) => timestampMillis(b.returnedAt || b.lostAt || b.createdAt) - timestampMillis(a.returnedAt || a.lostAt || a.createdAt));
-      const list = document.getElementById('borrow-history-list');
-      if (!history.length) {
-        list.innerHTML = '<p class="text-sm text-ink-400">Borrowed books will stay here after they are returned.</p>';
-        return;
-      }
-      list.innerHTML = history.map(req => {
-        const lender = req.ownerName && req.ownerName !== 'your friend' ? req.ownerName : 'Lender name unavailable';
-        return `<div class="bg-paper/70 border border-ink-200 rounded-lg px-4 py-3 flex items-center justify-between gap-3"><div class="min-w-0"><p class="font-semibold text-sm text-ink-950 truncate">${esc(req.title || 'Untitled book')}</p><p class="text-xs text-ink-500">Borrowed from <span class="font-semibold text-ink-700">${esc(lender)}</span>${req.returnedAt ? ` · returned ${esc(formatDate(req.returnedAt))}` : ''}${req.lostAt ? ` · reported lost ${esc(formatDate(req.lostAt))}` : ''}</p></div>${requestStatusPill(req.status)}</div>`;
-      }).join('');
+      renderBorrowHistory();
     }, listenerError('borrowing history'));
   }
 
@@ -1590,27 +1634,30 @@
     return ref.getDownloadURL();
   }
 
-  function fetchWishlist() {
-    db.collection('wishlists').where('userId', '==', currentUser.uid).limit(100).onSnapshot((snapshot) => {
-      const list = document.getElementById('wishlist-list');
-      if (snapshot.empty) {
-        list.innerHTML = '<p class="text-sm text-ink-400">Save a title and we will tell you when a friend adds it.</p>';
-        return;
-      }
-      list.innerHTML = snapshot.docs.map(doc => `<div class="bg-paper/70 border border-ink-200 rounded-lg px-3 py-2 flex items-center justify-between gap-3"><span class="text-sm font-medium text-ink-800 truncate">${esc(doc.data().title)}</span><button data-action="delete-wish" data-id="${esc(doc.id)}" class="text-rust-600 p-1.5" title="Remove">${icon('x','w-3.5 h-3.5')}</button></div>`).join('');
-    }, listenerError('wishlist'));
+  let savedBooksCache = [];
+  function renderSavedBooks() {
+    const list = document.getElementById('saved-books-list');
+    if (!list) return;
+    if (!savedBooksCache.length) {
+      list.innerHTML = '<p class="text-xs text-ink-400">Save a book from Search to keep it here for later.</p>';
+      return;
+    }
+    list.innerHTML = savedBooksCache.map(book => `<div class="flex items-center justify-between gap-3 rounded-lg border border-ink-200 bg-paper/70 px-3 py-2"><div class="min-w-0"><p class="truncate text-xs font-semibold text-ink-800">${esc(book.title || 'Untitled book')}</p><p class="truncate text-[11px] text-ink-500">${esc(book.author || '')}${book.seriesName ? ` · ${esc(book.seriesName)}` : ''}</p></div><button data-action="delete-saved-book" data-id="${esc(book.id)}" class="shrink-0 p-1 text-rust-600" title="Remove saved book">${icon('x','w-3.5 h-3.5')}</button></div>`).join('');
   }
-
-  document.getElementById('wishlist-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const title = document.getElementById('wishlist-title').value.trim();
-    if (!title) return;
-    const titleKey = normalizedTitle(title);
-    const existing = await guard(() => db.collection('wishlists').where('userId', '==', currentUser.uid).where('titleKey', '==', titleKey).limit(1).get(), { context: 'Checking your wishlist' });
-    if (existing === FAILED || !existing.empty) return existing === FAILED ? undefined : toast('That title is already on your wishlist.', 'info');
-    const res = await guard(() => db.collection('wishlists').add({ userId: currentUser.uid, userName: userProfile.libraryName, title, titleKey, createdAt: firebase.firestore.FieldValue.serverTimestamp() }), { context: 'Adding to your wishlist', success: 'Added to your wishlist.' });
-    if (res !== FAILED) e.target.reset();
-  });
+  function fetchSavedBooks() {
+    db.collection('savedBooks').where('userId', '==', currentUser.uid).limit(50).onSnapshot(snapshot => {
+      savedBooksCache = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      renderSavedBooks();
+    }, listenerError('saved books'));
+  }
+  async function saveBookForLater(book) {
+    const id = `${currentUser.uid}_${book.id}`;
+    const result = await guard(() => db.collection('savedBooks').doc(id).set({
+      userId: currentUser.uid, bookId: book.id, title: book.title || '', author: book.author || '', seriesName: book.seriesName || '',
+      coverUrl: book.coverUrl || '', ownerId: book.ownerId || '', ownerName: book.ownerName || '', createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }), { context: 'Saving book', success: 'Saved to your profile.' });
+    return result;
+  }
 
   async function notifyWishers(book) {
     // Matching is handled by the trusted onBookCreated Function. Keeping this
@@ -1904,7 +1951,7 @@
     const standalone = books.filter(book => !String(book.seriesName || '').trim());
     grid.innerHTML = [...grouped.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([seriesName, seriesBooks]) => {
       const available = seriesBooks.filter(book => book.status === 'Available').length;
-      return `<details class="col-span-full border border-ink-200 bg-white/55 rounded-xl overflow-hidden"><summary class="cursor-pointer list-none flex items-center justify-between gap-3 px-4 py-3"><span class="min-w-0"><span class="font-display text-lg text-ink-950 block truncate">${esc(seriesName)}</span><span class="text-xs text-ink-500">${seriesBooks.length} books · ${available} available</span></span><span class="text-xs font-semibold text-ink-700">View series</span></summary><div class="grid grid-cols-1 sm:grid-cols-2 gap-4 border-t border-ink-200 p-4">${seriesBooks.sort((a, b) => Number(a.seriesNumber || 0) - Number(b.seriesNumber || 0) || String(a.title).localeCompare(String(b.title))).map(renderFriendBook).join('')}</div></details>`;
+      return `<details class="app-panel border border-ink-200 shadow-sm rounded-xl overflow-hidden"><summary class="cursor-pointer list-none flex items-center justify-between gap-3 px-3 py-3"><span class="min-w-0"><span class="font-display text-base text-ink-950 block truncate">${esc(seriesName)}</span><span class="text-xs text-ink-500">${seriesBooks.length} books · ${available} available</span></span><span class="text-xs font-semibold text-ink-700">View series</span></summary><div class="grid grid-cols-1 gap-3 border-t border-ink-200 p-3">${seriesBooks.sort((a, b) => Number(a.seriesNumber || 0) - Number(b.seriesNumber || 0) || String(a.title).localeCompare(String(b.title))).map(renderFriendBook).join('')}</div></details>`;
     }).join('') + standalone.sort((a, b) => String(a.title).localeCompare(String(b.title))).map(renderFriendBook).join('');
   }
 
@@ -1980,9 +2027,11 @@
       if (shown.has(`book:${book.id}`) || book.ownerId === currentUser.uid) return;
       if ((statusFilter && book.status !== statusFilter) || (genreFilter && book.genre !== genreFilter)) return;
       shown.add(`book:${book.id}`);
+      searchBookCache[book.id] = book;
+      const saveButton = `<button data-action="save-book" data-id="${esc(book.id)}" class="text-xs font-semibold text-ink-600 hover:text-ink-950">Save</button>`;
       const actions = isFriend && book.status === 'Available'
-        ? borrowActionWrapper(book.id, book.title, book.ownerId)
-        : `<button data-action="open-reader-profile" data-uid="${esc(book.ownerId)}" class="text-rust-600 bg-rust-600/10 hover:bg-rust-600/20 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">View profile</button>`;
+        ? `${borrowActionWrapper(book.id, book.title, book.ownerId)}${saveButton}`
+        : `<button data-action="open-reader-profile" data-uid="${esc(book.ownerId)}" class="text-rust-600 bg-rust-600/10 hover:bg-rust-600/20 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">View profile</button>${saveButton}`;
       grid.insertAdjacentHTML('beforeend', renderBookCard(book, actions, `${esc(book.ownerName || 'A reader')}${isFriend ? ' · Friend' : ''}`));
     };
     friendBooks.forEach(book => addBook(book, true));
@@ -2069,7 +2118,11 @@
           inboxState.requesterRequests.filter(req => req.type === 'borrow').forEach(req => { borrowRequestStates[req.bookId] = req.status; });
           refreshBorrowActions();
           renderInbox();
-        }, listenerError('your request updates'))
+        }, listenerError('your request updates')),
+      db.collection('feedback').where('reporterId', '==', currentUser.uid).limit(20).onSnapshot(snap => {
+        inboxState.feedback = snap.docs.map(doc => ({ id: doc.id, kind: 'feedback', ...doc.data() }));
+        renderInbox();
+      }, listenerError('feedback updates'))
     ];
   }
 
@@ -2077,7 +2130,7 @@
     const inboxBody = document.getElementById('inbox-body');
     const badge = document.getElementById('inbox-badge');
     const mobileBadge = document.getElementById('mobile-inbox-badge');
-    const allItems = [...inboxState.friends, ...inboxState.ownerRequests, ...inboxState.requesterRequests]
+    const allItems = [...inboxState.friends, ...inboxState.ownerRequests, ...inboxState.requesterRequests, ...inboxState.feedback]
       .filter(item => !(item.audience === 'requester' && item.ownerId === currentUser.uid))
       .sort((a, b) => {
         const aTime = a.createdAt && typeof a.createdAt.toMillis === 'function' ? a.createdAt.toMillis() : 0;
@@ -2114,6 +2167,13 @@
     }
 
     items.slice(0, inboxVisibleCount).forEach(req => {
+      if (req.kind === 'feedback') {
+        const body = req.adminReply
+          ? `Your feedback: “${esc(req.message || '')}”<br><span class="font-semibold text-ink-700">Reply:</span> ${esc(req.adminReply)}`
+          : `Your feedback: “${esc(req.message || '')}”`;
+        inboxBody.insertAdjacentHTML('beforeend', inboxCard('mail', 'Feedback update', body, '', req.status || 'open', req.repliedAt || req.createdAt));
+        return;
+      }
       if (req.kind === 'friend') {
         const actions = req.status === 'pending' ? `
           <button data-action="accept-friend" data-id="${esc(req.id)}" class="bg-ink-600/10 text-ink-700 hover:bg-ink-600/20 p-2 rounded-lg" title="Accept">${icon('check','w-4 h-4')}</button>
@@ -2244,7 +2304,7 @@
       case 'send-reminder': sendReturnReminder(d.id); break;
       case 'borrow': sendBorrowRequest(d.id, d.title, d.owner); break;
       case 'add-friend': sendFriendRequest(d.owner, d.name); break;
-      case 'view-shelf': viewFriendLibrary(d.uid, d.name); break;
+      case 'view-shelf': closeReaderProfileModal(); viewFriendLibrary(d.uid, d.name); break;
       case 'back-to-friends': switchTab('friends'); break;
       case 'view-history': switchTab('history'); break;
       case 'back-to-library': switchTab('library'); break;
@@ -2259,6 +2319,8 @@
       case 'cancel-reminder': cancelReminder(d.id); break;
       case 'cleanup-inbox': cleanUpInbox(); break;
       case 'delete-wish': guard(() => db.collection('wishlists').doc(d.id).delete(), { context: 'Removing wishlist item', success: 'Removed from your wishlist.' }); break;
+      case 'delete-saved-book': guard(() => db.collection('savedBooks').doc(d.id).delete(), { context: 'Removing saved book', success: 'Removed from saved books.' }); break;
+      case 'save-book': { const book = searchBookCache[d.id]; if (book) saveBookForLater(book); else toast('Search result details are no longer available. Search again and save the book.', 'info'); break; }
       case 'delete-account': deleteAccount(); break;
       case 'edit-profile-introduction': openReaderProfile('self', true); break;
       case 'manage-circles': manageCircles(); break;
@@ -2266,7 +2328,11 @@
       case 'leave-circle': changeCircle('leave-circle', d.id); break;
       case 'install-starter-circles': installStarterCircles(); break;
       case 'open-admin-dashboard': openAdminDashboard(); break;
+      case 'rebuild-discovery': rebuildDiscoveryIndex(); break;
+      case 'open-admin-page': openAdminDashboard(); break;
+      case 'back-to-profile': openReaderProfile('self'); break;
       case 'resolve-feedback': resolveFeedback(d.id, d.status); break;
+      case 'archive-circle': archiveCircle(d.id); break;
       case 'open-help': openHelp(); break;
       case 'close-help': closeHelp(); break;
       case 'open-reader-profile': openReaderProfile(d.uid); break;

@@ -191,7 +191,8 @@ service cloud.firestore {
         && request.resource.data.status == 'pending';
       // Acceptance is handled by respondToFriendRequest. This prevents a client
       // from claiming an accepted relationship without also sharing both shelves.
-      allow update: if false;
+      allow update: if signedIn() && resource.data.userId == request.auth.uid
+        && request.resource.data.userId == request.auth.uid;
       allow delete: if signedIn() && resource.data.status == 'pending'
         && resource.data.user1 == request.auth.uid;
     }
@@ -225,6 +226,15 @@ service cloud.firestore {
       allow update, delete: if signedIn() && resource.data.userId == request.auth.uid;
     }
 
+    match /savedBooks/{savedBookId} {
+      allow get: if signedIn() && resource.data.userId == request.auth.uid;
+      allow list: if signedIn() && request.query.limit != null && request.query.limit <= 50
+        && resource.data.userId == request.auth.uid;
+      allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
+      allow delete: if signedIn() && resource.data.userId == request.auth.uid;
+      allow update: if false;
+    }
+
     // Ratings are written only by Firebase Functions; no browser writes are allowed.
     match /ratingEvents/{eventId} {
       allow get: if own(resource.data.subjectId);
@@ -241,7 +251,10 @@ service cloud.firestore {
         && request.resource.data.message is string && request.resource.data.message.size() > 0
         && request.resource.data.message.size() <= 1000
         && request.resource.data.page is string;
-      allow read, update, delete: if false;
+      allow get: if signedIn() && resource.data.reporterId == request.auth.uid;
+      allow list: if signedIn() && request.query.limit != null && request.query.limit <= 20
+        && resource.data.reporterId == request.auth.uid;
+      allow update, delete: if false;
     }
   }
 }

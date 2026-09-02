@@ -21,9 +21,9 @@ const STARTER_CIRCLES = [
   ['grade-4', 'Grade 4', 'Grade'], ['grade-5', 'Grade 5', 'Grade'], ['grade-6', 'Grade 6', 'Grade'],
   ['grade-7', 'Grade 7', 'Grade'], ['grade-8', 'Grade 8', 'Grade'], ['grade-9', 'Grade 9', 'Grade'],
   ['grade-10', 'Grade 10', 'Grade'], ['grade-11', 'Grade 11', 'Grade'], ['grade-12', 'Grade 12', 'Grade'],
-  ['gurgaon', 'Gurgaon', 'Locality'], ['dlf-phase-5', 'DLF Phase 5', 'Society'],
-  ['sushant-lok', 'Sushant Lok', 'Locality'], ['south-city', 'South City', 'Society'],
-  ['nirvana-country', 'Nirvana Country', 'Society'], ['golf-course-road', 'Golf Course Road', 'Locality'],
+  ['gurgaon', 'Gurgaon', 'Locality'], ['dlf-phase-5', 'DLF Phase 5', 'Locality'],
+  ['sushant-lok', 'Sushant Lok', 'Locality'], ['south-city', 'South City', 'Locality'],
+  ['nirvana-country', 'Nirvana Country', 'Locality'], ['golf-course-road', 'Golf Course Road', 'Locality'],
   ['fantasy-adventures', 'Fantasy & Adventures', 'Genre'], ['mystery-detectives', 'Mystery Detectives', 'Genre'],
   ['science-explorers', 'Science Explorers', 'Genre'], ['comics-manga', 'Comics & Manga', 'Genre'],
   ['mythology-legends', 'Mythology & Legends', 'Genre'], ['book-club', 'Book Club', 'Club'],
@@ -96,7 +96,7 @@ async function collectionCount(query) {
 
 function discoveryData(bookId, book) {
   const tokens = new Set();
-  [book.title, book.author].filter(Boolean).forEach(value => {
+  [book.title, book.author, book.seriesName].filter(Boolean).forEach(value => {
     String(value).toLowerCase().match(/[a-z0-9]+/g)?.forEach(word => {
       for (let index = 1; index <= Math.min(word.length, 24); index += 1) tokens.add(word.slice(0, index));
     });
@@ -281,10 +281,12 @@ exports.joinCircle = onCall(callableRuntime, async request => {
 
 exports.getCircleSettings = onCall(callableRuntime, async request => {
   const uid = requireUser(request);
-  const config = (await db.collection('appConfig').doc('community').get()).data() || {};
+  const configSnap = await db.collection('appConfig').doc('community').get();
+  const config = configSnap.data() || {};
   return {
     circleLimit: circleLimitFromConfig(config),
-    isAdmin: Array.isArray(config.adminUserIds) && config.adminUserIds.includes(uid)
+    isAdmin: Array.isArray(config.adminUserIds) && config.adminUserIds.includes(uid),
+    isConfigured: configSnap.exists
   };
 });
 
@@ -295,16 +297,38 @@ exports.installStarterCircles = onCall(callableRuntime, async request => {
   const batch = db.batch();
   let created = 0;
   existing.forEach((snap, index) => {
-    if (snap.exists) return;
     const [circleId, name, category] = STARTER_CIRCLES[index];
+    if (snap.exists) {
+      if (snap.data().category === 'Society') batch.update(snap.ref, { category: 'Locality', updatedAt: FieldValue.serverTimestamp() });
+      return;
+    }
     batch.set(snap.ref, { circleId, name, category, active: true, bootstrap: true, createdAt: FieldValue.serverTimestamp() });
     created += 1;
   });
-  if (created) {
+  if (created || existing.some(snap => snap.exists && snap.data().category === 'Society')) {
     await batch.commit();
-    await incrementNetworkStat('totalCircles', created);
+    if (created) await incrementNetworkStat('totalCircles', created);
   }
   return { created, total: STARTER_CIRCLES.length };
+});
+
+exports.createCircle = onCall(callableRuntime, async request => {
+  await requireCommunityAdmin(request);
+  const name = requireString(request.data?.name, 'Circle name').slice(0, 60);
+  const category = requireString(request.data?.category, 'Circle category').slice(0, 40);
+  const circleRef = db.collection('circles').doc();
+  await circleRef.set({ circleId: circleRef.id, name, category, active: true, bootstrap: false, createdAt: FieldValue.serverTimestamp() });
+  return { id: circleRef.id, name, category };
+});
+
+exports.archiveCircle = onCall(callableRuntime, async request => {
+  await requireCommunityAdmin(request);
+  const circleId = requireString(request.data?.circleId, 'circleId');
+  const circleRef = db.collection('circles').doc(circleId);
+  const circle = await circleRef.get();
+  if (!circle.exists) throw new HttpsError('not-found', 'This circle no longer exists.');
+  await circleRef.update({ active: false, archivedAt: FieldValue.serverTimestamp() });
+  return { archived: true };
 });
 
 exports.leaveCircle = onCall(callableRuntime, async request => {
@@ -345,11 +369,21 @@ exports.rebuildCommunityStats = onCall(callableRuntime, async request => {
   return stats;
 });
 
+exports.rebuildDiscoveryIndex = onCall(callableRuntime, async request => {
+  await requireCommunityAdmin(request);
+  const books = await db.collection('books').limit(500).get();
+  const batch = db.batch();
+  books.docs.forEach(book => batch.set(discoveryRef(book.id), discoveryData(book.id, book.data())));
+  if (!books.empty) await batch.commit();
+  return { indexed: books.size };
+});
+
 exports.getAdminDashboard = onCall(callableRuntime, async request => {
   const uid = await requireCommunityAdmin(request);
-  const [configSnap, feedbackSnap] = await Promise.all([
+  const [configSnap, feedbackSnap, circlesSnap] = await Promise.all([
     db.collection('appConfig').doc('community').get(),
-    db.collection('feedback').limit(50).get()
+    db.collection('feedback').limit(50).get(),
+    db.collection('circles').limit(100).get()
   ]);
   const config = configSnap.data() || {};
   const adminUserIds = Array.isArray(config.adminUserIds) ? config.adminUserIds : [uid];
@@ -359,7 +393,8 @@ exports.getAdminDashboard = onCall(callableRuntime, async request => {
   return {
     admins: adminProfiles.map(doc => ({ uid: doc.id, name: doc.data()?.libraryName || 'Deleted profile' })),
     feedback,
-    circleLimit: circleLimitFromConfig(config)
+    circleLimit: circleLimitFromConfig(config),
+    circles: circlesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })).sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')))
   };
 });
 
@@ -373,6 +408,17 @@ exports.resolveFeedback = onCall(callableRuntime, async request => {
   if (!feedback.exists) throw new HttpsError('not-found', 'Feedback item no longer exists.');
   await feedbackRef.set({ status, resolvedAt: status === 'resolved' ? FieldValue.serverTimestamp() : FieldValue.delete() }, { merge: true });
   return { status };
+});
+
+exports.replyToFeedback = onCall(callableRuntime, async request => {
+  await requireCommunityAdmin(request);
+  const feedbackId = requireString(request.data?.feedbackId, 'feedbackId');
+  const reply = requireString(request.data?.reply, 'Reply').slice(0, 1000);
+  const feedbackRef = db.collection('feedback').doc(feedbackId);
+  const feedback = await feedbackRef.get();
+  if (!feedback.exists) throw new HttpsError('not-found', 'Feedback item no longer exists.');
+  await feedbackRef.set({ adminReply: reply, status: 'answered', repliedAt: FieldValue.serverTimestamp() }, { merge: true });
+  return { status: 'answered' };
 });
 
 exports.cleanUpMyInbox = onCall(callableRuntime, async request => {
@@ -504,14 +550,15 @@ exports.respondToBorrowRequest = onCall(callableRuntime, async request => {
     const bookRef = db.collection('books').doc(loan.bookId);
     const borrowerStatsRef = db.collection('readerStats').doc(loan.requesterId);
     const ownerStatsRef = db.collection('readerStats').doc(uid);
+    const ownerProfileRef = db.collection('profiles').doc(uid);
     const bookStatsRef = db.collection('bookLoanStats').doc(loan.bookId);
     const networkStatsRef = db.collection('networkStats').doc('current');
-    const [bookSnap, activeLoans, pendingRequests, pendingForBorrower, borrowerStatsSnap, ownerStatsSnap, bookStatsSnap, networkStatsSnap, friendshipConfirmed] = await Promise.all([
+    const [bookSnap, activeLoans, pendingRequests, pendingForBorrower, borrowerStatsSnap, ownerStatsSnap, ownerProfileSnap, bookStatsSnap, networkStatsSnap, friendshipConfirmed] = await Promise.all([
       tx.get(bookRef),
       tx.get(db.collection('books').where('borrowerId', '==', loan.requesterId).where('status', '==', 'Lent Out').limit(MAX_ACTIVE_LOANS + 1)),
       tx.get(db.collection('requests').where('bookId', '==', loan.bookId).where('status', '==', 'pending').limit(100)),
       tx.get(db.collection('requests').where('requesterId', '==', loan.requesterId).where('status', '==', 'pending').limit(MAX_PENDING_BORROW_REQUESTS + 1)),
-      tx.get(borrowerStatsRef), tx.get(ownerStatsRef), tx.get(bookStatsRef), tx.get(networkStatsRef)
+      tx.get(borrowerStatsRef), tx.get(ownerStatsRef), tx.get(ownerProfileRef), tx.get(bookStatsRef), tx.get(networkStatsRef)
       , confirmedFriendship(tx, uid, loan.requesterId)
     ]);
     if (!bookSnap.exists || bookSnap.data().ownerId !== uid || bookSnap.data().status !== 'Available') throw new HttpsError('failed-precondition', 'This book is no longer available.');
@@ -537,6 +584,10 @@ exports.respondToBorrowRequest = onCall(callableRuntime, async request => {
       totalLent: Number(ownerStats.totalLent || 0) + 1,
       mostBorrowedTitle: nextBookLoanCount >= Number(ownerStats.mostBorrowedCount || 0) ? bookSnap.data().title || 'Untitled book' : ownerStats.mostBorrowedTitle || '',
       mostBorrowedCount: ownerMostBorrowed,
+      updatedAt: FieldValue.serverTimestamp()
+    }, { merge: true });
+    tx.set(ownerProfileRef, {
+      totalLent: Number(ownerProfileSnap.data()?.totalLent || 0) + 1,
       updatedAt: FieldValue.serverTimestamp()
     }, { merge: true });
     tx.set(networkStatsRef, {
@@ -801,6 +852,7 @@ exports.deleteMyAccount = onCall(callableRuntime, async request => {
     deleteQuery(db.collection('friendships').where('user1', '==', uid)),
     deleteQuery(db.collection('friendships').where('user2', '==', uid)),
     deleteQuery(db.collection('wishlists').where('userId', '==', uid)),
+    deleteQuery(db.collection('savedBooks').where('userId', '==', uid)),
     deleteQuery(db.collection('ratingEvents').where('subjectId', '==', uid))
   ]);
   const batch = db.batch();
