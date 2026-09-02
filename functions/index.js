@@ -55,6 +55,17 @@ function normalizedTitle(value) {
   return String(value || '').trim().toLowerCase().replace(/\s+/g, ' ');
 }
 
+function suggestionBucket(bookId) {
+  // A stable, evenly spread position gives each book a chance to be suggested
+  // without changing its place every time the owner edits its details.
+  let hash = 2166136261;
+  for (const character of String(bookId || '')) {
+    hash ^= character.charCodeAt(0);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0) / 4294967296;
+}
+
 function discoveryRef(bookId) {
   return db.collection('bookDiscovery').doc(bookId);
 }
@@ -116,6 +127,9 @@ function discoveryData(bookId, book) {
     rating: Math.max(0, Math.min(5, Number(book.rating || 0))),
     coverUrl: book.coverUrl || '',
     status: book.status || 'Available',
+    // Lets the client pick one inexpensive, varied community suggestion
+    // without scanning the whole discovery collection.
+    suggestionBucket: suggestionBucket(bookId),
     searchTokens: [...tokens],
     updatedAt: FieldValue.serverTimestamp()
   };
@@ -181,10 +195,22 @@ async function writePublicBookActivity(eventKey, type, book) {
   // how active the community becomes, and never associates a reader with it.
   await db.collection('networkTicker').doc(latestActivityIds[type] || eventKey).set({
     type,
+    bookId: book.bookId || book.id || '',
     title: book.title || 'Untitled book',
+    seriesName: book.seriesName || '',
     coverUrl: book.coverUrl || '',
     createdAt: FieldValue.serverTimestamp()
   });
+}
+
+async function clearBookTicker(bookId) {
+  const [publicItems, friendItems] = await Promise.all([
+    db.collection('networkTicker').where('bookId', '==', bookId).limit(10).get(),
+    db.collection('tickerActivities').where('bookId', '==', bookId).limit(200).get()
+  ]);
+  const batch = db.batch();
+  [...publicItems.docs, ...friendItems.docs].forEach(doc => batch.delete(doc.ref));
+  if (!publicItems.empty || !friendItems.empty) await batch.commit();
 }
 
 exports.respondToFriendRequest = onCall(callableRuntime, async request => {
@@ -613,16 +639,17 @@ exports.respondToBorrowRequest = onCall(callableRuntime, async request => {
     return {
       action, dueAt: dueAt.toDate().toISOString(), ownerId: uid,
       ownerName: bookSnap.data().ownerName || 'A friend', borrowerId: loan.requesterId,
-      borrowerName: loan.requesterName || 'Reader', title: bookSnap.data().title || 'Untitled book', coverUrl: bookSnap.data().coverUrl || ''
+      borrowerName: loan.requesterName || 'Reader', bookId: loan.bookId,
+      title: bookSnap.data().title || 'Untitled book', seriesName: bookSnap.data().seriesName || '', coverUrl: bookSnap.data().coverUrl || ''
     };
   });
   if (result.action === 'approved') {
     await Promise.all([
       writeTickerActivities([result.ownerId], `borrowed-owner-${requestId}`, {
-        type: 'book-borrowed-owner', actorId: result.borrowerId, actorName: result.borrowerName, title: result.title
+        type: 'book-borrowed-owner', bookId: result.bookId, actorId: result.borrowerId, actorName: result.borrowerName, title: result.title, seriesName: result.seriesName || ''
       }),
       writeTickerActivities([result.borrowerId], `borrowed-reader-${requestId}`, {
-        type: 'book-borrowed-reader', actorId: result.ownerId, actorName: result.ownerName, title: result.title
+        type: 'book-borrowed-reader', bookId: result.bookId, actorId: result.ownerId, actorName: result.ownerName, title: result.title, seriesName: result.seriesName || ''
       }),
       writePublicBookActivity(`borrowed-${requestId}`, 'public-book-borrowed', result)
     ]).catch(err => console.error('Could not write borrow activity', err));
@@ -643,11 +670,14 @@ exports.closeLoan = onCall(callableRuntime, async request => {
     if (book.ownerId !== uid || book.status !== 'Lent Out' || !book.borrowerId) throw new HttpsError('failed-precondition', 'This book is not an active loan.');
     const requestRef = book.activeRequestId ? db.collection('requests').doc(book.activeRequestId) : null;
     const networkStatsRef = db.collection('networkStats').doc('current');
-    const [profileSnap, requestSnap, networkStatsSnap] = await Promise.all([
+    const returnRequestRef = db.collection('requests').doc(`return-${bookId}-${book.activeRequestId || book.borrowerId}`);
+    const [profileSnap, requestSnap, networkStatsSnap, returnRequestSnap] = await Promise.all([
       tx.get(db.collection('profiles').doc(book.borrowerId)),
       requestRef ? tx.get(requestRef) : Promise.resolve(null),
-      tx.get(networkStatsRef)
+      tx.get(networkStatsRef),
+      tx.get(returnRequestRef)
     ]);
+    if (outcome === 'returned' && (!returnRequestSnap.exists || returnRequestSnap.data().status !== 'pending')) throw new HttpsError('failed-precondition', 'The borrower needs to request a return before you confirm it.');
     const now = Date.now();
     const heldFor = now - (book.lentAt?.toMillis?.() || now);
     const onTime = !book.loanDueAt?.toMillis || now <= book.loanDueAt.toMillis();
@@ -661,10 +691,10 @@ exports.closeLoan = onCall(callableRuntime, async request => {
       updatedAt: FieldValue.serverTimestamp()
     }, { merge: true });
     tx.update(bookRef, outcome === 'lost' ? {
-      status: 'Lost', lostAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp()
+      status: 'Lost', returnRequestedAt: FieldValue.delete(), lostAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp()
     } : {
       status: 'Available', borrowerId: FieldValue.delete(), borrowerName: FieldValue.delete(),
-      lentAt: FieldValue.delete(), loanDueAt: FieldValue.delete(), activeRequestId: FieldValue.delete(), updatedAt: FieldValue.serverTimestamp()
+      lentAt: FieldValue.delete(), loanDueAt: FieldValue.delete(), activeRequestId: FieldValue.delete(), returnRequestedAt: FieldValue.delete(), updatedAt: FieldValue.serverTimestamp()
     });
     tx.set(discoveryRef(bookId), { status: outcome === 'lost' ? 'Lost' : 'Available', updatedAt: FieldValue.serverTimestamp() }, { merge: true });
     const networkStats = networkStatsSnap.data() || {};
@@ -674,29 +704,51 @@ exports.closeLoan = onCall(callableRuntime, async request => {
       updatedAt: FieldValue.serverTimestamp()
     }, { merge: true });
     if (requestSnap?.exists) tx.update(requestRef, { status: outcome === 'lost' ? 'lost' : 'returned', returnRatingPoints: points, returnedAt: FieldValue.serverTimestamp() });
-    if (points !== 0) {
-      tx.set(db.collection('ratingEvents').doc(`${book.activeRequestId || bookId}-${outcome}`), {
+    if (outcome === 'returned') tx.update(returnRequestRef, { status: 'confirmed', confirmedAt: FieldValue.serverTimestamp() });
+    if (outcome === 'lost' && returnRequestSnap.exists && returnRequestSnap.data().status === 'pending') tx.update(returnRequestRef, { status: 'cancelled', cancellationReason: 'book-reported-lost', respondedAt: FieldValue.serverTimestamp() });
+    tx.set(db.collection('ratingEvents').doc(`${book.activeRequestId || bookId}-${outcome}`), {
         subjectId: book.borrowerId,
         bookId,
         title: book.title || 'Untitled book',
         outcome,
         points,
-        reason: outcome === 'lost' ? 'Book reported lost' : (points > 0 ? 'Returned on time after two days' : 'Returned after the due date'),
+        reason: outcome === 'lost' ? 'Book reported lost' : (points > 0 ? 'Returned on time after two days' : (points < 0 ? 'Returned after the due date' : 'Returned within the first two days - no score change')),
         createdAt: FieldValue.serverTimestamp()
-      });
-    }
-    return { outcome, points, ownerId: book.ownerId, ownerName: book.ownerName || 'A friend', title: book.title || 'Untitled book', coverUrl: book.coverUrl || '', requestId: book.activeRequestId || '' };
+    });
+    return { outcome, points, ownerId: book.ownerId, ownerName: book.ownerName || 'A friend', title: book.title || 'Untitled book', seriesName: book.seriesName || '', coverUrl: book.coverUrl || '', requestId: book.activeRequestId || '' };
   });
   if (outcome === 'returned') {
     const friends = await acceptedFriendIds(result.ownerId);
     await writeTickerActivities(friends, `available-${bookId}-${result.requestId || 'returned'}`, {
       type: 'book-available', actorId: result.ownerId, actorName: result.ownerName,
-      ownerId: result.ownerId, title: result.title
+      bookId, ownerId: result.ownerId, title: result.title, seriesName: result.seriesName || ''
     }).catch(err => console.error('Could not write return activity', err));
-    await writePublicBookActivity(`available-${bookId}-${result.requestId || 'returned'}`, 'public-book-available', result)
+    await writePublicBookActivity(`available-${bookId}-${result.requestId || 'returned'}`, 'public-book-available', { ...result, bookId })
       .catch(err => console.error('Could not write public return activity', err));
   }
   return result;
+});
+
+exports.requestReturn = onCall(callableRuntime, async request => {
+  const uid = requireUser(request);
+  const bookId = requireString(request.data?.bookId, 'bookId');
+  const bookRef = db.collection('books').doc(bookId);
+  return db.runTransaction(async tx => {
+    const bookSnap = await tx.get(bookRef);
+    if (!bookSnap.exists) throw new HttpsError('not-found', 'Book no longer exists.');
+    const book = bookSnap.data();
+    if (book.status !== 'Lent Out' || book.borrowerId !== uid) throw new HttpsError('failed-precondition', 'You are not the current borrower of this book.');
+    const returnRef = db.collection('requests').doc(`return-${bookId}-${book.activeRequestId || uid}`);
+    const existing = await tx.get(returnRef);
+    if (existing.exists && existing.data().status === 'pending') return { alreadyRequested: true };
+    tx.set(returnRef, {
+      type: 'return-request', bookId, title: book.title || 'Untitled book', ownerId: book.ownerId,
+      ownerName: book.ownerName || 'Owner', requesterId: uid, requesterName: book.borrowerName || 'Borrower',
+      status: 'pending', createdAt: FieldValue.serverTimestamp()
+    });
+    tx.update(bookRef, { returnRequestedAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
+    return { requested: true };
+  });
 });
 
 async function refreshBookCount(ownerId) {
@@ -749,9 +801,9 @@ exports.onBookCreated = onDocumentCreated({ ...runtime, document: 'books/{bookId
       writeTickerActivities(friendIds, `added-${event.params.bookId}`, {
         type: book.status === 'Available' ? 'book-added' : 'book-reading',
         actorId: book.ownerId, actorName: book.ownerName || 'A friend',
-        ownerId: book.ownerId, title: book.title || 'Untitled book'
+        bookId: event.params.bookId, ownerId: book.ownerId, title: book.title || 'Untitled book', seriesName: book.seriesName || ''
       }),
-      writePublicBookActivity(`added-${event.params.bookId}`, 'public-book-added', book)
+      writePublicBookActivity(`added-${event.params.bookId}`, 'public-book-added', { ...book, bookId: event.params.bookId })
   ]));
 });
 exports.onBookUpdated = onDocumentUpdated({ ...runtime, document: 'books/{bookId}' }, event =>
@@ -770,7 +822,8 @@ exports.onBookDeleted = onDocumentDeleted({ ...runtime, document: 'books/{bookId
   return Promise.all([
     discoveryRef(event.params.bookId).delete(),
     refreshBookCount(book.ownerId),
-    incrementNetworkStat('totalBooks', -1)
+    incrementNetworkStat('totalBooks', -1),
+    clearBookTicker(event.params.bookId)
   ]);
 });
 

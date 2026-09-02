@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 360" role="img" aria-labelledby="title desc">
+  <title id="title">CloudLibrary stacked lockup</title>
+  <desc id="desc">Stacked CloudLibrary logo with icon, wordmark, and tagline.</desc>
+  <defs>
+    <style>
+      .name { font-family: Fraunces, Georgia, serif; font-size: 46px; font-weight: 650; letter-spacing: 0; text-anchor: middle; }
+      .tag { font-family: Archivo, Arial, sans-serif; font-size: 11px; font-weight: 700; letter-spacing: .16em; text-anchor: middle; }
+    </style>
+    <linearGradient id="cover" x1="76" y1="44" x2="238" y2="226" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2b4638"/>
+      <stop offset="1" stop-color="#0f1813"/>
+    </linearGradient>
+  </defs>
+  <rect width="320" height="360" rx="28" fill="#f6efe0"/>
+  <g transform="translate(74 34) scale(1.35)">
+    <rect width="128" height="128" rx="28" fill="#f6efe0"/>
+    <path fill="url(#cover)" d="M28 54.2c0-12.7 10.3-23 23-23 2.9 0 5.7.5 8.2 1.5C64.7 24.9 73.8 20 84 20c17.7 0 32 14.3 32 32v42c0 7.7-6.3 14-14 14H42c-7.7 0-14-6.3-14-14V54.2Z"/>
+    <path fill="#f6efe0" d="M40 58.5c0-8.6 7-15.5 15.5-15.5 3.6 0 6.9 1.2 9.5 3.3C68.8 38.4 76.9 33 86.3 33 99.4 33 110 43.6 110 56.7V92c0 4.4-3.6 8-8 8H48c-4.4 0-8-3.6-8-8V58.5Z"/>
+    <path fill="#2b4638" d="M48 58h14v42H48z"/>
+    <path fill="#4a7460" d="M65 51h15v49H65z"/>
+    <path fill="#93b09c" d="M83 61h15v39H83z"/>
+    <path fill="#b5563a" d="M72 49h10v56l-5-5-5 5z"/>
+    <path fill="none" stroke="#f7ecc9" stroke-linecap="round" stroke-width="4" d="M54 68v22M90.5 70v18"/>
+    <path fill="none" stroke="#e6c765" stroke-linecap="round" stroke-width="4" d="M72 62v21"/>
+  </g>
+  <text class="name" x="160" y="252" fill="#0f1813">Cloud<tspan fill="#b5563a" font-style="italic">Library</tspan></text>
+  <text class="tag" x="160" y="282" fill="#4a7460">A LIBRARY BETWEEN FRIENDS</text>
+</svg>

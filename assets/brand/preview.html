@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CloudLibrary Brand Preview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600;700&family=Fraunces:ital,opsz,wght@0,9..144,650;1,9..144,650&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: #f6efe0;
+      --ink: #0f1813;
+      --green: #2b4638;
+      --sage: #93b09c;
+      --rust: #b5563a;
+      --gold: #e6c765;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Archivo, Arial, sans-serif;
+      color: var(--ink);
+      background: var(--paper);
+    }
+
+    main {
+      width: min(1080px, calc(100vw - 32px));
+      margin: 0 auto;
+      padding: 44px 0;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-family: Fraunces, Georgia, serif;
+      font-size: 42px;
+      line-height: 1.08;
+      font-weight: 650;
+    }
+
+    p {
+      max-width: 620px;
+      margin: 0;
+      color: #375a48;
+      line-height: 1.6;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+      margin-top: 34px;
+    }
+
+    .panel {
+      min-height: 220px;
+      display: grid;
+      align-content: center;
+      gap: 18px;
+      padding: 28px;
+      border: 1px solid #b9cdbf;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .42);
+    }
+
+    .panel.dark {
+      color: var(--paper);
+      border-color: #2b4638;
+      background: var(--ink);
+    }
+
+    .panel img { display: block; max-width: 100%; height: auto; }
+    .mark-row { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+    .mark-lg { width: 128px; }
+    .mark-sm { width: 40px; }
+    .wordmark { width: min(100%, 520px); }
+    .stacked { width: min(100%, 260px); justify-self: center; }
+
+    .swatches {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 24px;
+    }
+
+    .swatch {
+      width: 132px;
+      display: grid;
+      gap: 8px;
+      padding: 10px;
+      border: 1px solid #b9cdbf;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .35);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .chip {
+      height: 42px;
+      border-radius: 6px;
+      border: 1px solid rgba(15, 24, 19, .16);
+    }
+
+    @media (max-width: 760px) {
+      main { padding: 28px 0; }
+      h1 { font-size: 32px; }
+      .grid { grid-template-columns: 1fr; }
+      .panel { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>CloudLibrary</h1>
+    <p>A warm, bookish identity for a friend-to-friend lending library: cloud storage meets nearby shelves, softened by paper tones and a hand-kept-bookmark accent.</p>
+
+    <section class="grid" aria-label="Logo previews">
+      <div class="panel">
+        <img class="wordmark" src="./cloudlibrary-wordmark.svg" alt="CloudLibrary horizontal wordmark">
+      </div>
+      <div class="panel dark">
+        <img class="wordmark" src="./cloudlibrary-wordmark-reverse.svg" alt="CloudLibrary reverse wordmark">
+      </div>
+      <div class="panel">
+        <div class="mark-row">
+          <img class="mark-lg" src="./cloudlibrary-mark.svg" alt="CloudLibrary logo mark">
+          <img class="mark-sm" src="./cloudlibrary-mark.svg" alt="">
+        </div>
+      </div>
+      <div class="panel">
+        <img class="stacked" src="./cloudlibrary-lockup-stacked.svg" alt="CloudLibrary stacked lockup">
+      </div>
+    </section>
+
+    <section class="swatches" aria-label="Brand colors">
+      <div class="swatch"><span class="chip" style="background:#f6efe0"></span>Paper #f6efe0</div>
+      <div class="swatch"><span class="chip" style="background:#0f1813"></span>Ink #0f1813</div>
+      <div class="swatch"><span class="chip" style="background:#2b4638"></span>Green #2b4638</div>
+      <div class="swatch"><span class="chip" style="background:#93b09c"></span>Sage #93b09c</div>
+      <div class="swatch"><span class="chip" style="background:#b5563a"></span>Rust #b5563a</div>
+      <div class="swatch"><span class="chip" style="background:#e6c765"></span>Gold #e6c765</div>
+    </section>
+  </main>
+</body>
+</html>

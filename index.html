@@ -59,10 +59,26 @@
   @keyframes tickerIn { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: translateX(0); } }
   .ticker-item { animation: tickerIn .42s cubic-bezier(.16,1,.3,1) both; line-height: 1.3; }
   .ticker-icon { width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; border-radius: 7px; background: rgba(21,36,32,.08); color: #385c4b; flex: 0 0 auto; }
+  .series-stack { min-width: 0; max-width: 100%; }
+  .series-table-wrap { min-width: 0; max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain; }
+  .series-table-wrap table { min-width: 520px !important; }
+  .series-table-wrap table col:nth-child(1) { width: 2.25rem; }
+  .series-table-wrap table col:nth-child(2) { width: 11rem; }
+  .series-table-wrap table col:nth-child(3) { width: 5rem; }
+  .series-table-wrap table col:nth-child(4) { width: 10rem; }
+  .series-stack summary .font-display { white-space: normal; overflow: visible; text-overflow: clip; }
+  #books-grid, #friend-shelf-books { align-items: start; }
 
   @keyframes toastIn { from { opacity: 0; transform: translateY(12px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
   .toast-item { animation: toastIn .28s cubic-bezier(.16,1,.3,1) both; }
   .toast-item.toast-out { opacity: 0; transform: translateY(6px); transition: opacity .25s ease, transform .25s ease; }
+  @media (orientation: landscape) and (max-height: 620px) {
+    #app-content { padding-top: 1rem; padding-bottom: 1rem; }
+    #app-content > nav { position: sticky; top: .5rem; z-index: 30; }
+    .mobile-nav { display: none; }
+    #view-library { gap: 1rem; }
+    #cloud-ticker-card { padding-top: .55rem; padding-bottom: .55rem; }
+  }
 </style>
 </head>
 <body class="bg-paper text-ink-950 min-h-screen">
@@ -135,7 +151,7 @@
     <button type="button" data-action="close-help" title="Close help" class="absolute top-4 right-4 p-2 text-ink-500 hover:text-ink-950">&times;</button>
     <p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-1">Help</p>
     <h2 class="font-display text-2xl text-ink-950">Need a hand?</h2>
-    <div class="mt-4 space-y-2 text-sm text-ink-600 leading-relaxed"><details open class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">About CloudLibrary</summary><p class="mt-2">A small, real-life book-sharing community created by Amit Agarwal. Readers discover books, connect with people they know, and keep lending simple.</p></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Add books, step by step</summary><ol class="mt-2 space-y-1 list-decimal pl-5"><li>For one book, enter title and author; series name and number are optional.</li><li>Scan an ISBN to fill details, then check them before saving.</li><li>Add a cover from your camera or device if you want one.</li><li>For many books, use one line per book: <span class="font-mono text-xs">Book title | Author</span>.</li><li>For a series, choose numbers, select <strong>Prepare list</strong>, replace placeholders, then select <strong>Add listed books</strong>.</li></ol></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Borrow, return, and save books</summary><ul class="mt-2 space-y-1 list-disc pl-5"><li>Only confirmed friends can borrow from one another.</li><li>You can have three active loans, five pending requests, and two pending requests for one title.</li><li>Loans are due in 14 days. Save an interesting result from Search to revisit it later.</li></ul></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Reader score</summary><ul class="mt-2 space-y-1 list-disc pl-5"><li>Everyone starts at 3.0.</li><li>Each listed book adds 0.15, up to 1.5 points.</li><li>An on-time return after 48 hours adds 0.5; a late return loses 0.5; a lost book loses 2.0.</li><li>Quick returns do not change the score. Your profile ledger records score changes.</li></ul></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Privacy, circles, and feedback</summary><p class="mt-2">Email addresses are never shown. Use circles to add real-life context, and send a bug, question, or idea below. Admin replies will appear in Inbox.</p></details></div>
+    <div class="mt-4 space-y-2 text-sm text-ink-600 leading-relaxed"><details open class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">About CloudLibrary</summary><p class="mt-2">A small, real-life book-sharing community created by Amit Agarwal. Readers discover books, connect with people they know, and keep lending simple.</p></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Add one book</summary><ol class="mt-2 space-y-1 list-decimal pl-5"><li>Enter a title and author.</li><li>Optionally add a series name and book number, cover photo, rating, or note.</li><li>Use ISBN Scan when the barcode is clear, then check the details before saving.</li></ol></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Add many books or a series</summary><p class="mt-2">For several books, use one line per book: <span class="font-mono text-xs">Book title | Author</span>. For a series, choose the first and last number, select <strong>Prepare list</strong>, replace the placeholder titles, then select <strong>Add listed books</strong>. Preparing a list does not add books by itself.</p></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Borrowing a book</summary><p class="mt-2">Only confirmed friends can lend to one another. Readers can hold up to three active books, keep up to five pending requests, and ask at most two friends for the same title at once. A loan is due after 14 days.</p></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Returning a book</summary><p class="mt-2">The owner may send a reminder. Once the physical book is back with the owner, the borrower selects <strong>Request return</strong> and the owner selects <strong>Confirm returned</strong>. This two-step handoff prevents an accidental close.</p></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Saved books</summary><p class="mt-2">Use <strong>Save</strong> on a book in Search or a friend's shelf. Saved books remain on My Library and open Search again when selected.</p></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Reader score and ledger</summary><ul class="mt-2 space-y-1 list-disc pl-5"><li>Everyone starts at 3.0.</li><li>Each listed book adds 0.15, up to 1.5 points.</li><li>An on-time return after 48 hours adds 0.5; a late return loses 0.5; a lost book loses 2.0.</li><li>A return within the first 48 hours records a 0.0 ledger entry.</li></ul></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Circles</summary><p class="mt-2">Circles are approved groups such as a school, grade, locality, club, genre, or fan group. Open Profile, choose Edit introduction, and use the small cross on a circle to remove it. Administrators create and archive circles.</p></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Privacy and feedback</summary><p class="mt-2">Email addresses are never shown. Profiles display only library-facing details. Send a bug, question, or idea below; administrator replies arrive in Inbox.</p></details></div>
     <form id="feedback-form" class="mt-6 space-y-3 border-t border-ink-200 pt-5"><label class="block text-xs font-semibold text-ink-700" for="feedback-message">Report a problem or share an idea</label><select id="feedback-category" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-sm text-ink-950"><option value="bug">Something is not working</option><option value="idea">Suggestion</option><option value="question">Question</option></select><textarea id="feedback-message" required maxlength="1000" rows="4" placeholder="What happened? What did you expect?" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-sm text-ink-950 resize-none"></textarea><button type="submit" class="w-full bg-ink-950 text-paper py-3 rounded-lg text-sm font-semibold">Send feedback</button></form>
   </div>
 </div>
@@ -160,16 +176,18 @@
       <button onclick="switchTab('search')" id="tab-search" class="tab-btn flex items-center justify-center gap-1.5 min-w-0 text-sm px-3 py-2 rounded-lg text-ink-500 hover:text-ink-950 transition-colors"></button>
       <button onclick="switchTab('inbox')" id="tab-inbox" class="tab-btn flex items-center justify-center gap-1.5 min-w-0 text-sm px-3 py-2 rounded-lg text-ink-500 hover:text-ink-950 transition-colors"></button>
       <button onclick="openReaderProfile('self')" id="tab-profile" class="tab-btn flex items-center justify-center gap-1.5 min-w-0 text-sm px-3 py-2 rounded-lg text-ink-500 hover:text-ink-950 transition-colors"></button>
+      <button onclick="openAdminDashboard()" id="tab-admin" class="hidden tab-btn flex items-center justify-center gap-1.5 min-w-0 text-sm px-3 py-2 rounded-lg text-ink-500 hover:text-ink-950 transition-colors"></button>
     </div>
   </nav>
 
-  <nav class="mobile-nav md:hidden fixed inset-x-0 bottom-0 z-40 bg-white/95 backdrop-blur border-t border-ink-200 px-2 pt-2 grid grid-cols-6 gap-1 shadow-[0_-8px_24px_rgba(21,36,32,.10)]">
+  <nav id="mobile-nav" class="mobile-nav md:hidden fixed inset-x-0 bottom-0 z-40 bg-white/95 backdrop-blur border-t border-ink-200 px-2 pt-2 grid grid-cols-6 gap-1 shadow-[0_-8px_24px_rgba(21,36,32,.10)]">
     <button onclick="switchTab('library')" id="tab-mobile-library" class="tab-btn active flex flex-col items-center justify-center gap-1 min-w-0 py-2 rounded-lg text-[10px] font-semibold transition-colors"></button>
     <button onclick="switchTab('add')" id="tab-mobile-add" class="tab-btn flex flex-col items-center justify-center gap-1 min-w-0 py-2 rounded-lg text-[10px] font-semibold text-ink-500 transition-colors"></button>
     <button onclick="switchTab('friends')" id="tab-mobile-friends" class="tab-btn flex flex-col items-center justify-center gap-1 min-w-0 py-2 rounded-lg text-[10px] font-semibold text-ink-500 transition-colors"></button>
     <button onclick="switchTab('search')" id="tab-mobile-search" class="tab-btn flex flex-col items-center justify-center gap-1 min-w-0 py-2 rounded-lg text-[10px] font-semibold text-ink-500 transition-colors"></button>
     <button onclick="switchTab('inbox')" id="tab-mobile-inbox" class="tab-btn flex flex-col items-center justify-center gap-1 min-w-0 py-2 rounded-lg text-[10px] font-semibold text-ink-500 transition-colors"></button>
     <button onclick="openReaderProfile('self')" id="tab-mobile-profile" class="tab-btn flex flex-col items-center justify-center gap-1 min-w-0 py-2 rounded-lg text-[10px] font-semibold text-ink-500 transition-colors"></button>
+    <button onclick="openAdminDashboard()" id="tab-mobile-admin" class="hidden tab-btn flex flex-col items-center justify-center gap-1 min-w-0 py-2 rounded-lg text-[10px] font-semibold text-ink-500 transition-colors"></button>
   </nav>
 
   <!-- Header -->
@@ -236,7 +254,7 @@
       <details class="mt-5 border-t border-ink-200 pt-4">
         <summary class="cursor-pointer text-sm font-semibold text-ink-700">Add several books or a series</summary>
         <form id="quick-add-form" class="mt-3 space-y-3">
-          <p class="text-xs text-ink-500 leading-relaxed">One line per book: <span class="font-mono text-ink-700">Book title | Author</span> or <span class="font-mono text-ink-700">Series | # | Book title | Author</span>.</p>
+          <div class="rounded-lg bg-ink-800/5 p-3 text-xs leading-relaxed text-ink-600"><p class="font-semibold text-ink-800">Add several individual books</p><p class="mt-1">Put one book on each line:</p><p class="mt-1 font-mono text-ink-700">Book title | Author</p><p class="mt-3 font-semibold text-ink-800">Add books that belong to a series</p><p class="mt-1">Include the series title and book number before the book title:</p><p class="mt-1 font-mono text-ink-700">Series | # | Book title | Author</p></div>
           <textarea id="quick-book-lines" rows="6" placeholder="The Lightning Thief | Rick Riordan&#10;Percy Jackson | 2 | The Sea of Monsters | Rick Riordan" class="w-full bg-paper border border-ink-200 rounded-lg p-3 text-sm text-ink-950 resize-y focus:outline-none focus:ring-2 focus:ring-ink-700"></textarea>
           <div class="grid grid-cols-2 gap-2"><input id="series-title" type="text" placeholder="Series title" class="min-w-0 bg-paper border border-ink-200 rounded-lg p-2.5 text-sm text-ink-950"><input id="series-author" type="text" placeholder="Series author" class="min-w-0 bg-paper border border-ink-200 rounded-lg p-2.5 text-sm text-ink-950"></div>
           <div class="grid grid-cols-[1fr_1fr_auto] gap-2"><input id="series-start" type="number" min="1" value="1" aria-label="First book number" class="min-w-0 bg-paper border border-ink-200 rounded-lg p-2.5 text-sm text-ink-950"><input id="series-end" type="number" min="1" value="3" aria-label="Last book number" class="min-w-0 bg-paper border border-ink-200 rounded-lg p-2.5 text-sm text-ink-950"><button type="button" id="generate-series" class="text-xs font-semibold text-ink-700 bg-ink-800/10 hover:bg-ink-800/20 px-3 rounded-lg">Prepare list</button></div>
@@ -270,8 +288,16 @@
             <h2 class="font-display text-xl text-ink-950">Books I borrowed</h2>
           </div>
         </div>
-        <div id="borrowed-books-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+        <div id="borrowed-books-grid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4"></div>
         <p id="borrowed-empty-state" class="text-sm text-ink-400">No borrowed books yet.</p>
+      </div>
+      <div id="lent-out-panel" class="hidden app-panel p-5 rounded-xl border border-ink-200 shadow-sm">
+        <div class="flex items-center justify-between mb-3"><div><p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-1">Owner dashboard</p><h2 class="font-display text-xl text-ink-950">Currently lent out</h2></div><span id="lent-out-count" class="text-xs font-semibold text-ink-500"></span></div>
+        <div id="lent-out-books-grid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4"></div>
+      </div>
+      <div id="saved-books-panel" class="app-panel p-5 rounded-xl border border-ink-200 shadow-sm">
+        <div class="flex items-center justify-between mb-3"><div><p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-1">Reading list</p><h2 class="font-display text-xl text-ink-950">Saved books</h2></div><button type="button" data-action="go-search" class="text-xs font-semibold text-rust-600 hover:text-rust-700">Find books</button></div>
+        <div id="saved-books-list" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3"></div>
       </div>
       <div>
         <div class="flex items-center justify-between mb-3">
@@ -280,7 +306,7 @@
             <h2 class="font-display text-xl text-ink-950">My shelf</h2>
           </div>
         </div>
-      <div id="books-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+      <div id="books-grid" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4"></div>
       <div id="empty-state" class="hidden text-center p-12 rounded-2xl border border-dashed border-ink-300 bg-white/50">
         <p class="font-display text-xl text-ink-700">Your shelves are empty.</p>
         <p class="text-sm text-ink-400 mt-1">Add your first book, or scan a barcode to get started.</p>
@@ -458,6 +484,7 @@
     trash: '<path d="M4.5 7h15"/><path d="M9.5 7V4.9A1 1 0 0 1 10.5 4h3a1 1 0 0 1 1 .9V7"/><path d="M6.5 7l1 12.1A1 1 0 0 0 8.5 20h7a1 1 0 0 0 1-.9L17.5 7"/>',
     pencil: '<path d="M4.5 19.5l.9-3.6L15.8 5.6l2.6 2.6L8.1 18.5z"/><path d="M14.3 7.1l2.6 2.6"/>',
     undo: '<path d="M4 9.5h9a5 5 0 1 1 0 10h-2"/><path d="M8 5.5l-4 4 4 4"/>',
+    handshake: '<path d="m8.5 12.5 2 2a2 2 0 0 0 2.8 0l1.2-1.2"/><path d="m5 11.5 3.7-3.7a2.4 2.4 0 0 1 3.4 0l.8.8 2.2-2.2 4 4-2.1 2.1"/><path d="m3.8 10.2 3.7 3.7 1.6-1.6"/><path d="m14.4 15.4 1.2 1.2a2 2 0 0 0 2.8 0l1.8-1.8"/>',
     clock: '<circle cx="12" cy="12" r="8"/><path d="M12 8v4l2.5 2"/>',
     mail: '<path d="M4 6.5h16v11H4z"/><path d="M4.5 7l7.5 6 7.5-6"/>',
     star: '<path d="M12 3.5l2.6 5.4 5.9.6-4.4 4 1.2 5.8L12 16.6 6.7 19.3l1.2-5.8-4.4-4 5.9-.6z"/>',
@@ -465,6 +492,7 @@
     x: '<path d="M6 6l12 12M18 6L6 18"/>',
     arrowLeft: '<path d="M19 12H5"/><path d="M11 18l-6-6 6-6"/>',
     userMinus: '<circle cx="10" cy="8" r="3"/><path d="M3.5 20c.5-3.1 2.9-5.2 6.5-5.2 1.1 0 2.1.2 3 .6"/><path d="M17 12h5M19.5 9.5v5"/>'
+    ,bookmark: '<path d="M6 4.5A1.5 1.5 0 0 1 7.5 3h9A1.5 1.5 0 0 1 18 4.5V21l-6-3.7L6 21z"/>'
   };
   function icon(name, cls) {
     return `<svg class="${cls||'w-4 h-4'}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${ICON_PATHS[name]||''}</svg>`;
@@ -478,12 +506,14 @@
   document.getElementById('tab-search').innerHTML = icon('search') + '<span>Search</span>';
   document.getElementById('tab-inbox').innerHTML = icon('bell') + '<span>Inbox</span><span id="inbox-badge" class="hidden bg-rust-500 text-paper rounded-full px-1.5 py-0.5 text-[10px] font-mono">0</span>';
   document.getElementById('tab-profile').innerHTML = icon('user') + '<span>Profile</span>';
+  document.getElementById('tab-admin').innerHTML = icon('users') + '<span>Admin</span>';
   document.getElementById('tab-mobile-library').innerHTML = icon('book', 'w-5 h-5') + '<span>Library</span>';
   document.getElementById('tab-mobile-add').innerHTML = icon('plus', 'w-5 h-5') + '<span>Add</span>';
   document.getElementById('tab-mobile-friends').innerHTML = icon('users', 'w-5 h-5') + '<span>Friends</span>';
   document.getElementById('tab-mobile-search').innerHTML = icon('search', 'w-5 h-5') + '<span>Search</span>';
   document.getElementById('tab-mobile-inbox').innerHTML = icon('bell', 'w-5 h-5') + '<span>Inbox <span id="mobile-inbox-badge" class="hidden inline-flex items-center justify-center min-w-4 h-4 ml-0.5 bg-rust-500 text-paper rounded-full px-1 text-[9px] font-mono">0</span></span>';
   document.getElementById('tab-mobile-profile').innerHTML = icon('user', 'w-5 h-5') + '<span>Profile</span>';
+  document.getElementById('tab-mobile-admin').innerHTML = icon('users', 'w-5 h-5') + '<span>Admin</span>';
   document.getElementById('start-scan-btn').innerHTML = icon('camera') + '<span>Scan</span>';
   document.getElementById('copy-share-button').innerHTML = icon('link');
   document.getElementById('owner-controls').querySelector('button').innerHTML = icon('link') + '<span>Copy share link</span>';
@@ -552,7 +582,7 @@
     try {
       const score = await loadUserRating(currentUser.uid);
       const memberSince = formatDate(userProfile.memberSince) || 'Founding member';
-      panel.innerHTML = `<div class="relative"><button data-action="open-reader-profile" data-uid="self" title="Edit profile" aria-label="Edit profile" class="absolute top-0 right-0 p-1.5 text-rust-600 hover:text-rust-700 rounded-lg hover:bg-rust-600/10">${icon('pencil', 'w-4 h-4')}</button><div class="flex items-start gap-3 pr-8"><div class="shrink-0">${avatarHtml(userProfile, userProfile.libraryName, 'w-12 h-12 sm:w-14 sm:h-14')}</div><div class="min-w-0 flex-1"><p class="hidden sm:block font-mono text-[11px] uppercase tracking-widest text-rust-600">Your reader profile</p><h2 class="font-display text-2xl text-ink-950 leading-tight">${esc(userProfile.libraryName)}</h2>${userProfile.bio ? `<p class="text-sm text-ink-600 mt-1.5 max-w-3xl leading-relaxed">${esc(userProfile.bio)}</p>` : `<p class="text-sm text-ink-400 mt-1.5">Add an introduction so people you know can recognise you.</p>`}</div></div><div class="grid grid-cols-3 sm:grid-cols-5 gap-x-3 gap-y-3 mt-4 pt-3 border-t border-ink-200"><div><p class="font-display text-xl sm:text-2xl text-[#8a6414] leading-tight">${score.toFixed(1)}<span class="text-[11px] sm:text-sm text-ink-400">/10</span></p><p class="text-[10px] text-ink-500">reader score</p></div><div><p class="font-semibold text-ink-950 text-lg sm:text-xl leading-tight">${Number(userProfile.bookCount || 0)}</p><p class="text-[10px] text-ink-500">books listed</p></div><div><p class="font-semibold text-ink-950 text-lg sm:text-xl leading-tight">${Number(userProfile.timelyReturns || 0)}</p><p class="text-[10px] text-ink-500">timely returns</p></div><div><p class="font-semibold text-ink-950 text-lg sm:text-xl leading-tight">${confirmedFriends.length}</p><p class="text-[10px] text-ink-500">friends</p></div><div><p class="font-semibold text-ink-950 text-xs sm:text-sm leading-tight pt-0.5 truncate" title="${esc(memberSince)}">${esc(memberSince)}</p><p class="text-[10px] text-ink-500">member since</p></div></div></div>`;
+      panel.innerHTML = `<div class="relative"><button data-action="open-reader-profile" data-uid="self" title="Edit profile" aria-label="Edit profile" class="absolute top-0 right-0 p-1.5 text-rust-600 hover:text-rust-700 rounded-lg hover:bg-rust-600/10">${icon('pencil', 'w-4 h-4')}</button><div class="flex items-start gap-3 pr-8"><div class="shrink-0">${avatarHtml(userProfile, userProfile.libraryName, 'w-12 h-12 sm:w-14 sm:h-14')}</div><div class="min-w-0 flex-1"><p class="hidden sm:block font-mono text-[11px] uppercase tracking-widest text-rust-600">Your reader profile</p><h2 class="font-display text-2xl text-ink-950 leading-tight">${esc(userProfile.libraryName)}</h2><p class="text-[11px] text-ink-500 mt-0.5">${esc(memberSince)}</p>${userProfile.bio ? `<p class="text-sm text-ink-600 mt-1.5 max-w-3xl leading-relaxed">${esc(userProfile.bio)}</p>` : `<p class="text-sm text-ink-400 mt-1.5">Add an introduction so people you know can recognise you.</p>`}</div></div><div class="grid grid-cols-3 sm:grid-cols-6 gap-2 mt-4 pt-3 border-t border-ink-200"><div class="rounded-lg bg-ink-800/5 p-2"><p class="font-display text-xl text-[#8a6414] leading-tight">${score.toFixed(1)}<span class="text-[11px] text-ink-400">/10</span></p><p class="text-[10px] text-ink-500">reader score</p></div><div class="rounded-lg bg-ink-800/5 p-2"><p class="font-semibold text-ink-950 text-lg leading-tight">${Number(userProfile.bookCount || 0)}</p><p class="text-[10px] text-ink-500">books listed</p></div><div class="rounded-lg bg-ink-800/5 p-2"><p class="font-semibold text-ink-950 text-lg leading-tight">${Number(userProfile.totalLent || 0)}</p><p class="text-[10px] text-ink-500">books lent</p></div><div class="rounded-lg bg-ink-800/5 p-2"><p class="font-semibold text-ink-950 text-lg leading-tight">${Number(userProfile.timelyReturns || 0)}</p><p class="text-[10px] text-ink-500">timely returns</p></div><div class="rounded-lg bg-ink-800/5 p-2"><p class="font-semibold text-ink-950 text-lg leading-tight">${confirmedFriends.length}</p><p class="text-[10px] text-ink-500">friends</p></div><div class="rounded-lg bg-ink-800/5 p-2"><p class="font-semibold text-ink-950 text-lg leading-tight">${Array.isArray(userProfile.circleTags) ? userProfile.circleTags.length : 0}</p><p class="text-[10px] text-ink-500">circles</p></div></div></div>`;
     } catch (err) {
       console.warn('Could not load reader score', err);
       panel.innerHTML = '<p class="text-sm text-ink-400">Your reader score will appear here soon.</p>';
@@ -596,6 +626,11 @@
     const isFriend = confirmedFriends.includes(targetUid);
     const relationship = relationshipStates[targetUid];
     const name = profile.libraryName || 'Unnamed library';
+    const membershipResult = isSelf && editIntroduction
+      ? await guard(() => db.collection('circleMemberships').where('userId', '==', currentUser.uid).limit(20).get(), { context: 'Loading your circles' })
+      : null;
+    const circleMemberships = membershipResult && membershipResult !== FAILED
+      ? membershipResult.docs.map(doc => ({ id: doc.data().circleId, name: doc.data().circleName || '' })) : [];
     const actions = isSelf
       ? `${editIntroduction
           ? `<form id="profile-bio-form" class="mt-5 space-y-3"><label class="block text-xs font-semibold text-ink-700" for="profile-bio-edit">About you</label><textarea id="profile-bio-edit" rows="4" maxlength="280" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-sm text-ink-950 resize-none">${esc(profile.bio || '')}</textarea><div class="flex gap-2"><button type="button" data-action="open-reader-profile" data-uid="self" class="bg-ink-100 text-ink-700 px-4 py-2.5 rounded-lg text-xs font-semibold">Cancel</button><button type="submit" class="bg-ink-950 text-paper px-4 py-2.5 rounded-lg text-xs font-semibold">Save introduction</button></div></form>`
@@ -604,8 +639,8 @@
       : `<div class="mt-5 flex flex-wrap gap-2">${isFriend ? `<button data-action="view-shelf" data-uid="${esc(targetUid)}" data-name="${esc(name)}" class="bg-ink-800/10 text-ink-800 px-3 py-2.5 rounded-lg text-xs font-semibold">View shelf</button>` : relationship === 'pending' && relationshipSenders[targetUid] === currentUser.uid ? `<span class="text-xs font-semibold text-gold-600 py-2.5">Friend request sent</span><button data-action="cancel-request" data-id="${esc(relationshipDocs[targetUid] || '')}" data-name="${esc(name)}" class="text-xs font-semibold text-rust-600 px-2">Cancel request</button>` : relationship === 'pending' ? `<button data-action="switch-inbox" class="bg-ink-800/10 text-ink-800 px-3 py-2.5 rounded-lg text-xs font-semibold">Review request in Inbox</button>` : `<button data-action="add-friend" data-owner="${esc(targetUid)}" data-name="${esc(name)}" class="bg-rust-600 text-paper px-3 py-2.5 rounded-lg text-xs font-semibold">Add friend</button>`}</div>`;
     const memberSince = formatDate(profile.memberSince) || 'Founding member';
     const circles = Array.isArray(profile.circleTags) && profile.circleTags.length
-      ? `<div class="mt-4 flex flex-wrap gap-1.5">${profile.circleTags.map(tag => `<span class="bg-gold-100 text-ink-700 rounded-full px-2 py-1 text-[10px] font-semibold">${esc(tag)}</span>`).join('')}</div>` : '';
-    body.innerHTML = `<div class="flex items-center gap-4 pr-8">${avatarHtml(profile, name, 'w-16 h-16')}<div class="min-w-0"><p class="font-mono text-[10px] uppercase tracking-widest text-rust-600">Reader profile</p><h2 class="font-display text-2xl text-ink-950 truncate">${esc(name)}</h2><p class="text-sm text-[#8a6414] font-semibold">${score.toFixed(1)}/10 reader score</p><p class="text-[11px] text-ink-500 mt-1">${esc(memberSince)}</p></div></div><div class="grid grid-cols-3 gap-2 mt-5"><div class="bg-ink-800/5 rounded-lg p-3"><p class="font-semibold text-ink-950">${Number(profile.bookCount || 0)}</p><p class="text-[10px] text-ink-500">books listed</p></div><div class="bg-ink-800/5 rounded-lg p-3"><p class="font-semibold text-ink-950">${Number(profile.totalLent || 0)}</p><p class="text-[10px] text-ink-500">books lent</p></div><div class="bg-ink-800/5 rounded-lg p-3"><p class="font-semibold text-ink-950">${Number(profile.timelyReturns || 0)}</p><p class="text-[10px] text-ink-500">timely returns</p></div></div>${circles}<div class="mt-5"><p class="text-xs font-semibold text-ink-700 mb-1">About</p><p class="text-sm text-ink-600 leading-relaxed">${esc(profile.bio || 'No introduction added yet.')}</p></div>${actions}${isSelf ? `<details class="mt-4 border-t border-ink-200 pt-4"><summary class="cursor-pointer text-xs font-semibold text-ink-600 hover:text-ink-950">Reader score ledger</summary><div id="rating-ledger-list" class="mt-3 space-y-2"><p class="text-xs text-ink-400">Loading score changes…</p></div></details><details id="borrow-history-details" class="mt-4 border-t border-ink-200 pt-4"><summary class="cursor-pointer text-xs font-semibold text-ink-600 hover:text-ink-950">Borrowing history</summary><div class="mt-2 flex items-center gap-2"><select id="borrow-history-filter" class="rounded-lg border border-ink-200 bg-white px-2 py-1.5 text-xs"><option value="all">All activity</option><option value="returned">Returned</option><option value="lost">Lost</option></select><span class="text-[11px] text-ink-400">Latest five entries</span></div><div id="profile-borrow-history-list" class="mt-3 space-y-2"><p class="text-xs text-ink-400">Open to load your latest history.</p></div></details><details class="mt-4 border-t border-ink-200 pt-4"><summary class="cursor-pointer text-xs font-semibold text-ink-600 hover:text-ink-950">Saved books</summary><div id="saved-books-list" class="mt-3 space-y-2"><p class="text-xs text-ink-400">Loading saved books…</p></div></details>` : ''}`;
+      ? `<div class="mt-4 flex flex-wrap gap-1.5">${profile.circleTags.map(tag => { const membership = circleMemberships.find(item => item.name === tag); return `<span class="inline-flex items-center gap-1 bg-gold-100 text-ink-700 rounded-full px-2 py-1 text-[10px] font-semibold">${esc(tag)}${membership ? `<button type="button" data-action="leave-circle" data-id="${esc(membership.id)}" title="Remove ${esc(tag)}" class="text-rust-600 hover:text-rust-700">${icon('x','w-3 h-3')}</button>` : ''}</span>`; }).join('')}</div>` : '';
+    body.innerHTML = `<div class="flex items-center gap-4 pr-8">${avatarHtml(profile, name, 'w-16 h-16')}<div class="min-w-0"><p class="font-mono text-[10px] uppercase tracking-widest text-rust-600">Reader profile</p><h2 class="font-display text-2xl text-ink-950 truncate">${esc(name)}</h2><p class="text-[11px] text-ink-500 mt-1">${esc(memberSince)}</p><p class="text-sm text-[#8a6414] font-semibold mt-1">${score.toFixed(1)}/10 reader score</p></div></div><div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-5"><div class="bg-ink-800/5 rounded-lg p-3"><p class="font-semibold text-ink-950">${Number(profile.bookCount || 0)}</p><p class="text-[10px] text-ink-500">books listed</p></div><div class="bg-ink-800/5 rounded-lg p-3"><p class="font-semibold text-ink-950">${Number(profile.totalLent || 0)}</p><p class="text-[10px] text-ink-500">books lent</p></div><div class="bg-ink-800/5 rounded-lg p-3"><p class="font-semibold text-ink-950">${Number(profile.timelyReturns || 0)}</p><p class="text-[10px] text-ink-500">timely returns</p></div><div class="bg-ink-800/5 rounded-lg p-3"><p class="font-semibold text-ink-950">${Number(profile.friendCount || 0)}</p><p class="text-[10px] text-ink-500">friends</p></div></div>${circles}<div class="mt-5"><p class="text-xs font-semibold text-ink-700 mb-1">About</p><p class="text-sm text-ink-600 leading-relaxed">${esc(profile.bio || 'No introduction added yet.')}</p></div>${actions}${isSelf ? `<details class="mt-4 border-t border-ink-200 pt-4"><summary class="cursor-pointer text-xs font-semibold text-ink-600 hover:text-ink-950">Reader score ledger</summary><div id="rating-ledger-list" class="mt-3 space-y-2"><p class="text-xs text-ink-400">Loading score changes…</p></div></details><details id="borrow-history-details" class="mt-4 border-t border-ink-200 pt-4"><summary class="cursor-pointer text-xs font-semibold text-ink-600 hover:text-ink-950">Borrowing history</summary><div class="mt-2 flex items-center gap-2"><select id="borrow-history-filter" class="rounded-lg border border-ink-200 bg-white px-2 py-1.5 text-xs"><option value="all">All activity</option><option value="returned">Returned</option><option value="lost">Lost</option></select><span class="text-[11px] text-ink-400">Latest five entries</span></div><div id="profile-borrow-history-list" class="mt-3 space-y-2"><p class="text-xs text-ink-400">Open to load your latest history.</p></div></details>` : ''}`;
     const bioForm = document.getElementById('profile-bio-form');
     if (bioForm) bioForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -616,7 +651,6 @@
     });
     if (isSelf) {
       renderRatingLedger();
-      renderSavedBooks();
       document.getElementById('borrow-history-details')?.addEventListener('toggle', event => { if (event.target.open) loadBorrowHistory(); });
       document.getElementById('borrow-history-filter')?.addEventListener('change', renderBorrowHistory);
     }
@@ -628,7 +662,7 @@
     const result = await guard(() => db.collection('ratingEvents').where('subjectId', '==', currentUser.uid).orderBy('createdAt', 'desc').limit(20).get(), { context: 'Loading score ledger' });
     if (result === FAILED || !list.isConnected) return;
     const events = result.docs.map(doc => doc.data()).sort((a, b) => timestampMillis(b.createdAt) - timestampMillis(a.createdAt));
-    list.innerHTML = events.length ? events.map(event => `<div class="flex items-center justify-between gap-3 text-xs"><div class="min-w-0"><p class="font-semibold text-ink-700 truncate">${esc(event.reason || 'Score updated')}</p><p class="text-ink-400">${esc(event.title || '')}${event.createdAt ? ` · ${esc(formatDate(event.createdAt))}` : ''}</p></div><span class="font-semibold ${Number(event.points) > 0 ? 'text-ink-700' : 'text-rust-600'}">${Number(event.points) > 0 ? '+' : ''}${Number(event.points || 0).toFixed(1)}</span></div>`).join('') : '<p class="text-xs text-ink-400">No score changes yet.</p>';
+    list.innerHTML = events.length ? events.map(event => { const points = Number(event.points || 0); const tone = points > 0 ? 'text-ink-700' : (points < 0 ? 'text-rust-600' : 'text-ink-400'); return `<div class="flex items-center justify-between gap-3 text-xs"><div class="min-w-0"><p class="font-semibold text-ink-700 truncate">${esc(event.reason || 'Score updated')}</p><p class="text-ink-400">${esc(event.title || '')}${event.createdAt ? ` · ${esc(formatDate(event.createdAt))}` : ''}</p></div><span class="font-semibold ${tone}">${points > 0 ? '+' : ''}${points.toFixed(1)}</span></div>`; }).join('') : '<p class="text-xs text-ink-400">No lending outcomes yet.</p>';
   }
 
   async function manageCircles() {
@@ -686,12 +720,47 @@
     const data = result.data || {};
     const feedback = Array.isArray(data.feedback) ? data.feedback : [];
     const circles = Array.isArray(data.circles) ? data.circles : [];
-    panel.innerHTML = `<div class="mt-4 border-t border-ink-200 pt-4"><p class="text-xs font-semibold text-ink-700">Community admins</p><p class="text-xs text-ink-500 mt-1">${(data.admins || []).map(admin => esc(admin.name)).join(', ') || 'No admin profiles found.'}</p><form id="create-circle-form" class="mt-4 grid grid-cols-[1fr_120px_auto] gap-2"><input id="new-circle-name" required maxlength="60" placeholder="New circle name" class="min-w-0 rounded-lg border border-ink-200 bg-white px-2.5 py-2 text-xs"><select id="new-circle-category" required class="min-w-0 rounded-lg border border-ink-200 bg-white px-2.5 py-2 text-xs"><option value="School">School</option><option value="Grade">Grade</option><option value="Locality">Locality</option><option value="Genre">Genre</option><option value="Club">Club</option><option value="Fan group">Fan group</option></select><button class="rounded-lg bg-ink-800 px-3 text-xs font-semibold text-paper">Add</button></form><p class="mt-2 text-[10px] text-ink-400">Archiving hides a circle from new joins; existing members may leave it themselves.</p><div class="mt-2 space-y-1.5">${circles.map(circle => `<div class="flex items-center justify-between gap-2 rounded-lg border border-ink-200 px-2.5 py-2"><p class="min-w-0 truncate text-xs text-ink-700">${esc(circle.name || 'Circle')} <span class="text-ink-400">· ${esc(circle.category || 'Community')}</span></p>${circle.active ? `<button data-action="archive-circle" data-id="${esc(circle.id)}" class="shrink-0 text-[10px] font-semibold text-rust-600">Archive</button>` : '<span class="shrink-0 text-[10px] text-ink-400">Archived</span>'}</div>`).join('') || '<p class="text-xs text-ink-400">No circles yet.</p>'}</div><p class="text-xs font-semibold text-ink-700 mt-4">Feedback</p><div class="mt-2 space-y-2">${feedback.length ? feedback.map(item => `<div class="border border-ink-200 rounded-lg p-2.5"><div class="flex items-center justify-between gap-2"><p class="text-xs font-semibold text-ink-800">${esc(item.category || 'feedback')} · ${esc(item.reporterShelf || 'Reader')}</p><button data-action="resolve-feedback" data-id="${esc(item.id)}" data-status="${item.status === 'resolved' ? 'open' : 'resolved'}" class="text-[10px] font-semibold ${item.status === 'resolved' ? 'text-ink-500' : 'text-rust-600'}">${item.status === 'resolved' ? 'Reopen' : 'Resolve'}</button></div><p class="text-xs text-ink-600 mt-1 whitespace-pre-wrap">${esc(item.message || '')}</p></div>`).join('') : '<p class="text-xs text-ink-400">No feedback yet.</p>'}</div></div>`;
+    renderAdminDashboard(panel, data, circles, feedback);
+    return;
+    panel.innerHTML = `<div class="mt-4 border-t border-ink-200 pt-4"><p class="text-xs font-semibold text-ink-700">Community admins</p><p class="text-xs text-ink-500 mt-1">${(data.admins || []).map(admin => esc(admin.name)).join(', ') || 'No admin profiles found.'}</p><form id="create-circle-form" class="mt-4 grid grid-cols-[1fr_120px_auto] gap-2"><input id="new-circle-name" required maxlength="60" placeholder="New circle name" class="min-w-0 rounded-lg border border-ink-200 bg-white px-2.5 py-2 text-xs"><select id="new-circle-category" required class="min-w-0 rounded-lg border border-ink-200 bg-white px-2.5 py-2 text-xs"><option value="School">School</option><option value="Grade">Grade</option><option value="Locality">Locality</option><option value="Genre">Genre</option><option value="Club">Club</option><option value="Fan group">Fan group</option></select><button class="rounded-lg bg-ink-800 px-3 text-xs font-semibold text-paper">Add</button></form><p class="mt-2 text-[10px] text-ink-400">Archiving hides a circle from new joins; existing members may leave it themselves.</p><div class="mt-2 space-y-1.5">${circles.map(circle => `<div class="flex items-center justify-between gap-2 rounded-lg border border-ink-200 px-2.5 py-2"><p class="min-w-0 truncate text-xs text-ink-700">${esc(circle.name || 'Circle')} <span class="text-ink-400">· ${esc(circle.category || 'Community')}</span></p>${circle.active ? `<button data-action="archive-circle" data-id="${esc(circle.id)}" class="shrink-0 text-[10px] font-semibold text-rust-600">Archive</button>` : '<span class="shrink-0 text-[10px] text-ink-400">Archived</span>'}</div>`).join('') || '<p class="text-xs text-ink-400">No circles yet.</p>'}</div><p class="text-xs font-semibold text-ink-700 mt-4">Feedback</p><div class="mt-2 space-y-2">${feedback.length ? feedback.map(item => `<div class="border border-ink-200 rounded-lg p-2.5"><div class="flex items-center justify-between gap-2"><p class="text-xs font-semibold text-ink-800">${esc(item.category || 'feedback')} · ${esc(item.reporterShelf || 'Reader')}</p><button data-action="resolve-feedback" data-id="${esc(item.id)}" data-status="${item.status === 'resolved' ? 'open' : 'resolved'}" class="text-[10px] font-semibold ${item.status === 'resolved' ? 'text-ink-500' : 'text-rust-600'}">${item.status === 'resolved' ? 'Reopen' : 'Resolve'}</button></div><p class="text-xs text-ink-600 mt-1 whitespace-pre-wrap">${esc(item.message || '')}</p>${item.adminReply ? `<p class="mt-2 rounded bg-ink-800/5 px-2 py-1.5 text-xs text-ink-600"><strong>Reply:</strong> ${esc(item.adminReply)}</p>` : ''}<form data-feedback-reply="${esc(item.id)}" class="mt-2 flex gap-2"><input required maxlength="1000" placeholder="Reply to this reader" class="min-w-0 flex-1 rounded border border-ink-200 px-2 py-1.5 text-xs"><button class="text-xs font-semibold text-rust-600">Reply</button></form></div>`).join('') : '<p class="text-xs text-ink-400">No feedback yet.</p>'}</div></div>`;
     panel.insertAdjacentHTML('afterbegin', '<button data-action="rebuild-discovery" class="mb-3 text-xs font-semibold text-ink-700 hover:text-rust-700">Refresh book and series search index</button>');
     document.getElementById('create-circle-form')?.addEventListener('submit', async event => {
       event.preventDefault();
       const result = await guard(() => lendingFunctions.httpsCallable('createCircle')({ name: document.getElementById('new-circle-name').value, category: document.getElementById('new-circle-category').value }), { context: 'Adding circle', success: 'Circle added.' });
       if (result !== FAILED) openAdminDashboard();
+    });
+    panel.querySelectorAll('[data-feedback-reply]').forEach(form => form.addEventListener('submit', async event => {
+      event.preventDefault();
+      const reply = form.querySelector('input').value.trim();
+      if (!reply) return;
+      const response = await guard(() => lendingFunctions.httpsCallable('replyToFeedback')({ feedbackId: form.dataset.feedbackReply, reply }), { context: 'Replying to feedback', success: 'Reply sent to the reader inbox.' });
+      if (response !== FAILED) openAdminDashboard();
+    }));
+  }
+  function renderAdminDashboard(panel, data, circles, feedback) {
+    const circleRows = circles.map(circle => `<div class="flex items-center justify-between gap-2 rounded-lg border border-ink-200 px-2.5 py-2"><p class="min-w-0 truncate text-xs text-ink-700">${esc(circle.name || 'Circle')} <span class="text-ink-400">· ${esc(circle.category || 'Community')}</span></p>${circle.active ? `<button data-action="archive-circle" data-id="${esc(circle.id)}" class="shrink-0 text-[10px] font-semibold text-rust-600">Archive</button>` : '<span class="shrink-0 text-[10px] text-ink-400">Archived</span>'}</div>`).join('') || '<p class="text-xs text-ink-400">No circles yet.</p>';
+    const feedbackCard = item => `<div class="border border-ink-200 rounded-lg p-2.5"><div class="flex items-center justify-between gap-2"><p class="text-xs font-semibold text-ink-800">${esc(item.category || 'feedback')} · ${esc(item.reporterShelf || 'Reader')}</p><button data-action="resolve-feedback" data-id="${esc(item.id)}" data-status="${item.status === 'resolved' ? 'open' : 'resolved'}" class="text-[10px] font-semibold ${item.status === 'resolved' ? 'text-ink-500' : 'text-rust-600'}">${item.status === 'resolved' ? 'Reopen' : 'Resolve'}</button></div><p class="text-xs text-ink-600 mt-1 whitespace-pre-wrap">${esc(item.message || '')}</p>${item.adminReply ? `<p class="mt-2 rounded bg-ink-800/5 px-2 py-1.5 text-xs text-ink-600"><strong>Reply:</strong> ${esc(item.adminReply)}</p>` : ''}<form data-feedback-reply="${esc(item.id)}" class="mt-2 flex gap-2"><input required maxlength="1000" placeholder="Reply to this reader" class="min-w-0 flex-1 rounded border border-ink-200 px-2 py-1.5 text-xs"><button class="text-xs font-semibold text-rust-600">Reply</button></form></div>`;
+    panel.innerHTML = `<button data-action="rebuild-discovery" class="mb-3 text-xs font-semibold text-ink-700 hover:text-rust-700">Refresh book and series search index</button><div class="space-y-3"><details open class="rounded-lg border border-ink-200 bg-white/60"><summary class="cursor-pointer px-3 py-2.5 text-sm font-semibold text-ink-800">Community administrators</summary><p class="border-t border-ink-100 px-3 py-2.5 text-xs text-ink-500">${(data.admins || []).map(admin => esc(admin.name)).join(', ') || 'No admin profiles found.'}</p></details><details open class="rounded-lg border border-ink-200 bg-white/60"><summary class="cursor-pointer px-3 py-2.5 text-sm font-semibold text-ink-800">Circles <span class="text-xs font-normal text-ink-400">(${circles.length})</span></summary><div class="border-t border-ink-100 p-3"><form id="create-circle-form" class="grid grid-cols-1 sm:grid-cols-[1fr_120px_auto] gap-2"><input id="new-circle-name" required maxlength="60" placeholder="New circle name" class="min-w-0 rounded-lg border border-ink-200 bg-white px-2.5 py-2 text-xs"><select id="new-circle-category" required class="min-w-0 rounded-lg border border-ink-200 bg-white px-2.5 py-2 text-xs"><option value="School">School</option><option value="Grade">Grade</option><option value="Locality">Locality</option><option value="Genre">Genre</option><option value="Club">Club</option><option value="Fan group">Fan group</option></select><button class="rounded-lg bg-ink-800 px-3 py-2 text-xs font-semibold text-paper">Add</button></form><p class="mt-2 text-[10px] text-ink-400">Archive hides a circle from future joins; existing members may leave it themselves.</p><div class="mt-3 max-h-72 space-y-1.5 overflow-y-auto pr-1">${circleRows}</div></div></details><details class="rounded-lg border border-ink-200 bg-white/60"><summary class="cursor-pointer px-3 py-2.5 text-sm font-semibold text-ink-800">Feedback <span class="text-xs font-normal text-ink-400">(${feedback.length})</span></summary><div class="border-t border-ink-100 p-3"><input id="admin-feedback-filter" placeholder="Filter by reader, category, or message" class="w-full rounded-lg border border-ink-200 bg-white px-2.5 py-2 text-xs"><div id="admin-feedback-list" class="mt-3 max-h-[32rem] space-y-2 overflow-y-auto pr-1"></div></div></details></div>`;
+    const feedbackList = panel.querySelector('#admin-feedback-list');
+    const renderFeedback = term => {
+      const needle = String(term || '').toLowerCase();
+      const matches = feedback.filter(item => [item.reporterShelf, item.category, item.message, item.status].some(value => String(value || '').toLowerCase().includes(needle)));
+      feedbackList.innerHTML = matches.slice(0, 20).map(feedbackCard).join('') || '<p class="text-xs text-ink-400">No feedback matches.</p>';
+      if (matches.length > 20) feedbackList.insertAdjacentHTML('beforeend', `<p class="text-[10px] text-ink-400">Showing the newest 20 of ${matches.length} matching items.</p>`);
+      feedbackList.querySelectorAll('[data-feedback-reply]').forEach(form => form.addEventListener('submit', async event => {
+        event.preventDefault();
+        const reply = form.querySelector('input').value.trim();
+        if (!reply) return;
+        const response = await guard(() => lendingFunctions.httpsCallable('replyToFeedback')({ feedbackId: form.dataset.feedbackReply, reply }), { context: 'Replying to feedback', success: 'Reply sent to the reader inbox.' });
+        if (response !== FAILED) openAdminDashboard();
+      }));
+    };
+    renderFeedback('');
+    panel.querySelector('#admin-feedback-filter').addEventListener('input', event => renderFeedback(event.target.value));
+    panel.querySelector('#create-circle-form').addEventListener('submit', async event => {
+      event.preventDefault();
+      const response = await guard(() => lendingFunctions.httpsCallable('createCircle')({ name: panel.querySelector('#new-circle-name').value, category: panel.querySelector('#new-circle-category').value }), { context: 'Adding circle', success: 'Circle added.' });
+      if (response !== FAILED) openAdminDashboard();
     });
   }
   async function resolveFeedback(feedbackId, status) {
@@ -1104,6 +1173,12 @@
     if (photo) { navPhoto.src = photo; navPhoto.classList.remove('hidden'); navFallback.classList.add('hidden'); }
     else { navPhoto.classList.add('hidden'); navFallback.classList.remove('hidden'); }
     document.getElementById('app-content').classList.remove('hidden');
+    const circleSettings = await guard(() => lendingFunctions.httpsCallable('getCircleSettings')(), { context: 'Checking account role' });
+    const isAdmin = circleSettings !== FAILED && circleSettings.data?.isAdmin;
+    document.getElementById('tab-admin').classList.toggle('hidden', !isAdmin);
+    document.getElementById('tab-mobile-admin').classList.toggle('hidden', !isAdmin);
+    document.getElementById('mobile-nav').classList.toggle('grid-cols-6', !isAdmin);
+    document.getElementById('mobile-nav').classList.toggle('grid-cols-7', isAdmin);
     await loadFriendsList();
     fetchMyBooks();
     fetchBorrowedBooks();
@@ -1238,22 +1313,34 @@
           console.warn('Ticker activity index is not ready yet', err);
           return db.collection('tickerActivities').where('recipientId', '==', currentUser.uid).limit(6).get();
         });
-      const [friendActivity, newReaders, readerStats, networkStats, latestAdded, latestBorrowed, latestAvailable] = await Promise.all([
+      const communitySuggestionQuery = db.collection('bookDiscovery').orderBy('suggestionBucket').startAt(Math.random()).limit(1).get()
+        .then(snapshot => snapshot.empty
+          ? db.collection('bookDiscovery').orderBy('suggestionBucket').limit(1).get()
+          : snapshot)
+        // Existing books receive a bucket as they are next saved. Until then,
+        // still offer one recent book rather than leaving this slot empty.
+        .catch(() => db.collection('bookDiscovery').orderBy('updatedAt', 'desc').limit(1).get());
+      const [friendActivity, newReaders, readerStats, networkStats, latestAdded, latestBorrowed, latestAvailable, suggestion] = await Promise.all([
         friendActivityQuery,
         db.collection('networkTicker').orderBy('createdAt', 'desc').limit(1).get(),
         db.collection('readerStats').doc(currentUser.uid).get(),
         db.collection('networkStats').doc('current').get(),
         db.collection('networkTicker').doc('latest-book-added').get(),
         db.collection('networkTicker').doc('latest-book-borrowed').get(),
-        db.collection('networkTicker').doc('latest-book-available').get()
+        db.collection('networkTicker').doc('latest-book-available').get(),
+        communitySuggestionQuery
       ]);
+      const isBookActivity = item => /^(public-book|book-added|book-available|book-reading|book-borrowed|wishlist-match)/.test(item.type || '');
+      const suggestionItem = suggestion.docs.length ? { id: suggestion.docs[0].id, type: 'book-suggestion', ...suggestion.docs[0].data() } : null;
       const items = [
         ...friendActivity.docs.map(doc => ({ id: doc.id, ...doc.data() })),
         ...newReaders.docs.map(doc => ({ id: doc.id, ...doc.data() })).filter(item => item.actorId !== currentUser.uid),
         ...[latestAdded, latestBorrowed, latestAvailable]
           .filter(doc => doc.exists)
           .map(doc => ({ id: doc.id, ...doc.data() }))
-      ].sort((a, b) => timestampMillis(b.createdAt) - timestampMillis(a.createdAt)).slice(0, 8);
+      ].filter(item => !isBookActivity(item) || Boolean(item.bookId)).sort((a, b) => timestampMillis(b.createdAt) - timestampMillis(a.createdAt)).slice(0, 7);
+      // Reserve a ticker slot for discovery, even when a reader has a busy inbox.
+      if (suggestionItem) items.push(suggestionItem);
       const personal = readerStats.exists ? readerStats.data() : {};
       const community = networkStats.exists ? networkStats.data() : {};
       renderCommunityStats(community);
@@ -1297,51 +1384,53 @@
   function tickerItemHtml(item) {
     const actor = esc(item.actorName || 'A reader');
     const title = esc(item.title || 'a book');
-    const shelfAction = item.ownerId
-      ? `<button data-action="view-shelf" data-uid="${esc(item.ownerId)}" data-name="${actor}" class="ml-2 text-xs font-semibold text-rust-600">View shelf</button>`
-      : '';
+    const series = item.seriesName ? ` · ${esc(item.seriesName)}` : '';
+    const bookLink = `<button data-action="search-book" data-query="${esc(item.seriesName || item.title || '')}" class="font-display text-base text-ink-950 hover:text-rust-600 hover:underline">${title}</button>${series ? `<span class="text-xs text-ink-500">${series}</span>` : ''}`;
     const anonymousBookItem = (label, copy) => {
       const cover = safeUrl(item.coverUrl || '');
       const bookVisual = cover
         ? `<img src="${esc(cover)}" alt="" class="h-10 w-7 shrink-0 rounded border border-sage-200 object-cover">`
         : `<span class="flex h-10 w-7 shrink-0 items-center justify-center rounded border border-sage-200 bg-sage-50 text-sage-700">${icon('book', 15)}</span>`;
-      return `<div class="ticker-item flex items-center gap-3">${bookVisual}<div class="min-w-0"><span class="font-mono text-[10px] uppercase tracking-widest text-rust-600 mr-2">${label}</span><span class="font-display text-base text-ink-950">${title}</span><span class="text-ink-500"> ${copy}</span></div></div>`;
+      return `<div class="ticker-item flex items-center gap-3">${bookVisual}<div class="min-w-0"><span class="font-mono text-[10px] uppercase tracking-widest text-rust-600 mr-2">${label}</span>${bookLink}<span class="text-ink-500"> ${copy}</span></div></div>`;
     };
     if (item.type === 'public-book-added') return anonymousBookItem('New to CloudLibrary', 'was recently added.');
     if (item.type === 'public-book-borrowed') return anonymousBookItem('Latest loan', 'was recently borrowed.');
     if (item.type === 'public-book-available') return anonymousBookItem('Available again', 'is ready for another reader.');
     if (item.type === 'book-added') {
-      return `<div class="ticker-item"><span class="font-mono text-[10px] uppercase tracking-widest text-rust-600 mr-2">New on a shelf</span><span class="font-display text-base text-ink-950">${title}</span><span class="text-ink-500"> was added by ${actor}.</span>${shelfAction}</div>`;
+      return `<div class="ticker-item"><span class="font-mono text-[10px] uppercase tracking-widest text-rust-600 mr-2">New to explore</span>${bookLink}<span class="text-ink-500"> was recently added.</span></div>`;
     }
     if (item.type === 'book-available') {
-      return `<div class="ticker-item"><span class="font-mono text-[10px] uppercase tracking-widest text-rust-600 mr-2">Available again</span><span class="font-display text-base text-ink-950">${title}</span><span class="text-ink-500"> is back on ${actor}'s shelf.</span>${shelfAction}</div>`;
+      return `<div class="ticker-item"><span class="font-mono text-[10px] uppercase tracking-widest text-rust-600 mr-2">Available again</span>${bookLink}<span class="text-ink-500"> is ready for another reader.</span></div>`;
     }
     if (item.type === 'book-reading') {
-      return `<div class="ticker-item"><span class="font-mono text-[10px] uppercase tracking-widest text-rust-600 mr-2">Shelf update</span><span class="text-ink-500">${actor} added ${title} to their reading shelf.</span>${shelfAction}</div>`;
+      return `<div class="ticker-item"><span class="font-mono text-[10px] uppercase tracking-widest text-rust-600 mr-2">Reading now</span>${bookLink}<span class="text-ink-500"> is being read.</span></div>`;
     }
     if (item.type === 'wishlist-match') {
-      return `<div class="ticker-item"><span class="font-mono text-[10px] uppercase tracking-widest text-rust-600 mr-2">Wishlist match</span><span class="text-ink-500">${actor} added </span><span class="font-display text-base text-ink-950">${title}</span><span class="text-ink-500">, a book you wanted.</span>${shelfAction}</div>`;
+      return `<div class="ticker-item"><span class="font-mono text-[10px] uppercase tracking-widest text-rust-600 mr-2">Saved-book match</span>${bookLink}<span class="text-ink-500"> is available to explore.</span></div>`;
     }
     if (item.type === 'book-borrowed-owner') {
-      return `<div class="ticker-item"><span class="font-mono text-[10px] uppercase tracking-widest text-rust-600 mr-2">Latest loan</span><span class="font-display text-base text-ink-950">${title}</span><span class="text-ink-500"> was borrowed by ${actor}.</span></div>`;
+      return `<div class="ticker-item"><span class="font-mono text-[10px] uppercase tracking-widest text-rust-600 mr-2">Latest loan</span>${bookLink}<span class="text-ink-500"> has started a new reading journey.</span></div>`;
     }
     if (item.type === 'book-borrowed-reader') {
-      return `<div class="ticker-item"><span class="font-mono text-[10px] uppercase tracking-widest text-rust-600 mr-2">Latest loan</span><span class="text-ink-500">You borrowed </span><span class="font-display text-base text-ink-950">${title}</span><span class="text-ink-500"> from ${actor}.</span></div>`;
+      return `<div class="ticker-item"><span class="font-mono text-[10px] uppercase tracking-widest text-rust-600 mr-2">Your loan</span>${bookLink}<span class="text-ink-500"> is on your borrowed shelf.</span></div>`;
     }
     if (item.type === 'your-borrowing-total') {
       return `<div class="ticker-item"><span class="font-mono text-[10px] uppercase tracking-widest text-rust-600 mr-2">Your record</span><span class="font-display text-base text-ink-950">${Number(item.totalBorrowed)}</span><span class="text-ink-500"> successful book loan${Number(item.totalBorrowed) === 1 ? '' : 's'} tracked so far.</span></div>`;
     }
     if (item.type === 'your-most-borrowed') {
-      return `<div class="ticker-item"><span class="font-mono text-[10px] uppercase tracking-widest text-rust-600 mr-2">Your shelf favorite</span><span class="font-display text-base text-ink-950">${title}</span><span class="text-ink-500"> has been borrowed ${Number(item.count)} time${Number(item.count) === 1 ? '' : 's'}.</span></div>`;
+      return `<div class="ticker-item"><span class="font-mono text-[10px] uppercase tracking-widest text-rust-600 mr-2">Your shelf favorite</span>${bookLink}<span class="text-ink-500"> has been borrowed ${Number(item.count)} time${Number(item.count) === 1 ? '' : 's'}.</span></div>`;
     }
     if (item.type === 'community-loans') {
       return `<div class="ticker-item"><span class="font-mono text-[10px] uppercase tracking-widest text-rust-600 mr-2">Community tally</span><span class="font-display text-base text-ink-950">${Number(item.totalLoans)}</span><span class="text-ink-500"> successful loans · ${Number(item.activeLoans)} currently out.</span></div>`;
     }
     if (item.type === 'community-record') {
-      return `<div class="ticker-item"><span class="font-mono text-[10px] uppercase tracking-widest text-rust-600 mr-2">Community record</span><span class="font-display text-base text-ink-950">${Number(item.count)} books</span><span class="text-ink-500"> borrowed by one reader. Names stay private.</span></div>`;
+      return `<div class="ticker-item"><span class="font-mono text-[10px] uppercase tracking-widest text-rust-600 mr-2">Community record</span><span class="font-display text-base text-ink-950">${Number(item.count)} books</span><span class="text-ink-500"> borrowed by one reader.</span></div>`;
     }
     if (item.type === 'community-most-borrowed') {
       return anonymousBookItem('Most borrowed', `has been lent ${Number(item.count)} time${Number(item.count) === 1 ? '' : 's'} across CloudLibrary.`);
+    }
+    if (item.type === 'book-suggestion') {
+      return anonymousBookItem('Book suggestion', 'might be your next discovery.');
     }
     if (item.type === 'member-joined') {
       return `<div class="ticker-item"><span class="font-mono text-[10px] uppercase tracking-widest text-rust-600 mr-2">New reader</span><button data-action="open-reader-profile" data-uid="${esc(item.actorId)}" class="font-display text-base text-ink-950 hover:underline">${actor}</button><span class="text-ink-500"> joined CloudLibrary.</span></div>`;
@@ -1368,7 +1457,7 @@
 
   // --- 5. MY LIBRARY & BOOKS ---
   function ownBookActions(book) {
-    const returnBtn = book.status === 'Lent Out' ? `<button data-action="mark-returned" data-id="${esc(book.id)}" class="flex items-center gap-1 text-ink-600 bg-ink-600/10 hover:bg-ink-600/20 px-2.5 py-1 text-xs font-semibold rounded-lg transition-colors">${icon('undo','w-3.5 h-3.5')}Mark returned</button>` : '';
+    const returnBtn = book.status === 'Lent Out' && book.returnRequestedAt ? `<button data-action="mark-returned" data-id="${esc(book.id)}" class="flex items-center gap-1 text-ink-600 bg-ink-600/10 hover:bg-ink-600/20 px-2.5 py-1 text-xs font-semibold rounded-lg transition-colors">${icon('handshake','w-3.5 h-3.5')}Confirm returned</button>` : (book.status === 'Lent Out' ? `<span class="text-xs font-semibold text-ink-400">Waiting for return request</span>` : '');
     const reminderBtn = book.status === 'Lent Out' && book.borrowerId ? `<button data-action="send-reminder" data-id="${esc(book.id)}" class="flex items-center gap-1 text-rust-600 bg-rust-600/10 hover:bg-rust-600/20 px-2.5 py-1 text-xs font-semibold rounded-lg transition-colors">${icon('mail','w-3.5 h-3.5')}Reminder</button>` : '';
     const lostBtn = book.status === 'Lent Out' && timestampMillis(book.loanDueAt) < Date.now() ? `<button data-action="mark-lost" data-id="${esc(book.id)}" class="flex items-center gap-1 text-rust-600 bg-rust-600/10 hover:bg-rust-600/20 px-2.5 py-1 text-xs font-semibold rounded-lg transition-colors">${icon('x','w-3.5 h-3.5')}Report lost</button>` : '';
     const deleteButton = book.status !== 'Lent Out' ? `<button data-action="delete-book" data-id="${esc(book.id)}" class="flex items-center gap-1 text-rust-600 bg-rust-600/10 hover:bg-rust-600/20 px-2.5 py-1 text-xs font-semibold rounded-lg transition-colors">${icon('trash','w-3.5 h-3.5')}Delete</button>` : '';
@@ -1388,8 +1477,8 @@
     [...grouped.entries()].sort(([a], [b]) => a.localeCompare(b)).forEach(([seriesName, seriesBooks]) => {
       const available = seriesBooks.filter(book => book.status === 'Available').length;
       const details = document.createElement('details');
-      details.className = 'app-panel border border-ink-200 shadow-sm rounded-xl overflow-hidden';
-      details.innerHTML = `<summary class="cursor-pointer list-none flex items-center justify-between gap-3 px-3 py-3"><span class="min-w-0"><span class="font-display text-base text-ink-950 block truncate">${esc(seriesName)}</span><span class="text-xs text-ink-500">${seriesBooks.length} books · ${available} available</span></span><span class="text-xs font-semibold text-ink-700">View series</span></summary><div class="grid grid-cols-1 gap-3 border-t border-ink-200 p-3">${seriesBooks.sort((a, b) => Number(a.seriesNumber || 0) - Number(b.seriesNumber || 0) || String(a.title).localeCompare(String(b.title))).map(book => renderBookCard(book, ownBookActions(book))).join('')}</div>`;
+      details.className = 'series-stack app-panel border border-ink-200 shadow-sm rounded-xl overflow-hidden';
+      details.innerHTML = `<summary class="cursor-pointer list-none flex items-center justify-between gap-3 px-3 py-3"><span class="min-w-0"><span class="font-display text-base text-ink-950 block truncate">${esc(seriesName)}</span><span class="text-xs text-ink-500">${seriesBooks.length} books · ${available} available</span></span><span class="text-xs font-semibold text-ink-700">View series</span></summary><div class="series-table-wrap border-t border-ink-200"><table class="w-full min-w-[680px] table-fixed text-left text-xs"><colgroup><col class="w-10"><col><col class="w-24"><col class="w-[15rem]"></colgroup><thead class="bg-ink-800/5 text-ink-500"><tr><th class="px-3 py-2 font-semibold">#</th><th class="px-3 py-2 font-semibold">Book</th><th class="px-3 py-2 font-semibold">Status</th><th class="px-3 py-2 font-semibold">Actions</th></tr></thead><tbody>${seriesBooks.sort((a, b) => Number(a.seriesNumber || 0) - Number(b.seriesNumber || 0) || String(a.title).localeCompare(String(b.title))).map(book => `<tr class="border-t border-ink-100 align-top"><td class="px-3 py-3 text-ink-500">${esc(book.seriesNumber || '-')}</td><td class="px-3 py-3"><p class="font-semibold text-ink-800 break-words">${esc(book.title)}</p><p class="mt-0.5 text-ink-500">${esc(book.author || '')}</p></td><td class="px-3 py-3">${statusBadge(book.status)}</td><td class="px-3 py-3"><div class="flex flex-wrap gap-1.5">${ownBookActions(book)}</div></td></tr>`).join('')}</tbody></table></div>`;
       grid.appendChild(details);
     });
     standalone.sort((a, b) => String(a.title).localeCompare(String(b.title))).forEach(book => grid.insertAdjacentHTML('beforeend', renderBookCard(book, ownBookActions(book))));
@@ -1406,7 +1495,17 @@
       document.getElementById('empty-state').classList.toggle('hidden', books.length > 0);
       if (books.length) renderOwnShelf(books);
       else document.getElementById('books-grid').innerHTML = '';
+      renderLentOutBooks(books.filter(book => book.status === 'Lent Out'));
     }, listenerError('your library'));
+  }
+
+  function renderLentOutBooks(books) {
+    const panel = document.getElementById('lent-out-panel');
+    const grid = document.getElementById('lent-out-books-grid');
+    if (!panel || !grid) return;
+    panel.classList.toggle('hidden', !books.length);
+    document.getElementById('lent-out-count').textContent = books.length ? `${books.length} out now` : '';
+    grid.innerHTML = books.map(book => renderBookCard(book, ownBookActions(book))).join('');
   }
 
   function fetchBorrowedBooks() {
@@ -1419,7 +1518,8 @@
         const book = { id: doc.id, ...doc.data() };
         if (book.status !== 'Lent Out') return;
         borrowedBooksCache.push(book);
-        const actions = `<span class="flex items-center gap-1 text-xs font-semibold ${timestampMillis(book.loanDueAt) < Date.now() ? 'text-rust-600' : 'text-ink-500'}">${icon('clock','w-3.5 h-3.5')}${timestampMillis(book.loanDueAt) < Date.now() ? 'Return overdue' : 'Due within 14 days'}</span>`;
+        const returnAction = book.returnRequestedAt ? `<span class="text-xs font-semibold text-ink-500">Return request sent</span>` : `<button data-action="request-return" data-id="${esc(book.id)}" class="flex items-center gap-1 text-ink-600 bg-ink-600/10 hover:bg-ink-600/20 px-2.5 py-1 text-xs font-semibold rounded-lg">${icon('handshake','w-3.5 h-3.5')}Request return</button>`;
+        const actions = `${returnAction}<span class="flex items-center gap-1 text-xs font-semibold ${timestampMillis(book.loanDueAt) < Date.now() ? 'text-rust-600' : 'text-ink-500'}">${icon('clock','w-3.5 h-3.5')}${timestampMillis(book.loanDueAt) < Date.now() ? 'Return overdue' : 'Due within 14 days'}</span>`;
         grid.insertAdjacentHTML('beforeend', renderBookCard(book, actions, null, 'borrower'));
       });
       empty.classList.toggle('hidden', borrowedBooksCache.length > 0);
@@ -1635,6 +1735,18 @@
   }
 
   let savedBooksCache = [];
+  function savedBookDocumentId(bookId) { return `${currentUser.uid}_${bookId}`; }
+  function isBookSaved(bookId) { return savedBooksCache.some(book => book.bookId === bookId); }
+  function savedBookButton(book) {
+    const saved = isBookSaved(book.id);
+    return `<button data-action="toggle-save-book" data-id="${esc(book.id)}" title="${saved ? 'Remove saved book' : 'Save book for later'}" aria-label="${saved ? 'Remove saved book' : 'Save book for later'}" class="saved-book-toggle p-1.5 rounded-lg ${saved ? 'bg-rust-600/10 text-rust-600' : 'text-ink-500 hover:bg-ink-800/10 hover:text-ink-800'}">${icon('bookmark', `w-4 h-4 ${saved ? 'fill-current' : ''}`)}</button>`;
+  }
+  function refreshSavedBookButtons() {
+    document.querySelectorAll('[data-save-book-id]').forEach(holder => {
+      const book = searchBookCache[holder.dataset.saveBookId];
+      if (book) holder.innerHTML = savedBookButton(book);
+    });
+  }
   function renderSavedBooks() {
     const list = document.getElementById('saved-books-list');
     if (!list) return;
@@ -1642,21 +1754,28 @@
       list.innerHTML = '<p class="text-xs text-ink-400">Save a book from Search to keep it here for later.</p>';
       return;
     }
-    list.innerHTML = savedBooksCache.map(book => `<div class="flex items-center justify-between gap-3 rounded-lg border border-ink-200 bg-paper/70 px-3 py-2"><div class="min-w-0"><p class="truncate text-xs font-semibold text-ink-800">${esc(book.title || 'Untitled book')}</p><p class="truncate text-[11px] text-ink-500">${esc(book.author || '')}${book.seriesName ? ` · ${esc(book.seriesName)}` : ''}</p></div><button data-action="delete-saved-book" data-id="${esc(book.id)}" class="shrink-0 p-1 text-rust-600" title="Remove saved book">${icon('x','w-3.5 h-3.5')}</button></div>`).join('');
+    list.innerHTML = savedBooksCache.map(book => `<div class="flex items-center gap-3 rounded-lg border border-ink-200 bg-paper/70 p-3"><div class="h-12 w-9 shrink-0 overflow-hidden rounded border border-ink-200 bg-ink-800/5">${book.coverUrl ? `<img src="${esc(safeUrl(book.coverUrl))}" alt="" class="h-full w-full object-cover">` : ''}</div><div class="min-w-0 flex-1"><button data-action="search-book" data-query="${esc(book.title || '')}" class="block max-w-full truncate text-left text-sm font-semibold text-ink-800 hover:text-rust-600">${esc(book.title || 'Untitled book')}</button><p class="truncate text-[11px] text-ink-500">${esc(book.author || '')}${book.seriesName ? ` · ${esc(book.seriesName)}` : ''}</p><p class="truncate text-[10px] text-ink-400">${esc(book.ownerName || 'Saved from CloudLibrary')}</p></div><button data-action="delete-saved-book" data-id="${esc(book.id)}" class="shrink-0 p-1 text-rust-600" title="Remove saved book">${icon('x','w-3.5 h-3.5')}</button></div>`).join('');
   }
   function fetchSavedBooks() {
     db.collection('savedBooks').where('userId', '==', currentUser.uid).limit(50).onSnapshot(snapshot => {
       savedBooksCache = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       renderSavedBooks();
+      refreshSavedBookButtons();
     }, listenerError('saved books'));
   }
   async function saveBookForLater(book) {
-    const id = `${currentUser.uid}_${book.id}`;
+    const id = savedBookDocumentId(book.id);
     const result = await guard(() => db.collection('savedBooks').doc(id).set({
       userId: currentUser.uid, bookId: book.id, title: book.title || '', author: book.author || '', seriesName: book.seriesName || '',
       coverUrl: book.coverUrl || '', ownerId: book.ownerId || '', ownerName: book.ownerName || '', createdAt: firebase.firestore.FieldValue.serverTimestamp()
     }), { context: 'Saving book', success: 'Saved to your profile.' });
     return result;
+  }
+  async function toggleSavedBook(book) {
+    if (isBookSaved(book.id)) {
+      return guard(() => db.collection('savedBooks').doc(savedBookDocumentId(book.id)).delete(), { context: 'Removing saved book', success: 'Removed from saved books.' });
+    }
+    return saveBookForLater(book);
   }
 
   async function notifyWishers(book) {
@@ -1687,9 +1806,15 @@
   window.markReturned = async function (id) {
     const book = myBooksCache[id];
     if (!book || book.status !== 'Lent Out' || !book.borrowerId) return toast('This book is no longer recorded as lent out.', 'error');
-    const res = await guard(() => lendingFunctions.httpsCallable('closeLoan')({ bookId: id, outcome: 'returned' }), { context: 'Marking a book returned', success: 'Book marked returned and the reader score updated.' });
+    if (!book.returnRequestedAt) return toast('Wait for the borrower to request the return before confirming.', 'info');
+    const res = await guard(() => lendingFunctions.httpsCallable('closeLoan')({ bookId: id, outcome: 'returned' }), { context: 'Confirming a returned book', success: 'Return confirmed and the reader score updated.' });
     if (res !== FAILED) ratingCache.delete(book.borrowerId);
   };
+
+  async function requestReturn(bookId) {
+    const res = await guard(() => lendingFunctions.httpsCallable('requestReturn')({ bookId }), { context: 'Requesting a return', success: 'Return request sent. Ask the owner to confirm once they have the book.' });
+    return res;
+  }
 
   window.markLost = async function (id) {
     const book = myBooksCache[id];
@@ -1937,10 +2062,15 @@
       grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4">No books match these filters.</p>';
       return;
     }
+    const friendBookActions = book => {
+      searchBookCache[book.id] = book;
+      const saveButton = `<span data-save-book-id="${esc(book.id)}">${savedBookButton(book)}</span>`;
+      return book.status === 'Available'
+        ? `${borrowActionWrapper(book.id, book.title, activeFriendShelf.uid)}${saveButton}`
+        : `<span class="text-xs text-ink-400">Unavailable</span>${saveButton}`;
+    };
     const renderFriendBook = book => {
-      const actions = book.status === 'Available'
-        ? borrowActionWrapper(book.id, book.title, activeFriendShelf.uid)
-        : `<span class="text-xs text-ink-400">Unavailable</span>`;
+      const actions = friendBookActions(book);
       return renderBookCard(book, actions);
     };
     const grouped = new Map();
@@ -1951,7 +2081,7 @@
     const standalone = books.filter(book => !String(book.seriesName || '').trim());
     grid.innerHTML = [...grouped.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([seriesName, seriesBooks]) => {
       const available = seriesBooks.filter(book => book.status === 'Available').length;
-      return `<details class="app-panel border border-ink-200 shadow-sm rounded-xl overflow-hidden"><summary class="cursor-pointer list-none flex items-center justify-between gap-3 px-3 py-3"><span class="min-w-0"><span class="font-display text-base text-ink-950 block truncate">${esc(seriesName)}</span><span class="text-xs text-ink-500">${seriesBooks.length} books · ${available} available</span></span><span class="text-xs font-semibold text-ink-700">View series</span></summary><div class="grid grid-cols-1 gap-3 border-t border-ink-200 p-3">${seriesBooks.sort((a, b) => Number(a.seriesNumber || 0) - Number(b.seriesNumber || 0) || String(a.title).localeCompare(String(b.title))).map(renderFriendBook).join('')}</div></details>`;
+      return `<details class="series-stack app-panel border border-ink-200 shadow-sm rounded-xl overflow-hidden"><summary class="cursor-pointer list-none flex items-center justify-between gap-3 px-3 py-3"><span class="min-w-0"><span class="font-display text-base text-ink-950 block truncate">${esc(seriesName)}</span><span class="text-xs text-ink-500">${seriesBooks.length} books · ${available} available</span></span><span class="text-xs font-semibold text-ink-700">View series</span></summary><div class="series-table-wrap border-t border-ink-200"><table class="w-full min-w-[620px] table-fixed text-left text-xs"><colgroup><col class="w-10"><col><col class="w-24"><col class="w-32"></colgroup><thead class="bg-ink-800/5 text-ink-500"><tr><th class="px-3 py-2 font-semibold">#</th><th class="px-3 py-2 font-semibold">Book</th><th class="px-3 py-2 font-semibold">Status</th><th class="px-3 py-2 font-semibold">Actions</th></tr></thead><tbody>${seriesBooks.sort((a, b) => Number(a.seriesNumber || 0) - Number(b.seriesNumber || 0) || String(a.title).localeCompare(String(b.title))).map(book => `<tr class="border-t border-ink-100 align-top"><td class="px-3 py-3 text-ink-500">${esc(book.seriesNumber || '-')}</td><td class="px-3 py-3"><p class="font-semibold text-ink-800 break-words">${esc(book.title)}</p><p class="mt-0.5 text-ink-500">${esc(book.author || '')}</p></td><td class="px-3 py-3">${statusBadge(book.status)}</td><td class="px-3 py-3"><div class="flex flex-wrap gap-1.5">${friendBookActions(book)}</div></td></tr>`).join('')}</tbody></table></div></details>`;
     }).join('') + standalone.sort((a, b) => String(a.title).localeCompare(String(b.title))).map(renderFriendBook).join('');
   }
 
@@ -1987,6 +2117,8 @@
   // --- 7. GLOBAL SEARCH ---
   async function performGlobalSearch() {
     const query = document.getElementById('global-search-input').value.trim().toLowerCase();
+    const queryTerms = query.match(/[a-z0-9]+/g) || [];
+    const lookupToken = [...queryTerms].sort((first, second) => second.length - first.length)[0] || query;
     const statusFilter = document.getElementById('search-status-filter').value;
     const genreFilter = document.getElementById('search-genre-filter').value;
     const grid = document.getElementById('search-results-grid');
@@ -2008,12 +2140,12 @@
       const friendBookQuery = confirmedFriends.length
         ? guard(() => db.collection('bookDiscovery')
           .where('ownerId', 'in', confirmedFriends.slice(0, 30))
-          .where('searchTokens', 'array-contains', query).limit(10).get(), { context: 'Searching friends' })
+          .where('searchTokens', 'array-contains', lookupToken).limit(10).get(), { context: 'Searching friends' })
         : Promise.resolve({ docs: [] });
       const [friendBookSnap, bookSnap, profileSnap] = await Promise.all([
         friendBookQuery,
-        guard(() => db.collection('bookDiscovery').where('searchTokens', 'array-contains', query).limit(10).get(), { context: 'Searching the network' }),
-        guard(() => db.collection('profiles').where('searchTokens', 'array-contains', query).limit(10).get(), { context: 'Searching readers' })
+        guard(() => db.collection('bookDiscovery').where('searchTokens', 'array-contains', lookupToken).limit(10).get(), { context: 'Searching the network' }),
+        guard(() => db.collection('profiles').where('searchTokens', 'array-contains', lookupToken).limit(10).get(), { context: 'Searching readers' })
       ]);
       if (friendBookSnap === FAILED || bookSnap === FAILED || profileSnap === FAILED) { grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4">Search failed. Please try again.</p>'; return; }
       friendBooks = friendBookSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -2023,12 +2155,14 @@
     }
     grid.innerHTML = '';
     const shown = new Set();
+    const matchesTerms = values => queryTerms.every(term => values.some(value => String(value || '').toLowerCase().includes(term)));
     const addBook = (book, isFriend) => {
       if (shown.has(`book:${book.id}`) || book.ownerId === currentUser.uid) return;
+      if (!matchesTerms([book.title, book.author, book.seriesName, book.ownerName])) return;
       if ((statusFilter && book.status !== statusFilter) || (genreFilter && book.genre !== genreFilter)) return;
       shown.add(`book:${book.id}`);
       searchBookCache[book.id] = book;
-      const saveButton = `<button data-action="save-book" data-id="${esc(book.id)}" class="text-xs font-semibold text-ink-600 hover:text-ink-950">Save</button>`;
+      const saveButton = `<span data-save-book-id="${esc(book.id)}">${savedBookButton(book)}</span>`;
       const actions = isFriend && book.status === 'Available'
         ? `${borrowActionWrapper(book.id, book.title, book.ownerId)}${saveButton}`
         : `<button data-action="open-reader-profile" data-uid="${esc(book.ownerId)}" class="text-rust-600 bg-rust-600/10 hover:bg-rust-600/20 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">View profile</button>${saveButton}`;
@@ -2037,6 +2171,7 @@
     friendBooks.forEach(book => addBook(book, true));
     profiles.forEach(profile => {
       if (profile.id === currentUser.uid || shown.has(`profile:${profile.id}`)) return;
+      if (!matchesTerms([profile.libraryName, profile.ownerName, profile.shelfKey])) return;
       const isFriend = confirmedFriends.includes(profile.id);
       shown.add(`profile:${profile.id}`);
       const name = profile.libraryName || 'Unnamed library';
@@ -2154,7 +2289,7 @@
     }
     const items = allItems.filter(item => {
       if (inboxFilter === 'pending') return item.status === 'pending';
-      if (inboxFilter === 'borrow') return item.type === 'borrow' || item.type === 'return-reminder';
+      if (inboxFilter === 'borrow') return item.type === 'borrow' || item.type === 'return-reminder' || item.type === 'return-request';
       if (inboxFilter === 'friend') return item.kind === 'friend';
       if (inboxFilter === 'completed') return item.status !== 'pending';
       return true;
@@ -2179,6 +2314,16 @@
           <button data-action="accept-friend" data-id="${esc(req.id)}" class="bg-ink-600/10 text-ink-700 hover:bg-ink-600/20 p-2 rounded-lg" title="Accept">${icon('check','w-4 h-4')}</button>
           <button data-action="decline-friend" data-id="${esc(req.id)}" class="bg-rust-600/10 text-rust-600 hover:bg-rust-600/20 p-2 rounded-lg" title="Decline">${icon('x','w-4 h-4')}</button>` : '';
         inboxBody.insertAdjacentHTML('beforeend', inboxCard('users', 'Friend request', `<button data-action="open-reader-profile" data-uid="${esc(req.user1)}" class="text-rust-600 font-semibold hover:underline">${esc(req.user1Name)}</button> wants to connect libraries with you.`, actions, req.status, req.createdAt));
+        return;
+      }
+
+      if (req.type === 'return-request') {
+        const isOwner = req.ownerId === currentUser.uid;
+        const body = isOwner
+          ? `<span class="text-rust-600 font-semibold">${esc(req.requesterName || 'The borrower')}</span> says "${esc(req.title)}" has been returned. Confirm after you have the physical book.`
+          : `You asked <span class="text-rust-600 font-semibold">${esc(req.ownerName || 'the owner')}</span> to confirm the return of "${esc(req.title)}".`;
+        const actions = isOwner && req.status === 'pending' ? `<button data-action="mark-returned" data-id="${esc(req.bookId)}" class="bg-ink-600/10 text-ink-700 hover:bg-ink-600/20 px-3 py-1.5 rounded-lg text-xs font-semibold">Confirm returned</button>` : '';
+        inboxBody.insertAdjacentHTML('beforeend', inboxCard('handshake', 'Return handoff', body, actions, req.status, req.confirmedAt || req.createdAt));
         return;
       }
 
@@ -2300,6 +2445,7 @@
       case 'edit-book': openEditModal(d.id); break;
       case 'delete-book': deleteBook(d.id); break;
       case 'mark-returned': markReturned(d.id); break;
+      case 'request-return': requestReturn(d.id); break;
       case 'mark-lost': markLost(d.id); break;
       case 'send-reminder': sendReturnReminder(d.id); break;
       case 'borrow': sendBorrowRequest(d.id, d.title, d.owner); break;
@@ -2320,7 +2466,9 @@
       case 'cleanup-inbox': cleanUpInbox(); break;
       case 'delete-wish': guard(() => db.collection('wishlists').doc(d.id).delete(), { context: 'Removing wishlist item', success: 'Removed from your wishlist.' }); break;
       case 'delete-saved-book': guard(() => db.collection('savedBooks').doc(d.id).delete(), { context: 'Removing saved book', success: 'Removed from saved books.' }); break;
-      case 'save-book': { const book = searchBookCache[d.id]; if (book) saveBookForLater(book); else toast('Search result details are no longer available. Search again and save the book.', 'info'); break; }
+      case 'toggle-save-book': { const book = searchBookCache[d.id]; if (book) toggleSavedBook(book); else toast('Book details are no longer available. Search again and try once more.', 'info'); break; }
+      case 'search-book': switchTab('search'); searchCache.clear(); document.getElementById('global-search-input').value = d.query || ''; performGlobalSearch(); break;
+      case 'go-search': switchTab('search'); document.getElementById('global-search-input').focus(); break;
       case 'delete-account': deleteAccount(); break;
       case 'edit-profile-introduction': openReaderProfile('self', true); break;
       case 'manage-circles': manageCircles(); break;
