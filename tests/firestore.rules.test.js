@@ -65,6 +65,7 @@ function profile(name) {
     bookCount: 0,
     timelyReturns: 0,
     totalLent: 0,
+    friendCount: 0,
     memberSince: new Date(),
     circleTags: [],
     searchTokens: [name.toLowerCase()],
@@ -170,6 +171,18 @@ test('discovery cards are server-written and cannot carry private fields', async
     bookId: 'private-card', ownerId: 'alice', title: 'Book', coverUrl: '', status: 'Available', searchTokens: ['book'],
     parentEmail: 'parent@example.com'
   }));
+});
+
+test('saved books are private, bounded records with one deterministic copy per reader', async () => {
+  const alice = env.authenticatedContext('alice').firestore();
+  const saved = {
+    userId: 'alice', bookId: 'book-1', title: 'Book', author: 'Author', seriesName: '',
+    coverUrl: '', ownerId: 'bob', ownerName: 'BobShelf', createdAt: new Date()
+  };
+  await assertSucceeds(alice.collection('savedBooks').doc('alice_book-1').set(saved));
+  await assertFails(alice.collection('savedBooks').doc('alice_another-id').set(saved));
+  await assertFails(alice.collection('savedBooks').doc('alice_book-2').set({ ...saved, bookId: 'book-2', privateNote: 'unbounded data' }));
+  await assertFails(env.authenticatedContext('bob').firestore().collection('savedBooks').doc('alice_book-1').get());
 });
 
 test('a return reminder must belong to an active loan', async () => {

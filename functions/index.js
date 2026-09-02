@@ -15,6 +15,7 @@ const MAX_CIRCLE_LIMIT = 20;
 const MAX_ACTIVE_LOANS = 3;
 const MAX_PENDING_BORROW_REQUESTS = 5;
 const MAX_PENDING_REQUESTS_PER_TITLE = 2;
+const CIRCLE_CATEGORIES = new Set(['School', 'Grade', 'Locality', 'Genre', 'Club', 'Fan group']);
 const STARTER_CIRCLES = [
   ['hxls', 'HXLS', 'School'],
   ['grade-1', 'Grade 1', 'Grade'], ['grade-2', 'Grade 2', 'Grade'], ['grade-3', 'Grade 3', 'Grade'],
@@ -225,7 +226,13 @@ exports.respondToFriendRequest = onCall(callableRuntime, async request => {
     const friendship = snap.data();
     if (friendship.user2 !== uid || friendship.status !== 'pending') throw new HttpsError('permission-denied', 'This friend request cannot be changed.');
     if (action === 'accepted') {
+      const [firstProfile, secondProfile] = await Promise.all([
+        tx.get(db.collection('profiles').doc(friendship.user1)),
+        tx.get(db.collection('profiles').doc(friendship.user2))
+      ]);
       tx.set(db.collection('networkStats').doc('current'), { totalFriendships: FieldValue.increment(1), updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+      if (firstProfile.exists) tx.update(firstProfile.ref, { friendCount: Number(firstProfile.data().friendCount || 0) + 1, updatedAt: FieldValue.serverTimestamp() });
+      if (secondProfile.exists) tx.update(secondProfile.ref, { friendCount: Number(secondProfile.data().friendCount || 0) + 1, updatedAt: FieldValue.serverTimestamp() });
     }
     tx.update(friendshipRef, { status: action, respondedAt: FieldValue.serverTimestamp() });
     return { action };
@@ -241,8 +248,14 @@ exports.removeFriend = onCall(callableRuntime, async request => {
     if (!snap.exists) throw new HttpsError('not-found', 'Friendship no longer exists.');
     const friendship = snap.data();
     if (friendship.status !== 'accepted' || (friendship.user1 !== uid && friendship.user2 !== uid)) throw new HttpsError('permission-denied', 'This friendship cannot be removed.');
+    const [firstProfile, secondProfile] = await Promise.all([
+      tx.get(db.collection('profiles').doc(friendship.user1)),
+      tx.get(db.collection('profiles').doc(friendship.user2))
+    ]);
     tx.delete(friendshipRef);
     tx.set(db.collection('networkStats').doc('current'), { totalFriendships: FieldValue.increment(-1), updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+    if (firstProfile.exists) tx.update(firstProfile.ref, { friendCount: Math.max(0, Number(firstProfile.data().friendCount || 0) - 1), updatedAt: FieldValue.serverTimestamp() });
+    if (secondProfile.exists) tx.update(secondProfile.ref, { friendCount: Math.max(0, Number(secondProfile.data().friendCount || 0) - 1), updatedAt: FieldValue.serverTimestamp() });
     return { removed: true };
   });
 });
@@ -342,6 +355,7 @@ exports.createCircle = onCall(callableRuntime, async request => {
   await requireCommunityAdmin(request);
   const name = requireString(request.data?.name, 'Circle name').slice(0, 60);
   const category = requireString(request.data?.category, 'Circle category').slice(0, 40);
+  if (!CIRCLE_CATEGORIES.has(category)) throw new HttpsError('invalid-argument', 'Choose a supported circle category.');
   const circleRef = db.collection('circles').doc();
   await circleRef.set({ circleId: circleRef.id, name, category, active: true, bootstrap: false, createdAt: FieldValue.serverTimestamp() });
   return { id: circleRef.id, name, category };
@@ -763,30 +777,6 @@ async function refreshBookCount(ownerId) {
   await profileSnap.ref.update({ bookCount, ratingScore, updatedAt: FieldValue.serverTimestamp() });
 }
 
-async function notifyWishers(bookId, book, friendIds) {
-  const titleKey = String(book.title || '').trim().toLowerCase().replace(/\s+/g, ' ');
-  if (!titleKey || !friendIds.length) return;
-  const wishes = await db.collection('wishlists').where('titleKey', '==', titleKey).limit(50).get();
-  const batch = db.batch();
-  wishes.docs.forEach(wish => {
-    const data = wish.data();
-    if (friendIds.includes(data.userId)) {
-      batch.set(db.collection('requests').doc(`wishlist-${bookId}-${wish.id}`), {
-        type: 'wishlist-match', bookId, title: book.title || 'Untitled book',
-        ownerId: book.ownerId, ownerName: book.ownerName || 'A friend',
-        requesterId: data.userId, requesterName: data.userName || 'Friend',
-        status: 'completed', createdAt: FieldValue.serverTimestamp()
-      });
-      batch.set(db.collection('tickerActivities').doc(`wishlist-${bookId}-${wish.id}-${data.userId}`), {
-        recipientId: data.userId, type: 'wishlist-match', actorId: book.ownerId,
-        actorName: book.ownerName || 'A friend', ownerId: book.ownerId,
-        title: book.title || 'Untitled book', createdAt: FieldValue.serverTimestamp()
-      });
-    }
-  });
-  if (wishes.size) await batch.commit();
-}
-
 exports.onBookCreated = onDocumentCreated({ ...runtime, document: 'books/{bookId}' }, event => {
   const book = event.data.data();
   const coreWrites = [
@@ -797,7 +787,6 @@ exports.onBookCreated = onDocumentCreated({ ...runtime, document: 'books/{bookId
   if (book.quietImport) return Promise.all(coreWrites);
   return acceptedFriendIds(book.ownerId).then(friendIds => Promise.all([
     ...coreWrites,
-      notifyWishers(event.params.bookId, book, friendIds),
       writeTickerActivities(friendIds, `added-${event.params.bookId}`, {
         type: book.status === 'Available' ? 'book-added' : 'book-reading',
         actorId: book.ownerId, actorName: book.ownerName || 'A friend',
@@ -879,11 +868,15 @@ async function notifyFriendsOfAccountDeletion(userId, readerName) {
     if (friendship.status === 'accepted') friendIds.add(friendship.user1 === userId ? friendship.user2 : friendship.user1);
   });
   if (!friendIds.size) return;
+  const friendProfiles = await db.getAll(...[...friendIds].map(friendId => db.collection('profiles').doc(friendId)));
   const batch = db.batch();
   friendIds.forEach(friendId => batch.set(db.collection('requests').doc(), {
     type: 'account-deleted', ownerId: friendId, requesterId: userId,
     requesterName: readerName || 'A reader', status: 'completed', createdAt: FieldValue.serverTimestamp()
   }));
+  friendProfiles.filter(profile => profile.exists).forEach(profile => {
+    batch.update(profile.ref, { friendCount: Math.max(0, Number(profile.data().friendCount || 0) - 1), updatedAt: FieldValue.serverTimestamp() });
+  });
   await batch.commit();
 }
 
@@ -906,10 +899,15 @@ exports.deleteMyAccount = onCall(callableRuntime, async request => {
     deleteQuery(db.collection('friendships').where('user2', '==', uid)),
     deleteQuery(db.collection('wishlists').where('userId', '==', uid)),
     deleteQuery(db.collection('savedBooks').where('userId', '==', uid)),
-    deleteQuery(db.collection('ratingEvents').where('subjectId', '==', uid))
+    deleteQuery(db.collection('ratingEvents').where('subjectId', '==', uid)),
+    deleteQuery(db.collection('circleMemberships').where('userId', '==', uid)),
+    deleteQuery(db.collection('tickerActivities').where('recipientId', '==', uid)),
+    deleteQuery(db.collection('bookLoanStats').where('ownerId', '==', uid)),
+    deleteQuery(db.collection('feedback').where('reporterId', '==', uid))
   ]);
   const batch = db.batch();
   if (profile.exists && profile.data().shelfKey) batch.delete(db.collection('shelfNames').doc(profile.data().shelfKey));
+  batch.delete(db.collection('networkTicker').doc(`member-${uid}`));
   batch.delete(db.collection('profiles').doc(uid));
   await batch.commit();
   await getStorage().bucket().deleteFiles({ prefix: `covers/${uid}/`, force: true }).catch(() => undefined);

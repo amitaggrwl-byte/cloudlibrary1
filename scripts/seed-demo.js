@@ -25,7 +25,7 @@ const circles = [
   ['hxls', 'HXLS', 'School'],
   ['grade-5', 'Grade 5', 'Grade'],
   ['gurgaon', 'Gurgaon', 'Locality'],
-  ['dlf-phase-5', 'DLF Phase 5', 'Society'],
+  ['dlf-phase-5', 'DLF Phase 5', 'Locality'],
   ['fantasy-adventures', 'Fantasy & Adventures', 'Genre'],
   ['mystery-detectives', 'Mystery Detectives', 'Club'],
   ['harry-potter', 'Harry Potter Readers', 'Fan group']
@@ -55,7 +55,7 @@ async function main() {
     batch.set(db.collection('profiles').doc(uid), {
       libraryName, shelfKey: libraryName.toLowerCase(), ownerName: libraryName,
       photoURL: '', bio, ratingScore: uid === 'alex' ? 4.2 : 3.4,
-      ratingAdjustment: 0, bookCount: uid === 'bella' ? 3 : 2, timelyReturns: uid === 'alex' ? 2 : 0,
+      ratingAdjustment: 0, bookCount: uid === 'bella' ? 3 : 2, timelyReturns: uid === 'alex' ? 2 : 0, friendCount: uid === 'carlos' ? 0 : 1,
       memberSince: FieldValue.serverTimestamp(), circleTags, searchTokens: tokens(libraryName), updatedAt: FieldValue.serverTimestamp()
     });
     batch.set(db.collection('shelfNames').doc(libraryName.toLowerCase()), { ownerId: uid, createdAt: FieldValue.serverTimestamp() });
@@ -84,7 +84,7 @@ async function main() {
     batch.set(db.collection('books').doc(id), book);
     batch.set(db.collection('bookDiscovery').doc(id), {
       bookId: id, ownerId, ownerName, title, author, genre: 'Fiction',
-      publishedYear: null, rating: 4, coverUrl: '', status,
+      publishedYear: null, rating: 4, coverUrl: '', status, suggestionBucket: Math.random(),
       searchTokens: tokens(title, author), updatedAt: FieldValue.serverTimestamp()
     });
   });

@@ -14,7 +14,7 @@ service cloud.firestore {
     function publicProfileFields(data) {
       return data.keys().hasOnly([
         'libraryName', 'shelfKey', 'ownerName', 'photoURL', 'bio',
-        'ratingScore', 'ratingAdjustment', 'bookCount', 'timelyReturns', 'totalLent', 'memberSince',
+        'ratingScore', 'ratingAdjustment', 'bookCount', 'timelyReturns', 'totalLent', 'friendCount', 'memberSince',
         'searchTokens', 'circleTags', 'updatedAt'
       ]);
     }
@@ -27,6 +27,8 @@ service cloud.firestore {
         && request.resource.data.ratingAdjustment == resource.data.ratingAdjustment
         && request.resource.data.bookCount == resource.data.bookCount
         && request.resource.data.timelyReturns == resource.data.timelyReturns
+        && ((!resource.data.keys().hasAll(['friendCount']) && request.resource.data.friendCount == 0)
+          || request.resource.data.friendCount == resource.data.friendCount)
         && ((!resource.data.keys().hasAll(['totalLent']) && request.resource.data.totalLent == 0)
           || request.resource.data.totalLent == resource.data.totalLent)
         && request.resource.data.memberSince == resource.data.memberSince
@@ -77,6 +79,19 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/books/$(data.bookId)).data.status == 'Lent Out'
         && get(/databases/$(database)/documents/books/$(data.bookId)).data.borrowerId == data.requesterId;
     }
+    function validSavedBook(savedBookId, data) {
+      return data.keys().hasOnly(['userId', 'bookId', 'title', 'author', 'seriesName', 'coverUrl', 'ownerId', 'ownerName', 'createdAt'])
+        && data.userId == request.auth.uid
+        && data.bookId is string && data.bookId.size() > 0 && data.bookId.size() <= 150
+        && savedBookId == request.auth.uid + '_' + data.bookId
+        && data.title is string && data.title.size() <= 200
+        && data.author is string && data.author.size() <= 160
+        && data.seriesName is string && data.seriesName.size() <= 200
+        && data.coverUrl is string && data.coverUrl.size() <= 2000
+        && data.ownerId is string && data.ownerId.size() <= 150
+        && data.ownerName is string && data.ownerName.size() <= 80
+        && data.createdAt is timestamp;
+    }
 
     // Public discovery profiles contain no email address or other contact data.
     match /profiles/{userId} {
@@ -91,6 +106,7 @@ service cloud.firestore {
         && request.resource.data.bookCount == 0
         && request.resource.data.timelyReturns == 0
         && request.resource.data.totalLent == 0
+        && request.resource.data.friendCount == 0
         && request.resource.data.circleTags == []
         && request.resource.data.memberSince is timestamp;
       allow update: if own(userId) && validShelfName(request.resource.data)
@@ -230,7 +246,7 @@ service cloud.firestore {
       allow get: if signedIn() && resource.data.userId == request.auth.uid;
       allow list: if signedIn() && request.query.limit != null && request.query.limit <= 50
         && resource.data.userId == request.auth.uid;
-      allow create: if signedIn() && request.resource.data.userId == request.auth.uid;
+      allow create: if signedIn() && validSavedBook(savedBookId, request.resource.data);
       allow delete: if signedIn() && resource.data.userId == request.auth.uid;
       allow update: if false;
     }

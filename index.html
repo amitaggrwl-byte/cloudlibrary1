@@ -1720,6 +1720,7 @@
       bookCount: Number(profile.bookCount || 0),
       timelyReturns: Number(profile.timelyReturns || 0),
       totalLent: Number(profile.totalLent || 0),
+      friendCount: Number(profile.friendCount || 0),
       memberSince: profile.memberSince || firebase.firestore.FieldValue.serverTimestamp(),
       circleTags: Array.isArray(profile.circleTags) ? profile.circleTags.slice(0, 20) : [],
       searchTokens: searchTokens(profile.libraryName, profile.ownerName, profile.shelfKey),
@@ -1776,12 +1777,6 @@
       return guard(() => db.collection('savedBooks').doc(savedBookDocumentId(book.id)).delete(), { context: 'Removing saved book', success: 'Removed from saved books.' });
     }
     return saveBookForLater(book);
-  }
-
-  async function notifyWishers(book) {
-    // Matching is handled by the trusted onBookCreated Function. Keeping this
-    // stub avoids an unsafe client-side collection query for older callers.
-    return undefined;
   }
 
   window.deleteBook = async function (id) {
@@ -2464,7 +2459,6 @@
       case 'complete-reminder': completeReminder(d.id); break;
       case 'cancel-reminder': cancelReminder(d.id); break;
       case 'cleanup-inbox': cleanUpInbox(); break;
-      case 'delete-wish': guard(() => db.collection('wishlists').doc(d.id).delete(), { context: 'Removing wishlist item', success: 'Removed from your wishlist.' }); break;
       case 'delete-saved-book': guard(() => db.collection('savedBooks').doc(d.id).delete(), { context: 'Removing saved book', success: 'Removed from saved books.' }); break;
       case 'toggle-save-book': { const book = searchBookCache[d.id]; if (book) toggleSavedBook(book); else toast('Book details are no longer available. Search again and try once more.', 'info'); break; }
       case 'search-book': switchTab('search'); searchCache.clear(); document.getElementById('global-search-input').value = d.query || ''; performGlobalSearch(); break;
