@@ -14,7 +14,7 @@ service cloud.firestore {
     function publicProfileFields(data) {
       return data.keys().hasOnly([
         'libraryName', 'shelfKey', 'ownerName', 'photoURL', 'bio',
-        'ratingScore', 'ratingAdjustment', 'bookCount', 'timelyReturns', 'memberSince',
+        'ratingScore', 'ratingAdjustment', 'bookCount', 'timelyReturns', 'totalLent', 'memberSince',
         'searchTokens', 'circleTags', 'updatedAt'
       ]);
     }
@@ -27,6 +27,8 @@ service cloud.firestore {
         && request.resource.data.ratingAdjustment == resource.data.ratingAdjustment
         && request.resource.data.bookCount == resource.data.bookCount
         && request.resource.data.timelyReturns == resource.data.timelyReturns
+        && ((!resource.data.keys().hasAll(['totalLent']) && request.resource.data.totalLent == 0)
+          || request.resource.data.totalLent == resource.data.totalLent)
         && request.resource.data.memberSince == resource.data.memberSince
         && (
           (!resource.data.keys().hasAll(['circleTags']) && request.resource.data.circleTags == [])
@@ -57,7 +59,7 @@ service cloud.firestore {
     }
     function validBookCreate(data) {
       return data.keys().hasOnly([
-          'title', 'author', 'genre', 'isbn', 'publishedYear', 'condition',
+          'title', 'author', 'seriesName', 'seriesNumber', 'genre', 'isbn', 'publishedYear', 'condition',
           'coverUrl', 'description', 'rating', 'status', 'ownerId', 'ownerName',
           'quietImport', 'createdAt'
         ])
@@ -88,6 +90,7 @@ service cloud.firestore {
         && request.resource.data.ratingAdjustment == 0
         && request.resource.data.bookCount == 0
         && request.resource.data.timelyReturns == 0
+        && request.resource.data.totalLent == 0
         && request.resource.data.circleTags == []
         && request.resource.data.memberSince is timestamp;
       allow update: if own(userId) && validShelfName(request.resource.data)
@@ -116,7 +119,7 @@ service cloud.firestore {
           || (resource.data.status in ['Available', 'Reading']
             && request.resource.data.status in ['Available', 'Reading']))
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
-          'title', 'author', 'genre', 'isbn', 'publishedYear', 'condition',
+          'title', 'author', 'seriesName', 'seriesNumber', 'genre', 'isbn', 'publishedYear', 'condition',
           'coverUrl', 'description', 'rating', 'status', 'updatedAt'
         ]);
       allow delete: if signedIn() && resource.data.ownerId == request.auth.uid
@@ -197,20 +200,10 @@ service cloud.firestore {
       allow get: if signedIn() && (resource.data.ownerId == request.auth.uid || resource.data.requesterId == request.auth.uid);
       allow list: if signedIn() && request.query.limit != null && request.query.limit <= 100
         && (resource.data.ownerId == request.auth.uid || resource.data.requesterId == request.auth.uid);
-      allow create: if signedIn() && (
-        (request.resource.data.type == 'borrow'
-          && request.resource.data.status == 'pending'
-          && request.resource.data.requesterId == request.auth.uid
-          && request.resource.data.ownerId != request.auth.uid
-          && get(/databases/$(database)/documents/books/$(request.resource.data.bookId)).data.ownerId == request.resource.data.ownerId
-          && get(/databases/$(database)/documents/books/$(request.resource.data.bookId)).data.status == 'Available'
-          && (
-            hasLegacyBookAccess(get(/databases/$(database)/documents/books/$(request.resource.data.bookId)).data, request.auth.uid)
-            || areConfirmedFriends(request.resource.data.ownerId, request.auth.uid)
-          ))
-        || (request.resource.data.type == 'return-reminder'
-          && validReturnReminder(request.resource.data))
-      );
+      // Borrow requests are created by createBorrowRequest so caps, duplicate
+      // prevention, and friendship checks cannot be bypassed from the browser.
+      allow create: if signedIn() && request.resource.data.type == 'return-reminder'
+        && validReturnReminder(request.resource.data);
       allow update: if signedIn() && resource.data.type == 'return-reminder'
         && resource.data.status == 'pending'
         && (
@@ -234,7 +227,10 @@ service cloud.firestore {
 
     // Ratings are written only by Firebase Functions; no browser writes are allowed.
     match /ratingEvents/{eventId} {
-      allow read, write: if false;
+      allow get: if own(resource.data.subjectId);
+      allow list: if signedIn() && request.query.limit != null && request.query.limit <= 20
+        && resource.data.subjectId == request.auth.uid;
+      allow write: if false;
     }
 
     match /feedback/{feedbackId} {

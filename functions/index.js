@@ -12,6 +12,9 @@ const callableRuntime = { ...runtime, invoker: 'public' };
 const DAY_MS = 24 * 60 * 60 * 1000;
 const DEFAULT_CIRCLE_LIMIT = 5;
 const MAX_CIRCLE_LIMIT = 20;
+const MAX_ACTIVE_LOANS = 3;
+const MAX_PENDING_BORROW_REQUESTS = 5;
+const MAX_PENDING_REQUESTS_PER_TITLE = 2;
 const STARTER_CIRCLES = [
   ['hxls', 'HXLS', 'School'],
   ['grade-1', 'Grade 1', 'Grade'], ['grade-2', 'Grade 2', 'Grade'], ['grade-3', 'Grade 3', 'Grade'],
@@ -46,6 +49,10 @@ function clampScore(value) {
 function readerScore(bookCount, ratingAdjustment) {
   // A full shelf helps, but dependable lending matters more than sheer volume.
   return clampScore(3 + Math.min(1.5, Number(bookCount || 0) * 0.15) + Number(ratingAdjustment || 0));
+}
+
+function normalizedTitle(value) {
+  return String(value || '').trim().toLowerCase().replace(/\s+/g, ' ');
 }
 
 function discoveryRef(bookId) {
@@ -102,6 +109,8 @@ function discoveryData(bookId, book) {
     ownerName: book.ownerName || 'A reader',
     title: book.title || 'Untitled book',
     author: book.author || '',
+    seriesName: book.seriesName || '',
+    seriesNumber: Number.isFinite(Number(book.seriesNumber)) ? Number(book.seriesNumber) : null,
     genre: book.genre || '',
     publishedYear: Number.isFinite(Number(book.publishedYear)) ? Number(book.publishedYear) : null,
     rating: Math.max(0, Math.min(5, Number(book.rating || 0))),
@@ -336,6 +345,36 @@ exports.rebuildCommunityStats = onCall(callableRuntime, async request => {
   return stats;
 });
 
+exports.getAdminDashboard = onCall(callableRuntime, async request => {
+  const uid = await requireCommunityAdmin(request);
+  const [configSnap, feedbackSnap] = await Promise.all([
+    db.collection('appConfig').doc('community').get(),
+    db.collection('feedback').limit(50).get()
+  ]);
+  const config = configSnap.data() || {};
+  const adminUserIds = Array.isArray(config.adminUserIds) ? config.adminUserIds : [uid];
+  const adminProfiles = await db.getAll(...adminUserIds.slice(0, 20).map(id => db.collection('profiles').doc(id)));
+  const feedback = feedbackSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+    .sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
+  return {
+    admins: adminProfiles.map(doc => ({ uid: doc.id, name: doc.data()?.libraryName || 'Deleted profile' })),
+    feedback,
+    circleLimit: circleLimitFromConfig(config)
+  };
+});
+
+exports.resolveFeedback = onCall(callableRuntime, async request => {
+  await requireCommunityAdmin(request);
+  const feedbackId = requireString(request.data?.feedbackId, 'feedbackId');
+  const status = request.data?.status;
+  if (!['resolved', 'open'].includes(status)) throw new HttpsError('invalid-argument', 'Invalid feedback status.');
+  const feedbackRef = db.collection('feedback').doc(feedbackId);
+  const feedback = await feedbackRef.get();
+  if (!feedback.exists) throw new HttpsError('not-found', 'Feedback item no longer exists.');
+  await feedbackRef.set({ status, resolvedAt: status === 'resolved' ? FieldValue.serverTimestamp() : FieldValue.delete() }, { merge: true });
+  return { status };
+});
+
 exports.cleanUpMyInbox = onCall(callableRuntime, async request => {
   const uid = requireUser(request);
   const [owned, requested, incomingFriendships] = await Promise.all([
@@ -397,6 +436,56 @@ exports.cleanUpMyInbox = onCall(callableRuntime, async request => {
   return { cleaned };
 });
 
+// Borrow requests are deliberately created by trusted code rather than from
+// the browser. This makes limits reliable even when several owners respond at
+// once or a reader has multiple tabs open.
+exports.createBorrowRequest = onCall(callableRuntime, async request => {
+  const uid = requireUser(request);
+  const bookId = requireString(request.data?.bookId, 'bookId');
+  const bookRef = db.collection('books').doc(bookId);
+  const requestRef = db.collection('requests').doc();
+  return db.runTransaction(async tx => {
+    const [bookSnap, profileSnap, activeLoans, pendingRequests] = await Promise.all([
+      tx.get(bookRef),
+      tx.get(db.collection('profiles').doc(uid)),
+      tx.get(db.collection('books').where('borrowerId', '==', uid).where('status', '==', 'Lent Out').limit(MAX_ACTIVE_LOANS + 1)),
+      tx.get(db.collection('requests').where('requesterId', '==', uid).where('status', '==', 'pending').limit(MAX_PENDING_BORROW_REQUESTS + 1))
+    ]);
+    if (!bookSnap.exists || bookSnap.data().status !== 'Available') {
+      throw new HttpsError('failed-precondition', 'This book is no longer available.');
+    }
+    const book = bookSnap.data();
+    if (book.ownerId === uid) throw new HttpsError('invalid-argument', 'You cannot borrow a book from your own shelf.');
+    if (!profileSnap.exists) throw new HttpsError('failed-precondition', 'Create your reader profile before borrowing books.');
+    if (!(await confirmedFriendship(tx, book.ownerId, uid))) {
+      throw new HttpsError('permission-denied', 'Connect as friends before requesting this book.');
+    }
+    if (activeLoans.size >= MAX_ACTIVE_LOANS) {
+      throw new HttpsError('failed-precondition', `You already have ${MAX_ACTIVE_LOANS} active loans. Return one before requesting another book.`);
+    }
+    const pendingBorrowRequests = pendingRequests.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+      .filter(item => item.type === 'borrow');
+    if (pendingBorrowRequests.some(item => item.bookId === bookId)) {
+      throw new HttpsError('already-exists', 'You already have a pending request for this copy.');
+    }
+    if (pendingBorrowRequests.length >= MAX_PENDING_BORROW_REQUESTS) {
+      throw new HttpsError('resource-exhausted', `You already have ${MAX_PENDING_BORROW_REQUESTS} pending book requests. Wait for an answer or cancel one first.`);
+    }
+    const titleKey = normalizedTitle(book.title);
+    if (pendingBorrowRequests.filter(item => item.titleKey === titleKey || normalizedTitle(item.title) === titleKey).length >= MAX_PENDING_REQUESTS_PER_TITLE) {
+      throw new HttpsError('resource-exhausted', `You can ask up to ${MAX_PENDING_REQUESTS_PER_TITLE} friends for the same title at a time.`);
+    }
+    const borrower = profileSnap.data();
+    tx.set(requestRef, {
+      type: 'borrow', bookId, title: book.title || 'Untitled book', titleKey,
+      ownerId: book.ownerId, ownerName: book.ownerName || 'A friend',
+      requesterId: uid, requesterName: borrower.libraryName || 'Reader',
+      status: 'pending', createdAt: FieldValue.serverTimestamp()
+    });
+    return { requestId: requestRef.id, title: book.title || 'Untitled book' };
+  });
+});
+
 exports.respondToBorrowRequest = onCall(callableRuntime, async request => {
   const uid = requireUser(request);
   const requestId = requireString(request.data?.requestId, 'requestId');
@@ -417,16 +506,19 @@ exports.respondToBorrowRequest = onCall(callableRuntime, async request => {
     const ownerStatsRef = db.collection('readerStats').doc(uid);
     const bookStatsRef = db.collection('bookLoanStats').doc(loan.bookId);
     const networkStatsRef = db.collection('networkStats').doc('current');
-    const [bookSnap, activeLoans, pendingRequests, borrowerStatsSnap, ownerStatsSnap, bookStatsSnap, networkStatsSnap, friendshipConfirmed] = await Promise.all([
+    const [bookSnap, activeLoans, pendingRequests, pendingForBorrower, borrowerStatsSnap, ownerStatsSnap, bookStatsSnap, networkStatsSnap, friendshipConfirmed] = await Promise.all([
       tx.get(bookRef),
-      tx.get(db.collection('books').where('borrowerId', '==', loan.requesterId).where('status', '==', 'Lent Out').limit(4)),
+      tx.get(db.collection('books').where('borrowerId', '==', loan.requesterId).where('status', '==', 'Lent Out').limit(MAX_ACTIVE_LOANS + 1)),
       tx.get(db.collection('requests').where('bookId', '==', loan.bookId).where('status', '==', 'pending').limit(100)),
+      tx.get(db.collection('requests').where('requesterId', '==', loan.requesterId).where('status', '==', 'pending').limit(MAX_PENDING_BORROW_REQUESTS + 1)),
       tx.get(borrowerStatsRef), tx.get(ownerStatsRef), tx.get(bookStatsRef), tx.get(networkStatsRef)
       , confirmedFriendship(tx, uid, loan.requesterId)
     ]);
     if (!bookSnap.exists || bookSnap.data().ownerId !== uid || bookSnap.data().status !== 'Available') throw new HttpsError('failed-precondition', 'This book is no longer available.');
     if (!friendshipConfirmed) throw new HttpsError('permission-denied', 'Only a confirmed friend can borrow this book.');
-    if (activeLoans.size >= 3) throw new HttpsError('failed-precondition', 'This reader already has three active loans.');
+    if (activeLoans.size >= MAX_ACTIVE_LOANS) {
+      throw new HttpsError('failed-precondition', `${loan.requesterName || 'This reader'} already has ${MAX_ACTIVE_LOANS} active loans. They need to return one before you can lend this book.`);
+    }
     const dueAt = Timestamp.fromMillis(Date.now() + 14 * DAY_MS);
     tx.update(requestRef, { status: 'approved', respondedAt: FieldValue.serverTimestamp(), loanDueAt: dueAt });
     tx.update(bookRef, {
@@ -442,6 +534,7 @@ exports.respondToBorrowRequest = onCall(callableRuntime, async request => {
     tx.set(borrowerStatsRef, { totalBorrowed: nextBorrowedTotal, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
     tx.set(bookStatsRef, { ownerId: uid, loanCount: nextBookLoanCount, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
     tx.set(ownerStatsRef, {
+      totalLent: Number(ownerStats.totalLent || 0) + 1,
       mostBorrowedTitle: nextBookLoanCount >= Number(ownerStats.mostBorrowedCount || 0) ? bookSnap.data().title || 'Untitled book' : ownerStats.mostBorrowedTitle || '',
       mostBorrowedCount: ownerMostBorrowed,
       updatedAt: FieldValue.serverTimestamp()
@@ -458,6 +551,14 @@ exports.respondToBorrowRequest = onCall(callableRuntime, async request => {
     pendingRequests.docs.filter(doc => doc.id !== requestId).forEach(doc => {
       tx.update(doc.ref, { status: 'denied', denialReason: 'book-unavailable', respondedAt: FieldValue.serverTimestamp() });
     });
+    // Once the third live loan begins, old unanswered requests can no longer
+    // be approved. Close them immediately and retain their history instead of
+    // leaving owners with a button that will only fail later.
+    if (activeLoans.size + 1 >= MAX_ACTIVE_LOANS) {
+      pendingForBorrower.docs.filter(doc => doc.id !== requestId && doc.data().type === 'borrow').forEach(doc => {
+        tx.update(doc.ref, { status: 'cancelled', cancellationReason: 'borrow-limit-reached', respondedAt: FieldValue.serverTimestamp() });
+      });
+    }
     return {
       action, dueAt: dueAt.toDate().toISOString(), ownerId: uid,
       ownerName: bookSnap.data().ownerName || 'A friend', borrowerId: loan.requesterId,
@@ -522,6 +623,17 @@ exports.closeLoan = onCall(callableRuntime, async request => {
       updatedAt: FieldValue.serverTimestamp()
     }, { merge: true });
     if (requestSnap?.exists) tx.update(requestRef, { status: outcome === 'lost' ? 'lost' : 'returned', returnRatingPoints: points, returnedAt: FieldValue.serverTimestamp() });
+    if (points !== 0) {
+      tx.set(db.collection('ratingEvents').doc(`${book.activeRequestId || bookId}-${outcome}`), {
+        subjectId: book.borrowerId,
+        bookId,
+        title: book.title || 'Untitled book',
+        outcome,
+        points,
+        reason: outcome === 'lost' ? 'Book reported lost' : (points > 0 ? 'Returned on time after two days' : 'Returned after the due date'),
+        createdAt: FieldValue.serverTimestamp()
+      });
+    }
     return { outcome, points, ownerId: book.ownerId, ownerName: book.ownerName || 'A friend', title: book.title || 'Untitled book', coverUrl: book.coverUrl || '', requestId: book.activeRequestId || '' };
   });
   if (outcome === 'returned') {

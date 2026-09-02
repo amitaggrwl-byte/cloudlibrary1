@@ -41,6 +41,13 @@ test.before(async () => {
     });
     await store.collection('readerStats').doc('alice').set({ totalBorrowed: 4, mostBorrowedTitle: 'Book', mostBorrowedCount: 2 });
     await store.collection('networkStats').doc('current').set({ totalLoans: 9, activeLoans: 2, highestMemberBorrowed: 4 });
+    await store.collection('ratingEvents').doc('alice-return').set({
+      subjectId: 'alice', title: 'Book', points: 0.5, reason: 'Returned on time', createdAt: new Date()
+    });
+    await store.collection('books').doc('series-book').set({
+      ownerId: 'owner', ownerName: 'OwnerShelf', title: 'The Sea of Monsters', author: 'Rick Riordan',
+      seriesName: 'Percy Jackson', seriesNumber: 2, status: 'Available'
+    });
   });
 });
 
@@ -57,6 +64,7 @@ function profile(name) {
     ratingAdjustment: 0,
     bookCount: 0,
     timelyReturns: 0,
+    totalLent: 0,
     memberSince: new Date(),
     circleTags: [],
     searchTokens: [name.toLowerCase()],
@@ -96,7 +104,7 @@ test('a full book is readable by the owner and confirmed reader only', async () 
 test('existing server-written book access keeps working during friendship migration', async () => {
   const charlie = env.authenticatedContext('charlie').firestore();
   await assertSucceeds(charlie.collection('books').doc('legacy-book').get());
-  await assertSucceeds(charlie.collection('requests').doc('legacy-borrow').set({
+  await assertFails(charlie.collection('requests').doc('legacy-borrow').set({
     type: 'borrow', bookId: 'legacy-book', ownerId: 'alice', requesterId: 'charlie', status: 'pending'
   }));
 });
@@ -109,11 +117,16 @@ test('the browser cannot lend a book or change a score directly', async () => {
   await assertFails(owner.collection('books').doc('self-shared').set({ ownerId: 'owner', title: 'Private', status: 'Available', readerIds: ['stranger'] }));
 });
 
-test('a confirmed friendship, not copied book access, authorizes a borrow request', async () => {
+test('an owner can add series metadata without changing protected loan state', async () => {
+  const owner = env.authenticatedContext('owner').firestore();
+  await assertSucceeds(owner.collection('books').doc('series-book').update({ seriesName: 'Percy Jackson & the Olympians', seriesNumber: 2 }));
+});
+
+test('borrow requests can only be created by the trusted Function', async () => {
   const bob = env.authenticatedContext('bob').firestore();
   const charlie = env.authenticatedContext('charlie').firestore();
   const request = { type: 'borrow', bookId: 'book-1', ownerId: 'alice', requesterId: 'bob', status: 'pending' };
-  await assertSucceeds(bob.collection('requests').doc('bob-borrow').set(request));
+  await assertFails(bob.collection('requests').doc('bob-borrow').set(request));
   await assertFails(charlie.collection('requests').doc('charlie-borrow').set({ ...request, requesterId: 'charlie' }));
 });
 
@@ -191,4 +204,11 @@ test('ticker statistics keep personal details private and community records anon
   await assertFails(bob.collection('readerStats').doc('alice').get());
   await assertSucceeds(alice.collection('networkStats').doc('current').get());
   await assertFails(alice.collection('networkStats').get());
+});
+
+test('score ledger entries are readable only by the reader they belong to', async () => {
+  const alice = env.authenticatedContext('alice').firestore();
+  const bob = env.authenticatedContext('bob').firestore();
+  await assertSucceeds(alice.collection('ratingEvents').where('subjectId', '==', 'alice').limit(20).get());
+  await assertFails(bob.collection('ratingEvents').where('subjectId', '==', 'alice').limit(20).get());
 });

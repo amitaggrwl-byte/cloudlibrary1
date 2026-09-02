@@ -27,6 +27,25 @@ leave only these approved tags; they cannot create circles themselves. Edit or
 deactivate a circle in Firestore when the community changes. The membership
 cap remains the `circleLimit` value in `appConfig/community`.
 
+## Review feedback and community roles
+
+The same `adminUserIds` list controls the small administrator view. An admin
+can open **Reader profile -> Manage circles -> Review feedback and admin
+roles** to see member feedback, mark it resolved, and see the configured
+administrator profiles. Add or remove an administrator UID only in
+`appConfig/community`; it is intentionally not a general reader setting.
+
+## Borrowing limits and history
+
+- Readers can hold up to three active loans.
+- Readers can keep up to five unanswered book requests, and up to two for the
+  same title.
+- When a third loan is approved, other outstanding book requests are closed
+  automatically with an explanation for the affected reader and owner.
+- The home screen shows active loans. The separate **Borrowing history** view
+  reads only the latest 20 history items; it does not grow the dashboard or
+  load a reader's entire history.
+
 ## Local verification
 
 1. Install launch-check dependencies with `npm install` in the repository root and `npm install` in `functions`.
