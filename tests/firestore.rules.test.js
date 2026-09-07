@@ -15,6 +15,7 @@ test.before(async () => {
     projectId,
     firestore: { rules: readFileSync('firestore.rules', 'utf8') }
   });
+  await env.clearFirestore();
   await env.withSecurityRulesDisabled(async context => {
     const store = context.firestore();
     await store.collection('books').doc('book-1').set({
@@ -52,6 +53,29 @@ test.before(async () => {
 });
 
 test.after(async () => env.cleanup());
+
+test('a crafted friendship cannot grant its sender approval rights', async () => {
+  const attacker = env.authenticatedContext('attacker').firestore();
+  await assertFails(attacker.collection('friendships').doc('attacker__victim').set({
+    user1: 'attacker', user2: 'victim', senderId: 'attacker', userId: 'attacker', status: 'pending'
+  }));
+  await assertSucceeds(attacker.collection('friendships').doc('attacker__victim').set({
+    user1:'attacker', user2:'victim', senderId:'attacker', status:'pending'
+  }));
+  await assertFails(attacker.collection('friendships').doc('attacker__victim').update({status:'accepted'}));
+  await assertSucceeds(attacker.collection('friendships').doc('attacker__victim').delete());
+});
+
+test('readers cannot bypass account cleanup by deleting their profile', async () => {
+  await assertFails(env.authenticatedContext('owner').firestore().collection('profiles').doc('owner').delete());
+});
+
+test('loan participants cannot erase shared loan records', async () => {
+  await env.withSecurityRulesDisabled(async context => {
+    await context.firestore().collection('requests').doc('protected-history').set({ownerId:'owner',requesterId:'reader',type:'borrow',status:'approved'});
+  });
+  await assertFails(env.authenticatedContext('owner').firestore().collection('requests').doc('protected-history').delete());
+});
 
 function profile(name) {
   return {

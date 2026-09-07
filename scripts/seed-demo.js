@@ -60,7 +60,7 @@ async function main() {
     });
     batch.set(db.collection('shelfNames').doc(libraryName.toLowerCase()), { ownerId: uid, createdAt: FieldValue.serverTimestamp() });
   });
-  batch.set(db.collection('appConfig').doc('community'), { adminUserIds: ['alex'], circleLimit: 5, updatedAt: FieldValue.serverTimestamp() });
+  batch.set(db.collection('appConfig').doc('community'), { adminUserIds: ['alex'], circleLimit: 6, updatedAt: FieldValue.serverTimestamp() });
   circles.forEach(([id, name, category]) => {
     batch.set(db.collection('circles').doc(id), { name, category, active: true, createdAt: FieldValue.serverTimestamp() });
   });

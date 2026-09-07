@@ -10,7 +10,7 @@ const db = getFirestore();
 const runtime = { region: 'asia-south1', memory: '256MiB', timeoutSeconds: 30, maxInstances: 2 };
 const callableRuntime = { ...runtime, invoker: 'public' };
 const DAY_MS = 24 * 60 * 60 * 1000;
-const DEFAULT_CIRCLE_LIMIT = 5;
+const DEFAULT_CIRCLE_LIMIT = 6;
 const MAX_CIRCLE_LIMIT = 20;
 const MAX_ACTIVE_LOANS = 3;
 const MAX_PENDING_BORROW_REQUESTS = 5;
@@ -108,7 +108,7 @@ async function collectionCount(query) {
 
 function discoveryData(bookId, book) {
   const tokens = new Set();
-  [book.title, book.author, book.seriesName].filter(Boolean).forEach(value => {
+  [book.title, book.author, book.seriesName, book.seriesNumber].filter(value => value !== undefined && value !== null && value !== '').forEach(value => {
     String(value).toLowerCase().match(/[a-z0-9]+/g)?.forEach(word => {
       for (let index = 1; index <= Math.min(word.length, 24); index += 1) tokens.add(word.slice(0, index));
     });
@@ -411,31 +411,89 @@ exports.rebuildCommunityStats = onCall(callableRuntime, async request => {
 
 exports.rebuildDiscoveryIndex = onCall(callableRuntime, async request => {
   await requireCommunityAdmin(request);
-  const books = await db.collection('books').limit(500).get();
+  let query = db.collection('books').orderBy('__name__');
+  const after = request.data?.after;
+  if (after) {
+    if (typeof after !== 'string' || after.includes('/') || after.length > 1500) throw new HttpsError('invalid-argument', 'Invalid cursor.');
+    query = query.startAfter(db.collection('books').doc(after));
+  }
+  const books = await query.limit(101).get();
+  const docs = books.docs.slice(0, 100);
   const batch = db.batch();
-  books.docs.forEach(book => batch.set(discoveryRef(book.id), discoveryData(book.id, book.data())));
-  if (!books.empty) await batch.commit();
-  return { indexed: books.size };
+  docs.forEach(book => batch.set(discoveryRef(book.id), discoveryData(book.id, book.data())));
+  if (docs.length) await batch.commit();
+  const next = books.size > 100 ? docs[docs.length - 1].id : null;
+  if (!next) await db.collection('appConfig').doc('adminMaintenance').set({ searchCompletedAt: FieldValue.serverTimestamp() }, { merge: true });
+  return { indexed: docs.length, next };
 });
 
 exports.getAdminDashboard = onCall(callableRuntime, async request => {
   const uid = await requireCommunityAdmin(request);
-  const [configSnap, feedbackSnap, circlesSnap] = await Promise.all([
+  const now = Timestamp.now();
+  const [configSnap, networkStatsSnap, activeLoans, overdueLoans, pendingFriendRequests, pendingFeedback, maintenanceSnap] = await Promise.all([
     db.collection('appConfig').doc('community').get(),
-    db.collection('feedback').limit(50).get(),
-    db.collection('circles').limit(100).get()
+    db.collection('networkStats').doc('current').get(),
+    collectionCount(db.collection('books').where('status', '==', 'Lent Out')).catch(() => null),
+    collectionCount(db.collection('books').where('status', '==', 'Lent Out').where('loanDueAt', '<', now)).catch(() => null),
+    collectionCount(db.collection('friendships').where('status', '==', 'pending')).catch(() => null),
+    collectionCount(db.collection('feedback').where('status', '==', 'open')).catch(() => null),
+    db.collection('appConfig').doc('adminMaintenance').get()
   ]);
   const config = configSnap.data() || {};
   const adminUserIds = Array.isArray(config.adminUserIds) ? config.adminUserIds : [uid];
   const adminProfiles = await db.getAll(...adminUserIds.slice(0, 20).map(id => db.collection('profiles').doc(id)));
-  const feedback = feedbackSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
-    .sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
   return {
     admins: adminProfiles.map(doc => ({ uid: doc.id, name: doc.data()?.libraryName || 'Deleted profile' })),
-    feedback,
     circleLimit: circleLimitFromConfig(config),
-    circles: circlesSnap.docs.map(doc => ({ id: doc.id, ...doc.data() })).sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')))
+    maintenance: { searchCompletedAt: maintenanceSnap.data()?.searchCompletedAt?.toMillis?.() || null, totalsCompletedAt: networkStatsSnap.data()?.rebuiltAt?.toMillis?.() || null },
+    health: {
+      activeLoans,
+      overdueLoans,
+      pendingFriendRequests,
+      pendingFeedback,
+      totals: networkStatsSnap.data() || {},
+      totalsUpdatedAt: networkStatsSnap.data()?.updatedAt?.toMillis?.() || null
+    }
   };
+});
+
+exports.getAdminItems = onCall(callableRuntime, async request => {
+  await requireCommunityAdmin(request);
+  const { kind, status, category, after } = request.data || {};
+  if (!['feedback', 'circles'].includes(kind)) throw new HttpsError('invalid-argument', 'Invalid list.');
+  let query = db.collection(kind);
+  if (kind === 'feedback') {
+    if (!['open', 'answered', 'resolved', 'all'].includes(status)) throw new HttpsError('invalid-argument', 'Invalid status.');
+    if (status !== 'all') query = query.where('status', '==', status);
+    query = query.orderBy('createdAt', 'desc');
+  } else {
+    if (!['active', 'archived', 'all'].includes(status)) throw new HttpsError('invalid-argument', 'Invalid status.');
+    if (status !== 'all') query = query.where('active', '==', status === 'active');
+    if (category) {
+      if (!CIRCLE_CATEGORIES.has(category)) throw new HttpsError('invalid-argument', 'Invalid category.');
+      query = query.where('category', '==', category);
+    }
+    query = query.orderBy('name');
+  }
+  if (after) {
+    if (typeof after !== 'string' || after.includes('/') || after.length > 1500) throw new HttpsError('invalid-argument', 'Invalid cursor.');
+    const cursor = await db.collection(kind).doc(after).get();
+    if (!cursor.exists) throw new HttpsError('failed-precondition', 'This page changed. Refresh the list.');
+    query = query.startAfter(cursor);
+  }
+  const snapshot = await query.limit(11).get();
+  const docs = snapshot.docs.slice(0, 10);
+  return { items: docs.map(doc => ({ ...doc.data(), id: doc.id, createdAt: doc.data().createdAt?.toMillis?.() || null })), next: snapshot.size > 10 ? docs[docs.length - 1].id : null };
+});
+
+exports.updateCircleSettings = onCall(callableRuntime, async request => {
+  await requireCommunityAdmin(request);
+  const circleLimit = Number(request.data?.circleLimit);
+  if (!Number.isInteger(circleLimit) || circleLimit < 1 || circleLimit > MAX_CIRCLE_LIMIT) {
+    throw new HttpsError('invalid-argument', `Circle limit must be a whole number from 1 to ${MAX_CIRCLE_LIMIT}.`);
+  }
+  await db.collection('appConfig').doc('community').set({ circleLimit, updatedAt: FieldValue.serverTimestamp() }, { merge: true });
+  return { circleLimit };
 });
 
 exports.resolveFeedback = onCall(callableRuntime, async request => {
@@ -535,7 +593,7 @@ exports.createBorrowRequest = onCall(callableRuntime, async request => {
       tx.get(bookRef),
       tx.get(db.collection('profiles').doc(uid)),
       tx.get(db.collection('books').where('borrowerId', '==', uid).where('status', '==', 'Lent Out').limit(MAX_ACTIVE_LOANS + 1)),
-      tx.get(db.collection('requests').where('requesterId', '==', uid).where('status', '==', 'pending').limit(MAX_PENDING_BORROW_REQUESTS + 1))
+      tx.get(db.collection('requests').where('requesterId', '==', uid).where('type', '==', 'borrow').where('status', '==', 'pending').limit(MAX_PENDING_BORROW_REQUESTS + 1))
     ]);
     if (!bookSnap.exists || bookSnap.data().status !== 'Available') {
       throw new HttpsError('failed-precondition', 'This book is no longer available.');
@@ -596,8 +654,8 @@ exports.respondToBorrowRequest = onCall(callableRuntime, async request => {
     const [bookSnap, activeLoans, pendingRequests, pendingForBorrower, borrowerStatsSnap, ownerStatsSnap, ownerProfileSnap, bookStatsSnap, networkStatsSnap, friendshipConfirmed] = await Promise.all([
       tx.get(bookRef),
       tx.get(db.collection('books').where('borrowerId', '==', loan.requesterId).where('status', '==', 'Lent Out').limit(MAX_ACTIVE_LOANS + 1)),
-      tx.get(db.collection('requests').where('bookId', '==', loan.bookId).where('status', '==', 'pending').limit(100)),
-      tx.get(db.collection('requests').where('requesterId', '==', loan.requesterId).where('status', '==', 'pending').limit(MAX_PENDING_BORROW_REQUESTS + 1)),
+      tx.get(db.collection('requests').where('bookId', '==', loan.bookId).where('type', '==', 'borrow').where('status', '==', 'pending').limit(100)),
+      tx.get(db.collection('requests').where('requesterId', '==', loan.requesterId).where('type', '==', 'borrow').where('status', '==', 'pending').limit(MAX_PENDING_BORROW_REQUESTS + 1)),
       tx.get(borrowerStatsRef), tx.get(ownerStatsRef), tx.get(ownerProfileRef), tx.get(bookStatsRef), tx.get(networkStatsRef)
       , confirmedFriendship(tx, uid, loan.requesterId)
     ]);

@@ -111,7 +111,8 @@ service cloud.firestore {
         && request.resource.data.memberSince is timestamp;
       allow update: if own(userId) && validShelfName(request.resource.data)
         && publicProfileFields(request.resource.data) && profileEditableFields();
-      allow delete: if own(userId);
+      // Account cleanup and active-loan checks belong to deleteMyAccount.
+      allow delete: if false;
     }
 
     match /shelfNames/{shelfKey} {
@@ -201,14 +202,16 @@ service cloud.firestore {
       allow list: if signedIn() && request.query.limit != null && request.query.limit <= 100
         && (resource.data.user1 == request.auth.uid || resource.data.user2 == request.auth.uid);
       allow create: if signedIn()
+        && request.resource.data.keys().hasOnly(['user1', 'user1Name', 'user2', 'user2Name', 'senderId', 'status', 'createdAt'])
         && request.resource.data.user1 == request.auth.uid
         && request.resource.data.senderId == request.auth.uid
+        && request.resource.data.user2 is string
         && request.resource.data.user2 != request.auth.uid
+        && friendshipId == friendshipKey(request.auth.uid, request.resource.data.user2)
         && request.resource.data.status == 'pending';
       // Acceptance is handled by respondToFriendRequest. This prevents a client
       // from claiming an accepted relationship without also sharing both shelves.
-      allow update: if signedIn() && resource.data.userId == request.auth.uid
-        && request.resource.data.userId == request.auth.uid;
+      allow update: if false;
       allow delete: if signedIn() && resource.data.status == 'pending'
         && resource.data.user1 == request.auth.uid;
     }
@@ -231,7 +234,7 @@ service cloud.firestore {
             && request.resource.data.status == 'cancelled'
             && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'cancellationReason', 'respondedAt']))
         );
-      allow delete: if signedIn() && (resource.data.ownerId == request.auth.uid || resource.data.requesterId == request.auth.uid);
+      allow delete: if false;
     }
 
     match /wishlists/{wishId} {

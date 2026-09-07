@@ -1,3 +1,9 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+/* Keep the emulator's safety notice visible without covering demo navigation. */
+@media (max-width: 767px) {
+  .local-demo #mobile-nav { bottom: 40px; }
+  .local-demo #app-content { padding-bottom: 140px; }
+}
+.local-demo .firebase-emulator-warning { pointer-events: none; }

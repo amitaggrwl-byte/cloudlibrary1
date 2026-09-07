@@ -9,9 +9,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/app.css">
+<link rel="stylesheet" href="/assets/app.css?v=20260903-onboarding">
 
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="assets/book-tools.js"></script>
+<script src="assets/admin-dashboard.js"></script>
+<script src="assets/help.js"></script>
+<link rel="stylesheet" href="assets/help.css">
+<link rel="stylesheet" href="assets/book-form.css">
 
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
@@ -155,7 +160,11 @@
     <button type="button" data-action="close-help" title="Close help" class="absolute top-4 right-4 p-2 text-ink-500 hover:text-ink-950">&times;</button>
     <p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-1">Help</p>
     <h2 class="font-display text-2xl text-ink-950">Need a hand?</h2>
-    <div class="mt-4 space-y-2 text-sm text-ink-600 leading-relaxed"><details open class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">About CloudLibrary</summary><p class="mt-2">A small, real-life book-sharing community created by Amit Agarwal. Readers discover books, connect with people they know, and keep lending simple.</p></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Add one book</summary><ol class="mt-2 space-y-1 list-decimal pl-5"><li>Enter a title and author.</li><li>Optionally add a series name and book number, cover photo, rating, or note.</li><li>Use ISBN Scan when the barcode is clear, then check the details before saving.</li></ol></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Add many books or a series</summary><p class="mt-2">For several books, use one line per book: <span class="font-mono text-xs">Book title | Author</span>. For a series, choose the first and last number, select <strong>Prepare list</strong>, replace the placeholder titles, then select <strong>Add listed books</strong>. Preparing a list does not add books by itself.</p></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Borrowing a book</summary><p class="mt-2">Only confirmed friends can lend to one another. Readers can hold up to three active books, keep up to five pending requests, and ask at most two friends for the same title at once. A loan is due after 14 days.</p></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Returning a book</summary><p class="mt-2">The owner may send a reminder. Once the physical book is back with the owner, the borrower selects <strong>Request return</strong> and the owner selects <strong>Confirm returned</strong>. This two-step handoff prevents an accidental close.</p></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Saved books</summary><p class="mt-2">Use <strong>Save</strong> on a book in Search or a friend's shelf. Saved books remain on My Library and open Search again when selected.</p></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Reader score and ledger</summary><ul class="mt-2 space-y-1 list-disc pl-5"><li>Everyone starts at 3.0.</li><li>Each listed book adds 0.15, up to 1.5 points.</li><li>An on-time return after 48 hours adds 0.5; a late return loses 0.5; a lost book loses 2.0.</li><li>A return within the first 48 hours records a 0.0 ledger entry.</li></ul></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Circles</summary><p class="mt-2">Circles are approved groups such as a school, grade, locality, club, genre, or fan group. Open Profile, choose Edit introduction, and use the small cross on a circle to remove it. Administrators create and archive circles.</p></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Privacy and feedback</summary><p class="mt-2">Email addresses are never shown. Profiles display only library-facing details. Send a bug, question, or idea below; administrator replies arrive in Inbox.</p></details></div>
+    <details class="mt-3 text-sm border border-ink-200 rounded-lg p-3"><summary class="cursor-pointer font-semibold">Administration</summary><p class="mt-2">Administrators use the Admin tab to answer feedback and manage circles. Feedback starts with Awaiting reply; choose Answered, Resolved or All feedback to find other items. Previous and Next load ten items per page. The text filter searches the current page; status and circle-category filters search the full list. Reply drafts stay in place during page changes in this session. Circle actions keep your filters and open sections. Refresh a list to see recent changes. Community health has a separate Refresh button. Maintenance contains repair tools with progress and the last completed run; normal book edits update search automatically.</p></details>
+    <details class="mt-3 text-sm border border-ink-200 rounded-lg p-3"><summary class="cursor-pointer font-semibold">Scan an ISBN or find missing details</summary><ol class="mt-2 list-decimal pl-5 space-y-2"><li>On Add book, scan the barcode or type the ISBN and choose Find book details.</li><li>Title, author, cover, year, genre and available series details fill empty fields. Catalogs do not always know the series or its book number; check these yourself.</li><li>Your existing text and chosen cover photo are kept. Clear a field first to replace it from the catalog.</li><li>For a book already on your shelf, open Edit, enter its ISBN, and choose Find missing details and cover. Save when ready.</li><li>For many books, scan, review and save each copy, or use the list and series helper for a whole set.</li></ol></details>
+    <details class="mt-2 text-sm border border-ink-200 rounded-lg p-3"><summary class="cursor-pointer font-semibold">Find a book from its cover photo</summary><ol class="mt-2 list-decimal pl-5 space-y-2"><li>Take or choose a clear, straight photo of the front cover.</li><li>Open Find details from a cover photo and select Read cover text. The optional reader downloads when first used and processes the photo on your device.</li><li>Correct any misread words. Keep the title and author, removing slogans or award labels.</li><li>Select Find matching books. These words go to Google Books or Open Library to look for up to five matches.</li><li>Choose the correct book, check the filled fields, and save. Decorative lettering may not be recognised; ISBN lookup is usually more dependable.</li></ol></details>
+    <details class="mt-2 text-sm border border-ink-200 rounded-lg p-3"><summary class="cursor-pointer font-semibold">Search by series and book number</summary><p class="mt-2">Try Magic Tree House 10 or Magic Tree House 10th book. The requested number appears first when found; other matching books are labelled as alternatives. Small spelling mistakes are tolerated, but an unrelated title will not match. Load more results continues through further batches. If nothing appears, check the spelling, try fewer words, or clear the genre and availability filters. Saved edits update search automatically after the search index catches up; run Search again to refresh results.</p></details>
+    <div class="mt-4 space-y-2 text-sm text-ink-600 leading-relaxed"><details open class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">About CloudLibrary</summary><p class="mt-2">A small, real-life book-sharing community created by Amit Agarwal. Readers discover books, connect with people they know, and keep lending simple.</p></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Add one book</summary><ol class="mt-2 space-y-1 list-decimal pl-5"><li>Enter a title and author.</li><li>Optionally add series details, a rating, or a note.</li><li>Use ISBN Scan when the barcode is clear, then check the result before saving.</li><li>A cover photo is compressed on your device before upload. Camera photos up to 12 MB are accepted; the compact cover is usually about 300 KB.</li></ol></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Add a list or a series</summary><ol class="mt-2 space-y-1 list-decimal pl-5"><li>Build a review list, with one book per line: <span class="font-mono text-xs">Book title | Author</span>.</li><li>For a series, use <span class="font-mono text-xs">Series | # | Book title | Author</span>, or enter its name, author, and number range in the Series helper.</li><li><strong>Add series to list</strong> only creates editable entries. Check or rename each placeholder title.</li><li><strong>Add reviewed books to my shelf</strong> is the only button that saves books. You can add up to 200 at once.</li></ol></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Borrowing a book</summary><p class="mt-2">Only confirmed friends can lend to one another. Readers can hold up to three active books, keep up to five pending requests, and ask at most two friends for the same title at once. A loan is due after 14 days.</p></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Returning a book</summary><p class="mt-2">The owner may send a reminder. Once the physical book is back with the owner, the borrower selects <strong>Request return</strong> and the owner selects <strong>Confirm returned</strong>. This two-step handoff prevents an accidental close.</p></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Saved books</summary><p class="mt-2">Use <strong>Save</strong> on a book in Search or a friend's shelf. Saved books remain on My Library and open Search again when selected.</p></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Reader score and ledger</summary><ul class="mt-2 space-y-1 list-disc pl-5"><li>Everyone starts at 3.0.</li><li>Each listed book adds 0.15, up to 1.5 points.</li><li>An on-time return after 48 hours adds 0.5; a late return loses 0.5; a lost book loses 2.0.</li><li>A return within the first 48 hours records a 0.0 ledger entry.</li></ul></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Circles</summary><p class="mt-2">Circles are approved groups such as a school, grade, locality, club, genre, or fan group. Open Profile, choose Edit introduction, and use the small cross on a circle to remove it. Administrators create and archive circles.</p></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Privacy and feedback</summary><p class="mt-2">Email addresses are never shown. Profiles display only library-facing details. Send a bug, question, or idea below; administrator replies arrive in Inbox.</p></details></div>
     <form id="feedback-form" class="mt-6 space-y-3 border-t border-ink-200 pt-5"><label class="block text-xs font-semibold text-ink-700" for="feedback-message">Report a problem or share an idea</label><select id="feedback-category" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-sm text-ink-950"><option value="bug">Something is not working</option><option value="idea">Suggestion</option><option value="question">Question</option></select><textarea id="feedback-message" required maxlength="1000" rows="4" placeholder="What happened? What did you expect?" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-sm text-ink-950 resize-none"></textarea><button type="submit" class="w-full bg-ink-950 text-paper py-3 rounded-lg text-sm font-semibold">Send feedback</button></form>
   </div>
 </div>
@@ -208,6 +217,7 @@
   <!-- TAB 1: MY LIBRARY -->
   <div id="view-library" class="space-y-6">
     <div id="my-reader-score" class="app-panel p-5 rounded-xl border border-ink-200 shadow-sm"></div>
+    <section id="onboarding-panel" class="hidden app-panel rounded-xl border border-ink-200 p-4 shadow-sm"></section>
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
     <div id="admin-panel" class="app-panel p-6 rounded-xl border border-ink-200 shadow-sm h-fit">
       <div class="flex justify-between items-center mb-1">
@@ -228,7 +238,7 @@
           </select>
         </div>
         <div class="grid grid-cols-2 gap-3">
-          <input type="text" id="isbn" placeholder="ISBN (optional)" class="w-full bg-paper border border-ink-200 rounded-lg p-3 text-ink-950 text-sm focus:outline-none focus:ring-2 focus:ring-ink-700">
+          <div class="min-w-0"><input type="text" id="isbn" placeholder="ISBN (optional)" class="w-full bg-paper border border-ink-200 rounded-lg p-3 text-ink-950 text-sm focus:outline-none focus:ring-2 focus:ring-ink-700"><button type="button" id="lookup-isbn" class="text-xs font-semibold text-ink-700 py-2">Find book details</button></div>
           <input type="number" id="publishedYear" placeholder="Year" class="w-full bg-paper border border-ink-200 rounded-lg p-3 text-ink-950 text-sm focus:outline-none focus:ring-2 focus:ring-ink-700">
         </div>
         <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-2"><input type="url" id="coverUrl" placeholder="Cover image URL (optional)" class="min-w-0 bg-paper border border-ink-200 rounded-lg p-3 text-ink-950 text-sm focus:outline-none focus:ring-2 focus:ring-ink-700"><button type="button" id="lookup-cover-button" class="bg-ink-800/10 text-ink-700 hover:bg-ink-800/20 px-3 rounded-lg text-xs font-semibold">Find cover</button></div>
@@ -256,17 +266,16 @@
         <button type="submit" id="add-book-submit" class="w-full bg-rust-600 hover:bg-rust-700 disabled:opacity-60 disabled:cursor-not-allowed text-paper font-semibold py-3 px-4 rounded-lg transition-colors">Add to shelf</button>
       </form>
       <details class="mt-5 border-t border-ink-200 pt-4">
-        <summary class="cursor-pointer text-sm font-semibold text-ink-700">Add several books or a series</summary>
+        <summary class="cursor-pointer text-sm font-semibold text-ink-700">Add a list or a series</summary>
         <form id="quick-add-form" class="mt-3 space-y-3">
-          <div class="rounded-lg bg-ink-800/5 p-3 text-xs leading-relaxed text-ink-600"><p class="font-semibold text-ink-800">Add several individual books</p><p class="mt-1">Put one book on each line:</p><p class="mt-1 font-mono text-ink-700">Book title | Author</p><p class="mt-3 font-semibold text-ink-800">Add books that belong to a series</p><p class="mt-1">Include the series title and book number before the book title:</p><p class="mt-1 font-mono text-ink-700">Series | # | Book title | Author</p></div>
-          <textarea id="quick-book-lines" rows="6" placeholder="The Lightning Thief | Rick Riordan&#10;Percy Jackson | 2 | The Sea of Monsters | Rick Riordan" class="w-full bg-paper border border-ink-200 rounded-lg p-3 text-sm text-ink-950 resize-y focus:outline-none focus:ring-2 focus:ring-ink-700"></textarea>
-          <div class="grid grid-cols-2 gap-2"><input id="series-title" type="text" placeholder="Series title" class="min-w-0 bg-paper border border-ink-200 rounded-lg p-2.5 text-sm text-ink-950"><input id="series-author" type="text" placeholder="Series author" class="min-w-0 bg-paper border border-ink-200 rounded-lg p-2.5 text-sm text-ink-950"></div>
-          <div class="grid grid-cols-[1fr_1fr_auto] gap-2"><input id="series-start" type="number" min="1" value="1" aria-label="First book number" class="min-w-0 bg-paper border border-ink-200 rounded-lg p-2.5 text-sm text-ink-950"><input id="series-end" type="number" min="1" value="3" aria-label="Last book number" class="min-w-0 bg-paper border border-ink-200 rounded-lg p-2.5 text-sm text-ink-950"><button type="button" id="generate-series" class="text-xs font-semibold text-ink-700 bg-ink-800/10 hover:bg-ink-800/20 px-3 rounded-lg">Prepare list</button></div>
+          <div class="rounded-lg bg-ink-800/5 p-3 text-xs leading-relaxed text-ink-600"><p class="font-semibold text-ink-800">1. Build your list</p><p class="mt-1">Add one book per line, or use the series helper below. Nothing is saved until you choose <strong>Add reviewed books</strong>.</p><p class="mt-2 font-mono text-ink-700">Book title | Author</p><p class="mt-1 font-mono text-ink-700">Series | # | Book title | Author</p></div>
+          <div><label for="quick-book-lines" class="block text-xs font-semibold text-ink-700 mb-1.5">2. Review the books to add</label><textarea id="quick-book-lines" rows="6" placeholder="The Lightning Thief | Rick Riordan&#10;Percy Jackson | 2 | The Sea of Monsters | Rick Riordan" class="w-full bg-paper border border-ink-200 rounded-lg p-3 text-sm text-ink-950 resize-y focus:outline-none focus:ring-2 focus:ring-ink-700"></textarea><p id="quick-import-count" class="mt-1.5 text-[11px] text-ink-500">Add up to 200 books at once.</p></div>
+          <div class="rounded-lg border border-ink-200 bg-white/60 p-3"><div class="flex items-center justify-between gap-3"><div><p class="text-xs font-semibold text-ink-800">Series helper</p><p class="text-[11px] text-ink-500">Creates editable placeholders in your review list.</p></div></div><div class="grid grid-cols-2 gap-2 mt-3"><input id="series-title" type="text" placeholder="Series title" class="min-w-0 bg-paper border border-ink-200 rounded-lg p-2.5 text-sm text-ink-950"><input id="series-author" type="text" placeholder="Series author" class="min-w-0 bg-paper border border-ink-200 rounded-lg p-2.5 text-sm text-ink-950"></div><div class="grid grid-cols-[1fr_1fr_auto] gap-2 mt-2"><input id="series-start" type="number" min="1" value="1" aria-label="First book number" class="min-w-0 bg-paper border border-ink-200 rounded-lg p-2.5 text-sm text-ink-950"><input id="series-end" type="number" min="1" value="3" aria-label="Last book number" class="min-w-0 bg-paper border border-ink-200 rounded-lg p-2.5 text-sm text-ink-950"><button type="button" id="generate-series" class="text-xs font-semibold text-ink-700 bg-ink-800/10 hover:bg-ink-800/20 px-3 rounded-lg">Add series to list</button></div></div>
           <div class="grid grid-cols-2 gap-3">
             <select id="quick-genre" class="w-full bg-paper border border-ink-200 rounded-lg p-2.5 text-sm text-ink-950"></select>
             <select id="quick-condition" class="w-full bg-paper border border-ink-200 rounded-lg p-2.5 text-sm text-ink-950"></select>
           </div>
-          <button type="submit" id="quick-add-submit" class="w-full bg-ink-950 hover:bg-ink-900 disabled:opacity-60 disabled:cursor-not-allowed text-paper font-semibold py-2.5 px-4 rounded-lg text-sm transition-colors">Add these books to my shelf</button>
+          <button type="submit" id="quick-add-submit" class="w-full bg-ink-950 hover:bg-ink-900 disabled:opacity-60 disabled:cursor-not-allowed text-paper font-semibold py-2.5 px-4 rounded-lg text-sm transition-colors">Add reviewed books to my shelf</button>
         </form>
       </details>
     </div>
@@ -442,7 +451,7 @@
         <select id="edit-condition" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-ink-950 text-sm focus:outline-none focus:ring-2 focus:ring-ink-700"></select>
       </div>
       <div class="grid grid-cols-2 gap-3">
-        <input type="text" id="edit-isbn" placeholder="ISBN" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-ink-950 text-sm focus:outline-none focus:ring-2 focus:ring-ink-700">
+        <div class="min-w-0"><input type="text" id="edit-isbn" placeholder="ISBN" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-ink-950 text-sm focus:outline-none focus:ring-2 focus:ring-ink-700"><button type="button" id="edit-lookup-isbn" class="text-xs font-semibold text-ink-700 py-2">Find missing details and cover</button></div>
         <input type="number" id="edit-publishedYear" placeholder="Year" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-ink-950 text-sm focus:outline-none focus:ring-2 focus:ring-ink-700">
       </div>
       <input type="url" id="edit-coverUrl" placeholder="Cover image URL" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-ink-950 text-sm focus:outline-none focus:ring-2 focus:ring-ink-700">
@@ -586,11 +595,29 @@
     try {
       const score = await loadUserRating(currentUser.uid);
       const memberSince = formatDate(userProfile.memberSince) || 'Founding member';
-      panel.innerHTML = `<div class="relative"><button data-action="open-reader-profile" data-uid="self" title="Edit profile" aria-label="Edit profile" class="absolute top-0 right-0 p-1.5 text-rust-600 hover:text-rust-700 rounded-lg hover:bg-rust-600/10">${icon('pencil', 'w-4 h-4')}</button><div class="flex items-start gap-3 pr-8"><div class="shrink-0">${avatarHtml(userProfile, userProfile.libraryName, 'w-12 h-12 sm:w-14 sm:h-14')}</div><div class="min-w-0 flex-1"><p class="hidden sm:block font-mono text-[11px] uppercase tracking-widest text-rust-600">Your reader profile</p><h2 class="font-display text-2xl text-ink-950 leading-tight">${esc(userProfile.libraryName)}</h2><p class="text-[11px] text-ink-500 mt-0.5">${esc(memberSince)}</p>${userProfile.bio ? `<p class="text-sm text-ink-600 mt-1.5 max-w-3xl leading-relaxed">${esc(userProfile.bio)}</p>` : `<p class="text-sm text-ink-400 mt-1.5">Add an introduction so people you know can recognise you.</p>`}</div></div><div class="grid grid-cols-3 sm:grid-cols-6 gap-2 mt-4 pt-3 border-t border-ink-200"><div class="rounded-lg bg-ink-800/5 p-2"><p class="font-display text-xl text-[#8a6414] leading-tight">${score.toFixed(1)}<span class="text-[11px] text-ink-400">/10</span></p><p class="text-[10px] text-ink-500">reader score</p></div><div class="rounded-lg bg-ink-800/5 p-2"><p class="font-semibold text-ink-950 text-lg leading-tight">${Number(userProfile.bookCount || 0)}</p><p class="text-[10px] text-ink-500">books listed</p></div><div class="rounded-lg bg-ink-800/5 p-2"><p class="font-semibold text-ink-950 text-lg leading-tight">${Number(userProfile.totalLent || 0)}</p><p class="text-[10px] text-ink-500">books lent</p></div><div class="rounded-lg bg-ink-800/5 p-2"><p class="font-semibold text-ink-950 text-lg leading-tight">${Number(userProfile.timelyReturns || 0)}</p><p class="text-[10px] text-ink-500">timely returns</p></div><div class="rounded-lg bg-ink-800/5 p-2"><p class="font-semibold text-ink-950 text-lg leading-tight">${confirmedFriends.length}</p><p class="text-[10px] text-ink-500">friends</p></div><div class="rounded-lg bg-ink-800/5 p-2"><p class="font-semibold text-ink-950 text-lg leading-tight">${Array.isArray(userProfile.circleTags) ? userProfile.circleTags.length : 0}</p><p class="text-[10px] text-ink-500">circles</p></div></div></div>`;
+      const shelfBooks = Object.values(myBooksCache);
+      const booksListed = myBooksLoaded ? shelfBooks.length : Number(userProfile.bookCount || 0);
+      const lentOutNow = myBooksLoaded ? shelfBooks.filter(book => book.status === 'Lent Out').length : 0;
+      panel.innerHTML = `<div class="relative"><button data-action="open-reader-profile" data-uid="self" title="Edit profile" aria-label="Edit profile" class="absolute top-0 right-0 p-1.5 text-rust-600 hover:text-rust-700 rounded-lg hover:bg-rust-600/10">${icon('pencil', 'w-4 h-4')}</button><div class="flex items-start gap-3 pr-8"><div class="shrink-0">${avatarHtml(userProfile, userProfile.libraryName, 'w-12 h-12 sm:w-14 sm:h-14')}</div><div class="min-w-0 flex-1"><p class="hidden sm:block font-mono text-[11px] uppercase tracking-widest text-rust-600">Your reader profile</p><h2 class="font-display text-2xl text-ink-950 leading-tight">${esc(userProfile.libraryName)}</h2><p class="text-[11px] text-ink-500 mt-0.5">${esc(memberSince)}</p>${userProfile.bio ? `<p class="text-sm text-ink-600 mt-1.5 max-w-3xl leading-relaxed">${esc(userProfile.bio)}</p>` : `<p class="text-sm text-ink-400 mt-1.5">Add an introduction so people you know can recognise you.</p>`}</div></div><div class="grid grid-cols-3 sm:grid-cols-6 gap-2 mt-4 pt-3 border-t border-ink-200"><div class="rounded-lg bg-ink-800/5 p-2"><p class="font-display text-xl text-[#8a6414] leading-tight">${score.toFixed(1)}<span class="text-[11px] text-ink-400">/10</span></p><p class="text-[10px] text-ink-500">reader score</p></div><div class="rounded-lg bg-ink-800/5 p-2"><p class="font-semibold text-ink-950 text-lg leading-tight">${booksListed}</p><p class="text-[10px] text-ink-500">books listed</p></div><div class="rounded-lg bg-ink-800/5 p-2"><p class="font-semibold text-ink-950 text-lg leading-tight">${lentOutNow}</p><p class="text-[10px] text-ink-500">lent out now</p></div><div class="rounded-lg bg-ink-800/5 p-2"><p class="font-semibold text-ink-950 text-lg leading-tight">${Number(userProfile.timelyReturns || 0)}</p><p class="text-[10px] text-ink-500">timely returns</p></div><div class="rounded-lg bg-ink-800/5 p-2"><p class="font-semibold text-ink-950 text-lg leading-tight">${confirmedFriends.length}</p><p class="text-[10px] text-ink-500">friends</p></div><div class="rounded-lg bg-ink-800/5 p-2"><p class="font-semibold text-ink-950 text-lg leading-tight">${Array.isArray(userProfile.circleTags) ? userProfile.circleTags.length : 0}</p><p class="text-[10px] text-ink-500">circles</p></div></div></div>`;
+      renderOnboarding();
     } catch (err) {
       console.warn('Could not load reader score', err);
       panel.innerHTML = '<p class="text-sm text-ink-400">Your reader score will appear here soon.</p>';
     }
+  }
+
+  function renderOnboarding() {
+    const panel = document.getElementById('onboarding-panel');
+    if (!panel || !userProfile || !currentUser) return;
+    const steps = [
+      { done: String(userProfile.bio || '').trim().length >= 12, title: 'Add a short introduction', detail: 'Help real-life readers recognise your shelf.', action: 'onboarding-profile', button: 'Add intro' },
+      { done: Object.keys(myBooksCache).length > 0 || Number(userProfile.bookCount || 0) > 0, title: 'Add your first book', detail: 'A shelf starts with one book you are happy to share.', action: 'onboarding-add-book', button: 'Add a book' },
+      { done: confirmedFriends.length > 0 || Number(userProfile.friendCount || 0) > 0, title: 'Connect with a reader', detail: 'Find someone you know, then browse each other’s shelves.', action: 'onboarding-find-friends', button: 'Find readers' }
+    ];
+    const complete = steps.filter(step => step.done).length;
+    panel.classList.toggle('hidden', complete === steps.length);
+    if (complete === steps.length) { panel.innerHTML = ''; return; }
+    panel.innerHTML = `<div class="flex items-start justify-between gap-4"><div><p class="font-mono text-[11px] uppercase tracking-widest text-rust-600">Getting started</p><h2 class="font-display text-xl text-ink-950 mt-1">Make your shelf useful</h2><p class="text-xs text-ink-500 mt-1">${complete} of ${steps.length} simple steps complete.</p></div><span class="shrink-0 rounded-full bg-gold-100 px-2.5 py-1 text-xs font-semibold text-ink-700">${complete}/${steps.length}</span></div><div class="grid gap-2 mt-4 sm:grid-cols-3">${steps.map(step => `<div class="rounded-lg border ${step.done ? 'border-sage-200 bg-sage-50/50' : 'border-ink-200 bg-white/60'} p-3"><div class="flex items-start justify-between gap-2"><div class="min-w-0"><p class="text-xs font-semibold text-ink-800">${esc(step.title)}</p><p class="text-[11px] leading-relaxed text-ink-500 mt-1">${esc(step.detail)}</p></div>${step.done ? `<span class="shrink-0 text-ink-700">${icon('check', 'w-4 h-4')}</span>` : ''}</div>${step.done ? `<p class="mt-3 text-[11px] font-semibold text-ink-600">Done</p>` : `<button data-action="${step.action}" class="mt-3 text-xs font-semibold text-rust-600 hover:text-rust-700">${esc(step.button)}</button>`}</div>`).join('')}</div>`;
   }
 
   function closeReaderProfileModal() {
@@ -598,8 +625,27 @@
     document.getElementById('reader-profile-body').innerHTML = '';
   }
 
-  function openHelp() { document.getElementById('help-modal').classList.remove('hidden'); }
-  function closeHelp() { document.getElementById('help-modal').classList.add('hidden'); }
+  function openHelp() {
+    CloudHelp.open({
+      admin: !!currentUser && !document.getElementById('tab-admin').classList.contains('hidden'),
+      navigate: async (target, anchor) => {
+        closeHelp();
+        if (target === 'profile') await openReaderProfile('self');
+        else if (target === 'admin') await openAdminDashboard();
+        else switchTab(target);
+        const element = anchor && document.querySelector(anchor);
+        if (element) {
+          for (let parent = element.parentElement; parent; parent = parent.parentElement) {
+            if (parent.tagName === 'DETAILS') parent.open = true;
+          }
+          element.scrollIntoView({ block: 'center' });
+          if (!element.matches('input,button,select,textarea')) element.setAttribute('tabindex', '-1');
+          element.focus({ preventScroll: true });
+        }
+      }
+    });
+  }
+  function closeHelp() { document.getElementById('help-modal').classList.add('hidden'); document.querySelector('[data-action="open-help"]')?.focus(); }
 
   document.getElementById('feedback-form').addEventListener('submit', async (event) => {
     event.preventDefault();
@@ -627,6 +673,10 @@
     const profile = profileDoc.data();
     const score = await loadUserRating(targetUid);
     const isSelf = targetUid === currentUser.uid;
+    const profileShelfBooks = isSelf && myBooksLoaded ? Object.values(myBooksCache) : [];
+    const profileBookCount = isSelf && myBooksLoaded ? profileShelfBooks.length : Number(profile.bookCount || 0);
+    const profileLentOut = isSelf && myBooksLoaded ? profileShelfBooks.filter(book => book.status === 'Lent Out').length : Number(profile.totalLent || 0);
+    const profileFriendCount = isSelf ? confirmedFriends.length : Number(profile.friendCount || 0);
     const isFriend = confirmedFriends.includes(targetUid);
     const relationship = relationshipStates[targetUid];
     const name = profile.libraryName || 'Unnamed library';
@@ -644,7 +694,7 @@
     const memberSince = formatDate(profile.memberSince) || 'Founding member';
     const circles = Array.isArray(profile.circleTags) && profile.circleTags.length
       ? `<div class="mt-4 flex flex-wrap gap-1.5">${profile.circleTags.map(tag => { const membership = circleMemberships.find(item => item.name === tag); return `<span class="inline-flex items-center gap-1 bg-gold-100 text-ink-700 rounded-full px-2 py-1 text-[10px] font-semibold">${esc(tag)}${membership ? `<button type="button" data-action="leave-circle" data-id="${esc(membership.id)}" title="Remove ${esc(tag)}" class="text-rust-600 hover:text-rust-700">${icon('x','w-3 h-3')}</button>` : ''}</span>`; }).join('')}</div>` : '';
-    body.innerHTML = `<div class="flex items-center gap-4 pr-8">${avatarHtml(profile, name, 'w-16 h-16')}<div class="min-w-0"><p class="font-mono text-[10px] uppercase tracking-widest text-rust-600">Reader profile</p><h2 class="font-display text-2xl text-ink-950 truncate">${esc(name)}</h2><p class="text-[11px] text-ink-500 mt-1">${esc(memberSince)}</p><p class="text-sm text-[#8a6414] font-semibold mt-1">${score.toFixed(1)}/10 reader score</p></div></div><div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-5"><div class="bg-ink-800/5 rounded-lg p-3"><p class="font-semibold text-ink-950">${Number(profile.bookCount || 0)}</p><p class="text-[10px] text-ink-500">books listed</p></div><div class="bg-ink-800/5 rounded-lg p-3"><p class="font-semibold text-ink-950">${Number(profile.totalLent || 0)}</p><p class="text-[10px] text-ink-500">books lent</p></div><div class="bg-ink-800/5 rounded-lg p-3"><p class="font-semibold text-ink-950">${Number(profile.timelyReturns || 0)}</p><p class="text-[10px] text-ink-500">timely returns</p></div><div class="bg-ink-800/5 rounded-lg p-3"><p class="font-semibold text-ink-950">${Number(profile.friendCount || 0)}</p><p class="text-[10px] text-ink-500">friends</p></div></div>${circles}<div class="mt-5"><p class="text-xs font-semibold text-ink-700 mb-1">About</p><p class="text-sm text-ink-600 leading-relaxed">${esc(profile.bio || 'No introduction added yet.')}</p></div>${actions}${isSelf ? `<details class="mt-4 border-t border-ink-200 pt-4"><summary class="cursor-pointer text-xs font-semibold text-ink-600 hover:text-ink-950">Reader score ledger</summary><div id="rating-ledger-list" class="mt-3 space-y-2"><p class="text-xs text-ink-400">Loading score changes…</p></div></details><details id="borrow-history-details" class="mt-4 border-t border-ink-200 pt-4"><summary class="cursor-pointer text-xs font-semibold text-ink-600 hover:text-ink-950">Borrowing history</summary><div class="mt-2 flex items-center gap-2"><select id="borrow-history-filter" class="rounded-lg border border-ink-200 bg-white px-2 py-1.5 text-xs"><option value="all">All activity</option><option value="returned">Returned</option><option value="lost">Lost</option></select><span class="text-[11px] text-ink-400">Latest five entries</span></div><div id="profile-borrow-history-list" class="mt-3 space-y-2"><p class="text-xs text-ink-400">Open to load your latest history.</p></div></details>` : ''}`;
+    body.innerHTML = `<div class="flex items-center gap-4 pr-8">${avatarHtml(profile, name, 'w-16 h-16')}<div class="min-w-0"><p class="font-mono text-[10px] uppercase tracking-widest text-rust-600">Reader profile</p><h2 class="font-display text-2xl text-ink-950 truncate">${esc(name)}</h2><p class="text-[11px] text-ink-500 mt-1">${esc(memberSince)}</p><p class="text-sm text-[#8a6414] font-semibold mt-1">${score.toFixed(1)}/10 reader score</p></div></div><div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-5"><div class="bg-ink-800/5 rounded-lg p-3"><p class="font-semibold text-ink-950">${profileBookCount}</p><p class="text-[10px] text-ink-500">books listed</p></div><div class="bg-ink-800/5 rounded-lg p-3"><p class="font-semibold text-ink-950">${profileLentOut}</p><p class="text-[10px] text-ink-500">${isSelf ? 'lent out now' : 'books lent'}</p></div><div class="bg-ink-800/5 rounded-lg p-3"><p class="font-semibold text-ink-950">${Number(profile.timelyReturns || 0)}</p><p class="text-[10px] text-ink-500">timely returns</p></div><div class="bg-ink-800/5 rounded-lg p-3"><p class="font-semibold text-ink-950">${profileFriendCount}</p><p class="text-[10px] text-ink-500">friends</p></div></div>${circles}<div class="mt-5"><p class="text-xs font-semibold text-ink-700 mb-1">About</p><p class="text-sm text-ink-600 leading-relaxed">${esc(profile.bio || 'No introduction added yet.')}</p></div>${actions}${isSelf ? `<details class="mt-4 border-t border-ink-200 pt-4"><summary class="cursor-pointer text-xs font-semibold text-ink-600 hover:text-ink-950">Reader score ledger</summary><div id="rating-ledger-list" class="mt-3 space-y-2"><p class="text-xs text-ink-400">Loading score changes…</p></div></details><details id="borrow-history-details" class="mt-4 border-t border-ink-200 pt-4"><summary class="cursor-pointer text-xs font-semibold text-ink-600 hover:text-ink-950">Borrowing history</summary><div class="mt-2 flex items-center gap-2"><select id="borrow-history-filter" class="rounded-lg border border-ink-200 bg-white px-2 py-1.5 text-xs"><option value="all">All activity</option><option value="returned">Returned</option><option value="lost">Lost</option></select><span class="text-[11px] text-ink-400">Latest five entries</span></div><div id="profile-borrow-history-list" class="mt-3 space-y-2"><p class="text-xs text-ink-400">Open to load your latest history.</p></div></details>` : ''}`;
     const bioForm = document.getElementById('profile-bio-form');
     if (bioForm) bioForm.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -716,56 +766,16 @@
   async function openAdminDashboard() {
     switchTab('admin');
     const panel = document.getElementById('admin-dashboard');
-    if (!panel) return;
+    if (!panel || !currentUser) return;
     panel.classList.remove('hidden');
-    panel.innerHTML = '<p class="text-xs text-ink-400">Loading feedback and roles…</p>';
-    const result = await guard(() => lendingFunctions.httpsCallable('getAdminDashboard')(), { context: 'Loading admin dashboard' });
-    if (result === FAILED) return;
-    const data = result.data || {};
-    const feedback = Array.isArray(data.feedback) ? data.feedback : [];
-    const circles = Array.isArray(data.circles) ? data.circles : [];
-    renderAdminDashboard(panel, data, circles, feedback);
-    return;
-    panel.innerHTML = `<div class="mt-4 border-t border-ink-200 pt-4"><p class="text-xs font-semibold text-ink-700">Community admins</p><p class="text-xs text-ink-500 mt-1">${(data.admins || []).map(admin => esc(admin.name)).join(', ') || 'No admin profiles found.'}</p><form id="create-circle-form" class="mt-4 grid grid-cols-[1fr_120px_auto] gap-2"><input id="new-circle-name" required maxlength="60" placeholder="New circle name" class="min-w-0 rounded-lg border border-ink-200 bg-white px-2.5 py-2 text-xs"><select id="new-circle-category" required class="min-w-0 rounded-lg border border-ink-200 bg-white px-2.5 py-2 text-xs"><option value="School">School</option><option value="Grade">Grade</option><option value="Locality">Locality</option><option value="Genre">Genre</option><option value="Club">Club</option><option value="Fan group">Fan group</option></select><button class="rounded-lg bg-ink-800 px-3 text-xs font-semibold text-paper">Add</button></form><p class="mt-2 text-[10px] text-ink-400">Archiving hides a circle from new joins; existing members may leave it themselves.</p><div class="mt-2 space-y-1.5">${circles.map(circle => `<div class="flex items-center justify-between gap-2 rounded-lg border border-ink-200 px-2.5 py-2"><p class="min-w-0 truncate text-xs text-ink-700">${esc(circle.name || 'Circle')} <span class="text-ink-400">· ${esc(circle.category || 'Community')}</span></p>${circle.active ? `<button data-action="archive-circle" data-id="${esc(circle.id)}" class="shrink-0 text-[10px] font-semibold text-rust-600">Archive</button>` : '<span class="shrink-0 text-[10px] text-ink-400">Archived</span>'}</div>`).join('') || '<p class="text-xs text-ink-400">No circles yet.</p>'}</div><p class="text-xs font-semibold text-ink-700 mt-4">Feedback</p><div class="mt-2 space-y-2">${feedback.length ? feedback.map(item => `<div class="border border-ink-200 rounded-lg p-2.5"><div class="flex items-center justify-between gap-2"><p class="text-xs font-semibold text-ink-800">${esc(item.category || 'feedback')} · ${esc(item.reporterShelf || 'Reader')}</p><button data-action="resolve-feedback" data-id="${esc(item.id)}" data-status="${item.status === 'resolved' ? 'open' : 'resolved'}" class="text-[10px] font-semibold ${item.status === 'resolved' ? 'text-ink-500' : 'text-rust-600'}">${item.status === 'resolved' ? 'Reopen' : 'Resolve'}</button></div><p class="text-xs text-ink-600 mt-1 whitespace-pre-wrap">${esc(item.message || '')}</p>${item.adminReply ? `<p class="mt-2 rounded bg-ink-800/5 px-2 py-1.5 text-xs text-ink-600"><strong>Reply:</strong> ${esc(item.adminReply)}</p>` : ''}<form data-feedback-reply="${esc(item.id)}" class="mt-2 flex gap-2"><input required maxlength="1000" placeholder="Reply to this reader" class="min-w-0 flex-1 rounded border border-ink-200 px-2 py-1.5 text-xs"><button class="text-xs font-semibold text-rust-600">Reply</button></form></div>`).join('') : '<p class="text-xs text-ink-400">No feedback yet.</p>'}</div></div>`;
-    panel.insertAdjacentHTML('afterbegin', '<button data-action="rebuild-discovery" class="mb-3 text-xs font-semibold text-ink-700 hover:text-rust-700">Refresh book and series search index</button>');
-    document.getElementById('create-circle-form')?.addEventListener('submit', async event => {
-      event.preventDefault();
-      const result = await guard(() => lendingFunctions.httpsCallable('createCircle')({ name: document.getElementById('new-circle-name').value, category: document.getElementById('new-circle-category').value }), { context: 'Adding circle', success: 'Circle added.' });
-      if (result !== FAILED) openAdminDashboard();
+    await AdminDashboard.open({
+      uid: currentUser.uid, panel, esc, date: formatDate,
+      call: async (name, data) => (await lendingFunctions.httpsCallable(name)(data)).data
     });
-    panel.querySelectorAll('[data-feedback-reply]').forEach(form => form.addEventListener('submit', async event => {
-      event.preventDefault();
-      const reply = form.querySelector('input').value.trim();
-      if (!reply) return;
-      const response = await guard(() => lendingFunctions.httpsCallable('replyToFeedback')({ feedbackId: form.dataset.feedbackReply, reply }), { context: 'Replying to feedback', success: 'Reply sent to the reader inbox.' });
-      if (response !== FAILED) openAdminDashboard();
-    }));
   }
-  function renderAdminDashboard(panel, data, circles, feedback) {
-    const circleRows = circles.map(circle => `<div class="flex items-center justify-between gap-2 rounded-lg border border-ink-200 px-2.5 py-2"><p class="min-w-0 truncate text-xs text-ink-700">${esc(circle.name || 'Circle')} <span class="text-ink-400">· ${esc(circle.category || 'Community')}</span></p>${circle.active ? `<button data-action="archive-circle" data-id="${esc(circle.id)}" class="shrink-0 text-[10px] font-semibold text-rust-600">Archive</button>` : '<span class="shrink-0 text-[10px] text-ink-400">Archived</span>'}</div>`).join('') || '<p class="text-xs text-ink-400">No circles yet.</p>';
-    const feedbackCard = item => `<div class="border border-ink-200 rounded-lg p-2.5"><div class="flex items-center justify-between gap-2"><p class="text-xs font-semibold text-ink-800">${esc(item.category || 'feedback')} · ${esc(item.reporterShelf || 'Reader')}</p><button data-action="resolve-feedback" data-id="${esc(item.id)}" data-status="${item.status === 'resolved' ? 'open' : 'resolved'}" class="text-[10px] font-semibold ${item.status === 'resolved' ? 'text-ink-500' : 'text-rust-600'}">${item.status === 'resolved' ? 'Reopen' : 'Resolve'}</button></div><p class="text-xs text-ink-600 mt-1 whitespace-pre-wrap">${esc(item.message || '')}</p>${item.adminReply ? `<p class="mt-2 rounded bg-ink-800/5 px-2 py-1.5 text-xs text-ink-600"><strong>Reply:</strong> ${esc(item.adminReply)}</p>` : ''}<form data-feedback-reply="${esc(item.id)}" class="mt-2 flex gap-2"><input required maxlength="1000" placeholder="Reply to this reader" class="min-w-0 flex-1 rounded border border-ink-200 px-2 py-1.5 text-xs"><button class="text-xs font-semibold text-rust-600">Reply</button></form></div>`;
-    panel.innerHTML = `<button data-action="rebuild-discovery" class="mb-3 text-xs font-semibold text-ink-700 hover:text-rust-700">Refresh book and series search index</button><div class="space-y-3"><details open class="rounded-lg border border-ink-200 bg-white/60"><summary class="cursor-pointer px-3 py-2.5 text-sm font-semibold text-ink-800">Community administrators</summary><p class="border-t border-ink-100 px-3 py-2.5 text-xs text-ink-500">${(data.admins || []).map(admin => esc(admin.name)).join(', ') || 'No admin profiles found.'}</p></details><details open class="rounded-lg border border-ink-200 bg-white/60"><summary class="cursor-pointer px-3 py-2.5 text-sm font-semibold text-ink-800">Circles <span class="text-xs font-normal text-ink-400">(${circles.length})</span></summary><div class="border-t border-ink-100 p-3"><form id="create-circle-form" class="grid grid-cols-1 sm:grid-cols-[1fr_120px_auto] gap-2"><input id="new-circle-name" required maxlength="60" placeholder="New circle name" class="min-w-0 rounded-lg border border-ink-200 bg-white px-2.5 py-2 text-xs"><select id="new-circle-category" required class="min-w-0 rounded-lg border border-ink-200 bg-white px-2.5 py-2 text-xs"><option value="School">School</option><option value="Grade">Grade</option><option value="Locality">Locality</option><option value="Genre">Genre</option><option value="Club">Club</option><option value="Fan group">Fan group</option></select><button class="rounded-lg bg-ink-800 px-3 py-2 text-xs font-semibold text-paper">Add</button></form><p class="mt-2 text-[10px] text-ink-400">Archive hides a circle from future joins; existing members may leave it themselves.</p><div class="mt-3 max-h-72 space-y-1.5 overflow-y-auto pr-1">${circleRows}</div></div></details><details class="rounded-lg border border-ink-200 bg-white/60"><summary class="cursor-pointer px-3 py-2.5 text-sm font-semibold text-ink-800">Feedback <span class="text-xs font-normal text-ink-400">(${feedback.length})</span></summary><div class="border-t border-ink-100 p-3"><input id="admin-feedback-filter" placeholder="Filter by reader, category, or message" class="w-full rounded-lg border border-ink-200 bg-white px-2.5 py-2 text-xs"><div id="admin-feedback-list" class="mt-3 max-h-[32rem] space-y-2 overflow-y-auto pr-1"></div></div></details></div>`;
-    const feedbackList = panel.querySelector('#admin-feedback-list');
-    const renderFeedback = term => {
-      const needle = String(term || '').toLowerCase();
-      const matches = feedback.filter(item => [item.reporterShelf, item.category, item.message, item.status].some(value => String(value || '').toLowerCase().includes(needle)));
-      feedbackList.innerHTML = matches.slice(0, 20).map(feedbackCard).join('') || '<p class="text-xs text-ink-400">No feedback matches.</p>';
-      if (matches.length > 20) feedbackList.insertAdjacentHTML('beforeend', `<p class="text-[10px] text-ink-400">Showing the newest 20 of ${matches.length} matching items.</p>`);
-      feedbackList.querySelectorAll('[data-feedback-reply]').forEach(form => form.addEventListener('submit', async event => {
-        event.preventDefault();
-        const reply = form.querySelector('input').value.trim();
-        if (!reply) return;
-        const response = await guard(() => lendingFunctions.httpsCallable('replyToFeedback')({ feedbackId: form.dataset.feedbackReply, reply }), { context: 'Replying to feedback', success: 'Reply sent to the reader inbox.' });
-        if (response !== FAILED) openAdminDashboard();
-      }));
-    };
-    renderFeedback('');
-    panel.querySelector('#admin-feedback-filter').addEventListener('input', event => renderFeedback(event.target.value));
-    panel.querySelector('#create-circle-form').addEventListener('submit', async event => {
-      event.preventDefault();
-      const response = await guard(() => lendingFunctions.httpsCallable('createCircle')({ name: panel.querySelector('#new-circle-name').value, category: panel.querySelector('#new-circle-category').value }), { context: 'Adding circle', success: 'Circle added.' });
-      if (response !== FAILED) openAdminDashboard();
-    });
+  async function rebuildCommunityStats() {
+    const result = await guard(() => lendingFunctions.httpsCallable('rebuildCommunityStats')({}), { context: 'Refreshing community totals', success: 'Community totals refreshed.' });
+    if (result !== FAILED) openAdminDashboard();
   }
   async function resolveFeedback(feedbackId, status) {
     const result = await guard(() => lendingFunctions.httpsCallable('resolveFeedback')({ feedbackId, status }), { context: 'Updating feedback', success: status === 'resolved' ? 'Feedback marked resolved.' : 'Feedback reopened.' });
@@ -776,7 +786,13 @@
     if (result !== FAILED) openAdminDashboard();
   }
   async function rebuildDiscoveryIndex() {
-    const result = await guard(() => lendingFunctions.httpsCallable('rebuildDiscoveryIndex')({}), { context: 'Refreshing search index', success: 'Book and series search index refreshed.' });
+    const result = await guard(async () => {
+      let after = null;
+      do {
+        const response = await lendingFunctions.httpsCallable('rebuildDiscoveryIndex')({ after });
+        after = response.data.next;
+      } while (after);
+    }, { context: 'Refreshing search index', success: 'Book and series search index refreshed.' });
     if (result !== FAILED) searchCache.clear();
   }
   window.openReaderProfile = openReaderProfile;
@@ -790,7 +806,7 @@
   }
 
   // --- BOOK METADATA OPTIONS ---
-  const GENRES = ['Fiction','Non-Fiction','Sci-Fi & Fantasy','Mystery & Thriller','Romance','Biography & Memoir','History','Self-Help','Poetry','Other'];
+  const GENRES = ['Fiction','Non-Fiction','Adventure','Humour','Comics & Graphic Novels','Picture Books','Science & Nature','Sci-Fi & Fantasy','Mystery & Thriller','Romance','Biography & Memoir','History','Self-Help','Poetry','Other'];
   const GENRE_COLORS = {
     'Fiction':'bg-rust-500','Non-Fiction':'bg-ink-600','Sci-Fi & Fantasy':'bg-gold-500','Mystery & Thriller':'bg-ink-800',
     'Romance':'bg-rust-400','Biography & Memoir':'bg-gold-600','History':'bg-ink-700','Self-Help':'bg-ink-500','Poetry':'bg-rust-700','Other':'bg-ink-400'
@@ -856,20 +872,42 @@
     if (fallback) fallback.classList.remove('hidden');
   }
 
+  const MAX_COVER_SOURCE_BYTES = 12 * 1024 * 1024;
+  const TARGET_COVER_BYTES = 300 * 1024;
+  const MAX_COVER_UPLOAD_BYTES = 350 * 1024;
+
+  function canvasToJpeg(canvas, quality) {
+    return new Promise((resolve, reject) => {
+      canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('Photo compression failed')), 'image/jpeg', quality);
+    });
+  }
+
   function resizeImageFile(file) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => {
         const img = new Image();
-        img.onload = () => {
-          const maxSide = 720;
-          const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
-          const canvas = document.createElement('canvas');
-          canvas.width = Math.max(1, Math.round(img.width * scale));
-          canvas.height = Math.max(1, Math.round(img.height * scale));
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-          canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('Photo compression failed')), 'image/jpeg', 0.76);
+        img.onload = async () => {
+          try {
+            let maxSide = 900;
+            let blob = null;
+            // Camera files vary wildly. Retry smaller canvases and lower JPEG quality
+            // so normal photos become a compact cover instead of an upload failure.
+            for (let attempt = 0; attempt < 4 && (!blob || blob.size > TARGET_COVER_BYTES); attempt += 1) {
+              const scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+              const canvas = document.createElement('canvas');
+              canvas.width = Math.max(1, Math.round(img.width * scale));
+              canvas.height = Math.max(1, Math.round(img.height * scale));
+              const ctx = canvas.getContext('2d');
+              ctx.fillStyle = '#ffffff';
+              ctx.fillRect(0, 0, canvas.width, canvas.height);
+              ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+              blob = await canvasToJpeg(canvas, Math.max(0.52, 0.8 - attempt * 0.09));
+              maxSide = Math.round(maxSide * 0.76);
+            }
+            if (!blob || blob.size > MAX_COVER_UPLOAD_BYTES) throw new Error('Photo could not be compressed enough');
+            resolve(blob);
+          } catch (err) { reject(err); }
         };
         img.onerror = reject;
         img.src = reader.result;
@@ -882,13 +920,13 @@
   document.getElementById('coverFile').addEventListener('change', async (e) => {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
-    if (file.size > 10 * 1024 * 1024) return toast('Please choose a photo smaller than 10 MB.', 'error');
+    if (file.size > MAX_COVER_SOURCE_BYTES) return toast('Please choose a cover photo smaller than 12 MB.', 'error');
     try {
       inlineCoverFile = await resizeImageFile(file);
       document.getElementById('coverUrl').value = '';
-      document.getElementById('cover-file-label').textContent = 'Cover photo ready';
+      document.getElementById('cover-file-label').textContent = `Cover photo ready (${Math.ceil(inlineCoverFile.size / 1024)} KB)`;
       document.getElementById('clear-cover-photo').classList.remove('hidden');
-      toast('Cover photo added.', 'success');
+      toast('Cover photo optimised and ready to upload.', 'success');
     } catch (err) {
       console.error('Image resize failed', err);
       toast('Could not use that photo. Try a smaller image.', 'error');
@@ -929,10 +967,11 @@
   document.getElementById('edit-coverFile').addEventListener('change', async (e) => {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
+    if (file.size > MAX_COVER_SOURCE_BYTES) return toast('Please choose a cover photo smaller than 12 MB.', 'error');
     try {
       editCoverFile = await resizeImageFile(file);
       document.getElementById('edit-coverUrl').value = '';
-      document.getElementById('edit-cover-file-label').textContent = 'New cover photo ready';
+      document.getElementById('edit-cover-file-label').textContent = `New cover ready (${Math.ceil(editCoverFile.size / 1024)} KB)`;
       document.getElementById('edit-clear-cover-photo').classList.remove('hidden');
       toast('Replacement cover photo added.', 'success');
     } catch (err) {
@@ -1024,6 +1063,7 @@
     document.getElementById('login-copy').textContent = 'Sign in to meet the reader who invited you and connect your libraries.';
   }
   if (isLocalDemo) {
+    document.documentElement.classList.add('local-demo');
     db.useEmulator('127.0.0.1', 8080);
     auth.useEmulator('http://127.0.0.1:9099');
     storage.useEmulator('127.0.0.1', 9199);
@@ -1041,6 +1081,7 @@
   let friendshipDocs = {};        // friendUid -> friendship document id (needed to unfriend)
   let pendingSentRequests = [];   // outgoing requests the user can still cancel
   let myBooksCache = {};
+  let myBooksLoaded = false;
   let searchBookCache = {};
   let borrowedBooksCache = [];
   let borrowRequestStates = {};
@@ -1093,9 +1134,25 @@
   function signOut() {
     isSigningOut = true;
     clearTimeout(inactivityTimer);
-    inboxUnsubscribers.forEach(unsubscribe => unsubscribe && unsubscribe());
-    inboxUnsubscribers = [];
+    stopSessionListeners();
     auth.signOut();
+  }
+
+  const sessionListeners = new Map();
+  function trackSessionListener(name, query, next, context) {
+    sessionListeners.get(name)?.();
+    const uid = currentUser.uid;
+    sessionListeners.set(name, query.onSnapshot(snapshot => {
+      if (currentUser?.uid === uid && !isSigningOut) next(snapshot);
+    }, listenerError(context)));
+  }
+  function stopSessionListeners() {
+    sessionListeners.forEach(unsubscribe => unsubscribe());
+    sessionListeners.clear();
+    inboxUnsubscribers.forEach(unsubscribe => unsubscribe?.());
+    inboxUnsubscribers = [];
+    clearInterval(tickerTimer);
+    tickerTimer = null;
   }
 
   async function deleteAccount() {
@@ -1113,12 +1170,24 @@
   }
 
   auth.onAuthStateChanged(async (user) => {
+    stopSessionListeners();
+    borrowHistoryLoaded = false;
+    borrowHistoryCache = [];
+    borrowedBooksCache = [];
+    savedBooksCache = [];
+    searchCache.clear();
+    ratingCache.clear();
+    if (currentUser?.uid !== user?.uid) AdminDashboard.reset();
     if (user) {
+      isSigningOut = false;
       currentUser = user;
+      myBooksCache = {};
+      myBooksLoaded = false;
       resetInactivityTimer();
       document.getElementById('login-screen').classList.add('hidden');
 
       const userDoc = await guard(() => db.collection("profiles").doc(user.uid).get(), { context: 'Loading your profile' });
+      if (currentUser?.uid !== user.uid) return;
       if (userDoc === FAILED) return;
       if (!userDoc.exists || !userDoc.data().libraryName) {
         document.getElementById('profile-modal').classList.remove('hidden');
@@ -1130,6 +1199,8 @@
       clearTimeout(inactivityTimer);
       currentUser = null;
       userProfile = null;
+      myBooksCache = {};
+      myBooksLoaded = false;
       closeReaderProfileModal();
       document.getElementById('login-screen').classList.remove('hidden');
       document.getElementById('app-content').classList.add('hidden');
@@ -1203,19 +1274,23 @@
   function switchTab(tabName) {
     PAGE_VIEWS.forEach(t => {
       document.getElementById(`view-${t}`).classList.add('hidden');
-      if (PRIMARY_TABS.includes(t)) {
+      if (PRIMARY_TABS.includes(t) || t === 'admin') {
         document.getElementById(`tab-${t}`).classList.remove('active');
         document.getElementById(`tab-${t}`).classList.add('text-ink-500');
         document.getElementById(`tab-mobile-${t}`).classList.remove('active');
         document.getElementById(`tab-mobile-${t}`).classList.add('text-ink-500');
+        document.getElementById(`tab-${t}`).removeAttribute('aria-current');
+        document.getElementById(`tab-mobile-${t}`).removeAttribute('aria-current');
       }
     });
     document.getElementById(`view-${tabName}`).classList.remove('hidden');
-    const activeTab = PRIMARY_TABS.includes(tabName) ? tabName : (tabName === 'history' ? 'library' : tabName === 'admin' ? 'profile' : 'friends');
+    const activeTab = PRIMARY_TABS.includes(tabName) || tabName === 'admin' ? tabName : (tabName === 'history' ? 'library' : 'friends');
     document.getElementById(`tab-${activeTab}`).classList.add('active');
     document.getElementById(`tab-${activeTab}`).classList.remove('text-ink-500');
     document.getElementById(`tab-mobile-${activeTab}`).classList.add('active');
     document.getElementById(`tab-mobile-${activeTab}`).classList.remove('text-ink-500');
+    document.getElementById(`tab-${activeTab}`).setAttribute('aria-current', 'page');
+    document.getElementById(`tab-mobile-${activeTab}`).setAttribute('aria-current', 'page');
 
     const titles = { library: 'My Library', add: 'Add a book', friends: 'Friends', search: 'Search Libraries', inbox: 'Inbox', profile: 'Reader profile', admin: 'Admin console', 'friend-shelf': 'Friend shelf', history: 'Borrowing history' };
     document.getElementById('header-title').textContent = titles[tabName] || 'CloudLibrary';
@@ -1489,18 +1564,21 @@
   }
 
   function fetchMyBooks() {
-    db.collection("books").where("ownerId", "==", currentUser.uid).limit(150).onSnapshot((snapshot) => {
+    trackSessionListener('owned', db.collection("books").where("ownerId", "==", currentUser.uid).limit(150), (snapshot) => {
       myBooksCache = {};
+      myBooksLoaded = true;
       const books = snapshot.docs.map(doc => {
         const book = { id: doc.id, ...doc.data() };
         myBooksCache[book.id] = book;
         return book;
       });
       document.getElementById('empty-state').classList.toggle('hidden', books.length > 0);
-      if (books.length) renderOwnShelf(books);
-      else document.getElementById('books-grid').innerHTML = '';
+    if (books.length) renderOwnShelf(books);
+    else document.getElementById('books-grid').innerHTML = '';
       renderLentOutBooks(books.filter(book => book.status === 'Lent Out'));
-    }, listenerError('your library'));
+      renderOnboarding();
+      renderMyReaderScore();
+    }, 'your library');
   }
 
   function renderLentOutBooks(books) {
@@ -1513,7 +1591,7 @@
   }
 
   function fetchBorrowedBooks() {
-    db.collection("books").where("borrowerId", "==", currentUser.uid).limit(150).onSnapshot((snapshot) => {
+    trackSessionListener('borrowed', db.collection("books").where("borrowerId", "==", currentUser.uid).where('status', '==', 'Lent Out').limit(3), (snapshot) => {
       const grid = document.getElementById('borrowed-books-grid');
       const empty = document.getElementById('borrowed-empty-state');
       grid.innerHTML = '';
@@ -1527,7 +1605,7 @@
         grid.insertAdjacentHTML('beforeend', renderBookCard(book, actions, null, 'borrower'));
       });
       empty.classList.toggle('hidden', borrowedBooksCache.length > 0);
-    }, listenerError('borrowed books'));
+    }, 'borrowed books');
   }
 
   let borrowHistoryCache = [];
@@ -1549,12 +1627,12 @@
   function loadBorrowHistory() {
     if (borrowHistoryLoaded) { renderBorrowHistory(); return; }
     borrowHistoryLoaded = true;
-    db.collection('requests').where('requesterId', '==', currentUser.uid).orderBy('createdAt', 'desc').limit(5).onSnapshot((snapshot) => {
+    trackSessionListener('history', db.collection('requests').where('requesterId', '==', currentUser.uid).orderBy('createdAt', 'desc').limit(5), (snapshot) => {
       borrowHistoryCache = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
         .filter(req => req.type === 'borrow')
         .sort((a, b) => timestampMillis(b.returnedAt || b.lostAt || b.createdAt) - timestampMillis(a.returnedAt || a.lostAt || a.createdAt));
       renderBorrowHistory();
-    }, listenerError('borrowing history'));
+    }, 'borrowing history');
   }
 
   function collectBookFields(prefix) {
@@ -1619,13 +1697,10 @@
     submitButton.textContent = 'Add to shelf';
   });
 
-  document.getElementById('quick-add-form').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    if (bulkSubmissionInProgress) return;
-    const lines = document.getElementById('quick-book-lines').value.split('\n')
-      .map(line => line.trim()).filter(Boolean).slice(0, 200);
-    if (!lines.length) return toast('Add at least one book title.', 'info');
-    const books = lines.map(line => {
+  const MAX_BULK_BOOKS = 200;
+  function parseQuickBookLines() {
+    const rawLines = document.getElementById('quick-book-lines').value.split('\n').map(line => line.trim()).filter(Boolean);
+    const books = rawLines.slice(0, MAX_BULK_BOOKS).map(line => {
       const parts = line.split('|').map(part => part.trim());
       if (parts.length >= 4) {
         const [seriesName, rawNumber, title, ...authorParts] = parts;
@@ -1634,7 +1709,27 @@
       const [title, ...authorParts] = parts;
       return { seriesName: '', seriesNumber: null, title, author: authorParts.join(' | ') || 'Unknown author' };
     }).filter(book => book.title);
+    return { rawLines, books };
+  }
+
+  function updateQuickImportPreview() {
+    const label = document.getElementById('quick-import-count');
+    if (!label) return;
+    const { rawLines, books } = parseQuickBookLines();
+    if (!rawLines.length) { label.textContent = `Add up to ${MAX_BULK_BOOKS} books at once.`; return; }
+    const skipped = rawLines.length - books.length;
+    const capped = Math.max(0, rawLines.length - MAX_BULK_BOOKS);
+    label.textContent = `${books.length} book${books.length === 1 ? '' : 's'} ready to add${skipped ? ` · ${skipped} blank title${skipped === 1 ? '' : 's'} skipped` : ''}${capped ? ` · only the first ${MAX_BULK_BOOKS} will be added` : ''}.`;
+  }
+  document.getElementById('quick-book-lines').addEventListener('input', updateQuickImportPreview);
+
+  document.getElementById('quick-add-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (bulkSubmissionInProgress) return;
+    const { rawLines, books } = parseQuickBookLines();
+    if (!rawLines.length) return toast('Add at least one book title.', 'info');
     if (!books.length) return toast('Each line needs a book title.', 'info');
+    if (rawLines.length > MAX_BULK_BOOKS && !confirm(`Only the first ${MAX_BULK_BOOKS} books can be added at once. Add those now?`)) return;
     const duplicates = books.filter(looksLikeShelfDuplicate);
     if (duplicates.length && !confirm(`${duplicates.length} listed book${duplicates.length === 1 ? ' looks' : 's look'} like ${duplicates.length === 1 ? 'a copy' : 'copies'} already on your shelf. Add them anyway?`)) return;
     const button = document.getElementById('quick-add-submit');
@@ -1664,6 +1759,7 @@
     }
     if (added === books.length) {
       e.target.reset();
+      updateQuickImportPreview();
       toast(`${added} books added to your shelf.`, 'success');
     } else if (added) {
       toast(`${added} books were added. The remaining entries stay in the list so you can try again.`, 'info');
@@ -1688,7 +1784,8 @@
     const field = document.getElementById('quick-book-lines');
     field.value = [field.value.trim(), ...lines].filter(Boolean).join('\n');
     field.focus();
-    toast('Series list prepared. Replace “Book #” with the real title where you know it, then add the books to your shelf.', 'info');
+    updateQuickImportPreview();
+    toast('Series added to your review list. Replace “Book #” with real titles where you know them, then add the reviewed books.', 'info');
   });
 
   function normalizedTitle(title) {
@@ -1733,7 +1830,7 @@
   }
 
   async function uploadCoverPhoto(bookId, blob) {
-    if (!blob || blob.size > 350 * 1024) throw new Error('Compressed cover photo is too large. Please use a smaller photo.');
+    if (!blob || blob.size > MAX_COVER_UPLOAD_BYTES) throw new Error('Compressed cover photo is too large. Please use a smaller photo.');
     const ref = storage.ref(`covers/${currentUser.uid}/${bookId}.jpg`);
     await ref.put(blob, { contentType: 'image/jpeg', cacheControl: 'public,max-age=31536000,immutable' });
     return ref.getDownloadURL();
@@ -1762,11 +1859,11 @@
     list.innerHTML = savedBooksCache.map(book => `<div class="flex items-center gap-3 rounded-lg border border-ink-200 bg-paper/70 p-3"><div class="h-12 w-9 shrink-0 overflow-hidden rounded border border-ink-200 bg-ink-800/5">${book.coverUrl ? `<img src="${esc(safeUrl(book.coverUrl))}" alt="" class="h-full w-full object-cover">` : ''}</div><div class="min-w-0 flex-1"><button data-action="search-book" data-query="${esc(book.title || '')}" class="block max-w-full truncate text-left text-sm font-semibold text-ink-800 hover:text-rust-600">${esc(book.title || 'Untitled book')}</button><p class="truncate text-[11px] text-ink-500">${esc(book.author || '')}${book.seriesName ? ` · ${esc(book.seriesName)}` : ''}</p><p class="truncate text-[10px] text-ink-400">${esc(book.ownerName || 'Saved from CloudLibrary')}</p></div><button data-action="delete-saved-book" data-id="${esc(book.id)}" class="shrink-0 p-1 text-rust-600" title="Remove saved book">${icon('x','w-3.5 h-3.5')}</button></div>`).join('');
   }
   function fetchSavedBooks() {
-    db.collection('savedBooks').where('userId', '==', currentUser.uid).limit(50).onSnapshot(snapshot => {
+    trackSessionListener('saved', db.collection('savedBooks').where('userId', '==', currentUser.uid).limit(50), snapshot => {
       savedBooksCache = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       renderSavedBooks();
       refreshSavedBookButtons();
-    }, listenerError('saved books'));
+    }, 'saved books');
   }
   async function saveBookForLater(book) {
     const id = savedBookDocumentId(book.id);
@@ -1784,6 +1881,8 @@
   }
 
   window.deleteBook = async function (id) {
+    const book = myBooksCache[id];
+    if (book?.status === 'Lent Out') return toast('This book is still lent out. Complete the return or close a lost loan before deleting it.', 'info');
     if (!confirm("Delete this book?")) return;
     await guard(() => db.collection('books').doc(id).delete(), {
       context: 'Deleting a book',
@@ -1878,6 +1977,7 @@
     const res = await guard(() => db.collection('books').doc(id).update(fields), { context: 'Updating a book', success: 'Changes saved.' });
     if (res === FAILED) return;
     editCoverFile = null;
+    searchCache.clear();
     closeEditModal();
   });
 
@@ -1922,6 +2022,7 @@
         }
       }
     });
+    renderOnboarding();
   }
 
   async function loadPendingSent() {
@@ -2114,10 +2215,15 @@
   window.viewFriendLibrary = viewFriendLibrary;
 
   // --- 7. GLOBAL SEARCH ---
-  async function performGlobalSearch() {
+  let searchRun = 0;
+  let searchPages = null;
+  async function performGlobalSearch(loadMore = false) {
+    const run = ++searchRun;
     const query = document.getElementById('global-search-input').value.trim().toLowerCase();
-    const queryTerms = query.match(/[a-z0-9]+/g) || [];
-    const lookupToken = [...queryTerms].sort((first, second) => second.length - first.length)[0] || query;
+    const parsed = BookTools.parseSearch(query);
+    const queryTerms = parsed.terms;
+    const lookupToken = parsed.token;
+    const fallbackToken = lookupToken.length >= 4 ? lookupToken.slice(0, -1) : '';
     const statusFilter = document.getElementById('search-status-filter').value;
     const genreFilter = document.getElementById('search-genre-filter').value;
     const grid = document.getElementById('search-results-grid');
@@ -2126,48 +2232,97 @@
       return;
     }
     grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4">Searching your circle first…</p>';
-    const cacheKey = `${query}|${confirmedFriends.slice().sort().join(',')}`;
-    const cached = searchCache.get(cacheKey);
+    const cacheKey = `${query}|${statusFilter}|${genreFilter}|${confirmedFriends.slice().sort().join(',')}`;
+    if (!loadMore || searchPages?.key !== cacheKey) searchPages = { key: cacheKey, cursors: {}, exhausted: {}, friendBooks: [], discoveryBooks: [], profiles: [] };
+    const page = searchPages;
+    const nextPage = async (source, base) => {
+      if (page.exhausted[source]) return { docs: [] };
+      const cursor = page.cursors[source];
+      const snapshot = await guard(() => (cursor ? base.startAfter(cursor) : base).limit(10).get(), { context: 'Searching books' });
+      if (snapshot !== FAILED) {
+        page.exhausted[source] = snapshot.docs.length < 10;
+        if (snapshot.docs.length) page.cursors[source] = snapshot.docs[snapshot.docs.length - 1];
+      }
+      return snapshot;
+    };
+    const bookQuery = token => db.collection('bookDiscovery').where('searchTokens', 'array-contains', token);
     let friendBooks;
     let discoveryBooks;
     let profiles;
-    if (cached && Date.now() - cached.createdAt < SEARCH_CACHE_MS) {
-      ({ friendBooks, discoveryBooks, profiles } = cached);
-    } else {
-      // One indexed query keeps friend-first search bounded. The previous
-      // implementation read ten books from each friend (up to 100 reads).
+    {
       const friendBookQuery = confirmedFriends.length
-        ? guard(() => db.collection('bookDiscovery')
+        ? nextPage('friends', db.collection('bookDiscovery')
           .where('ownerId', 'in', confirmedFriends.slice(0, 30))
-          .where('searchTokens', 'array-contains', lookupToken).limit(10).get(), { context: 'Searching friends' })
+          .where('searchTokens', 'array-contains', lookupToken))
         : Promise.resolve({ docs: [] });
       const [friendBookSnap, bookSnap, profileSnap] = await Promise.all([
         friendBookQuery,
-        guard(() => db.collection('bookDiscovery').where('searchTokens', 'array-contains', lookupToken).limit(10).get(), { context: 'Searching the network' }),
-        guard(() => db.collection('profiles').where('searchTokens', 'array-contains', lookupToken).limit(10).get(), { context: 'Searching readers' })
+        nextPage('books', bookQuery(lookupToken)),
+        nextPage('profiles', db.collection('profiles').where('searchTokens', 'array-contains', lookupToken))
       ]);
+      if (run !== searchRun) return;
       if (friendBookSnap === FAILED || bookSnap === FAILED || profileSnap === FAILED) { grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4">Search failed. Please try again.</p>'; return; }
       friendBooks = friendBookSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       discoveryBooks = bookSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       profiles = profileSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      searchCache.set(cacheKey, { createdAt: Date.now(), friendBooks, discoveryBooks, profiles });
+      // Fetch the requested number before applying the display limit. Broader
+      // series matches remain available below it and through cursor pagination.
+      if (parsed.seriesNumber !== null) {
+        const exact = await nextPage('number', bookQuery(lookupToken).where('seriesNumber', '==', parsed.seriesNumber));
+        if (run !== searchRun) return;
+        if (exact !== FAILED) discoveryBooks.unshift(...exact.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      }
+      // Prefixes already cover normal spelling. A single shorter fallback gives
+      // young readers room for a near miss such as "magik tree" without a
+      // broad or collection-wide fuzzy search.
+      if (!friendBooks.length && !discoveryBooks.length && fallbackToken && fallbackToken !== lookupToken) {
+        const fallbackFriendQuery = Promise.resolve({ docs: [] });
+        const [fallbackFriendSnap, fallbackBookSnap] = await Promise.all([
+          fallbackFriendQuery,
+          nextPage('fallback', db.collection('bookDiscovery').where('searchTokens', 'array-contains-any', [...new Set([fallbackToken, ...queryTerms.filter(term => /[a-z]/.test(term) && term !== lookupToken).slice(0, 2)])]))
+        ]);
+        if (run !== searchRun) return;
+        if (fallbackFriendSnap !== FAILED && fallbackBookSnap !== FAILED) {
+          friendBooks = fallbackFriendSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          discoveryBooks = fallbackBookSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          if (parsed.seriesNumber !== null) {
+            const fallbackNumber = await nextPage('fallback-number', db.collection('bookDiscovery')
+              .where('searchTokens', 'array-contains-any', [...new Set([fallbackToken, ...queryTerms.filter(term => /[a-z]/.test(term) && term !== lookupToken).slice(0, 2)])])
+              .where('seriesNumber', '==', parsed.seriesNumber));
+            if (run !== searchRun) return;
+            if (fallbackNumber !== FAILED) discoveryBooks.unshift(...fallbackNumber.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+          }
+        }
+      }
+      page.friendBooks.push(...friendBooks);
+      page.discoveryBooks.push(...discoveryBooks);
+      page.profiles.push(...profiles);
+      ({ friendBooks, discoveryBooks, profiles } = page);
     }
     grid.innerHTML = '';
     const shown = new Set();
-    const matchesTerms = values => queryTerms.every(term => values.some(value => String(value || '').toLowerCase().includes(term)));
+    const matchesTerms = values => BookTools.matchesSearch(parsed, values);
+    const matchesBook = book => BookTools.matchesSearch(parsed.seriesNumber === null ? parsed : { ...parsed, terms: parsed.terms.slice(0, -1) }, [book.title, book.author, book.seriesName]);
     const addBook = (book, isFriend) => {
-      if (shown.has(`book:${book.id}`) || book.ownerId === currentUser.uid) return;
-      if (!matchesTerms([book.title, book.author, book.seriesName, book.ownerName])) return;
+      if (shown.has(`book:${book.id}`)) return;
+      if (!matchesBook(book)) return;
       if ((statusFilter && book.status !== statusFilter) || (genreFilter && book.genre !== genreFilter)) return;
       shown.add(`book:${book.id}`);
       searchBookCache[book.id] = book;
       const saveButton = `<span data-save-book-id="${esc(book.id)}">${savedBookButton(book)}</span>`;
-      const actions = isFriend && book.status === 'Available'
+      const actions = book.ownerId === currentUser.uid
+        ? `<button data-action="edit-book" data-id="${esc(book.id)}" class="text-ink-700 px-3 py-1.5 text-xs font-semibold">Edit my book</button>`
+        : isFriend && book.status === 'Available'
         ? `${borrowActionWrapper(book.id, book.title, book.ownerId)}${saveButton}`
         : `<button data-action="open-reader-profile" data-uid="${esc(book.ownerId)}" class="text-rust-600 bg-rust-600/10 hover:bg-rust-600/20 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors">View profile</button>${saveButton}`;
-      grid.insertAdjacentHTML('beforeend', renderBookCard(book, actions, `${esc(book.ownerName || 'A reader')}${isFriend ? ' · Friend' : ''}`));
+      const alternative = parsed.seriesNumber !== null && Number(book.seriesNumber) !== parsed.seriesNumber;
+      grid.insertAdjacentHTML('beforeend', renderBookCard(book, actions, `${esc(book.ownerName || 'A reader')}${isFriend ? ' · Friend' : ''}${alternative ? ' · Other book in this search' : ''}`));
     };
-    friendBooks.forEach(book => addBook(book, true));
+    const ranked = [...friendBooks, ...discoveryBooks].sort((a, b) => {
+      const rank = book => (parsed.seriesNumber !== null && Number(book.seriesNumber) === parsed.seriesNumber ? 100 : 0) + (confirmedFriends.includes(book.ownerId) ? 10 : 0);
+      return rank(b) - rank(a);
+    });
+    ranked.forEach(book => addBook(book, confirmedFriends.includes(book.ownerId)));
     profiles.forEach(profile => {
       if (profile.id === currentUser.uid || shown.has(`profile:${profile.id}`)) return;
       if (!matchesTerms([profile.libraryName, profile.ownerName, profile.shelfKey])) return;
@@ -2177,8 +2332,15 @@
       const action = isFriend ? `<button data-action="view-shelf" data-uid="${esc(profile.id)}" data-name="${esc(name)}" class="bg-ink-800/10 text-ink-800 px-3 py-1.5 rounded-lg text-xs font-semibold">View shelf</button>` : `<button data-action="open-reader-profile" data-uid="${esc(profile.id)}" class="text-rust-600 bg-rust-600/10 hover:bg-rust-600/20 px-3 py-1.5 rounded-lg text-xs font-semibold">View profile</button>`;
       grid.insertAdjacentHTML('beforeend', `<div class="app-panel rounded-xl border border-ink-200 shadow-sm p-4 flex justify-between items-center gap-3"><div class="flex items-center gap-3 min-w-0">${avatarHtml(profile, name)}<div class="min-w-0"><p class="font-mono text-[10px] uppercase tracking-wider text-rust-600">${isFriend ? 'Friend shelf' : 'Reader profile'}</p><h3 class="font-display text-lg text-ink-950 truncate">${esc(name)}</h3>${ratingBadgeHtml(profile.id, profile.ratingScore || 3)}</div></div><div class="shrink-0">${action}</div></div>`);
     });
-    discoveryBooks.forEach(book => addBook(book, confirmedFriends.includes(book.ownerId)));
-    if (!shown.size) grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4">No matching books or reader profiles found.</p>';
+    const hasMore = Object.values(page.exhausted).some(exhausted => !exhausted);
+    if (!shown.size) grid.innerHTML = `<p class="text-ink-400 col-span-2 p-4">No matches ${hasMore ? 'in this batch' : 'found'}. Check the spelling, try a shorter series name, or clear the filters.${hasMore ? ' Load more to keep looking.' : ''}</p>`;
+    if (hasMore) {
+      const more = document.createElement('button');
+      more.type = 'button'; more.textContent = 'Load more results';
+      more.className = 'col-span-full justify-self-center px-4 py-3 text-sm font-semibold text-ink-800';
+      more.addEventListener('click', () => performGlobalSearch(true));
+      grid.appendChild(more);
+    }
   }
   window.performGlobalSearch = performGlobalSearch;
   document.getElementById('global-search-form').addEventListener('submit', (e) => {
@@ -2475,6 +2637,7 @@
       case 'install-starter-circles': installStarterCircles(); break;
       case 'open-admin-dashboard': openAdminDashboard(); break;
       case 'rebuild-discovery': rebuildDiscoveryIndex(); break;
+      case 'rebuild-community-stats': rebuildCommunityStats(); break;
       case 'open-admin-page': openAdminDashboard(); break;
       case 'back-to-profile': openReaderProfile('self'); break;
       case 'resolve-feedback': resolveFeedback(d.id, d.status); break;
@@ -2483,6 +2646,9 @@
       case 'close-help': closeHelp(); break;
       case 'open-reader-profile': openReaderProfile(d.uid); break;
       case 'close-reader-profile': closeReaderProfileModal(); break;
+      case 'onboarding-profile': openReaderProfile('self', true); break;
+      case 'onboarding-add-book': switchTab('add'); setTimeout(() => document.getElementById('title')?.focus(), 0); break;
+      case 'onboarding-find-friends': switchTab('search'); setTimeout(() => document.getElementById('global-search-input')?.focus(), 0); break;
     }
   });
 
@@ -2501,7 +2667,165 @@
       .catch(() => toast('Could not copy automatically. Link: ' + shareUrl, 'info'));
   };
 
-  // --- 9. BARCODE SCANNER (autofills title, author, ISBN, year, cover, description) ---
+  const isbnCatalogCache = new Map();
+  async function catalogJSON(url) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+    try {
+      const response = await fetch(url, { signal: controller.signal });
+      if (!response.ok) throw new Error('Catalog unavailable');
+      return await response.json();
+    } finally { clearTimeout(timeout); }
+  }
+  async function lookupISBNMetadata(isbn) {
+    if (isbnCatalogCache.has(isbn)) return isbnCatalogCache.get(isbn);
+    let metadata = {};
+    let reachedCatalog = false;
+    try {
+      const data = await catalogJSON(`https://www.googleapis.com/books/v1/volumes?q=isbn:${encodeURIComponent(isbn)}&maxResults=1`);
+      reachedCatalog = true;
+      if (data.items?.[0]) metadata = BookTools.googleMetadata(data.items[0].volumeInfo);
+    } catch (error) { console.warn('Primary ISBN catalog unavailable'); }
+    // The edition endpoint includes series information when contributed to the
+    // catalogue. Missing series metadata is left for the reader to confirm.
+    try {
+      const edition = await catalogJSON(`https://openlibrary.org/isbn/${encodeURIComponent(isbn)}.json`);
+      reachedCatalog = true;
+      let work = {};
+      const workKey = edition.works?.[0]?.key;
+      if ((!metadata.author || !metadata.subjects?.length) && /^\/works\/OL\d+W$/.test(workKey || '')) {
+        try { work = await catalogJSON(`https://openlibrary.org${workKey}.json`); } catch { /* Edition metadata remains usable. */ }
+      }
+      metadata.title ||= edition.title || '';
+      metadata.seriesName ||= edition.series?.[0] || work.series?.[0] || '';
+      const numberedSeries = /^(.*?)\s*(?:[,;:]\s*)?(?:book|volume|vol\.?|#)\s*(\d+)\s*$/i.exec(metadata.seriesName);
+      if (numberedSeries) { metadata.seriesName = numberedSeries[1].trim(); metadata.seriesNumber ||= Number(numberedSeries[2]); }
+      metadata.subjects = [...(metadata.subjects || []), ...(edition.subjects || []), ...(work.subjects || [])];
+      metadata.coverUrl ||= edition.covers?.find(id => id > 0) ? `https://covers.openlibrary.org/b/id/${edition.covers.find(id => id > 0)}-L.jpg` : '';
+      metadata.publishedYear ||= /\b\d{4}\b/.exec(edition.publish_date || '')?.[0] || '';
+      const authorRefs = edition.authors?.length ? edition.authors : work.authors;
+      if (!metadata.author && authorRefs?.length) {
+        const authors = await Promise.all(authorRefs.slice(0, 3).map(async author => {
+          const key = author.key || author.author?.key;
+          if (!/^\/authors\/OL\d+A$/.test(key || '')) return '';
+          try { return (await catalogJSON(`https://openlibrary.org${key}.json`)).name || ''; } catch { return ''; }
+        }));
+        metadata.author = authors.filter(Boolean).join(', ');
+      }
+    } catch (error) { console.warn('Secondary ISBN catalog unavailable'); }
+    if (!reachedCatalog) throw new Error('Book catalogs are unavailable. Try again shortly.');
+    if (metadata.title) isbnCatalogCache.set(isbn, metadata);
+    return metadata;
+  }
+  function fillCatalogFields(metadata, prefix = '') {
+    const fields = ['title', 'author', 'seriesName', 'seriesNumber', 'publishedYear', 'coverUrl'];
+    let filled = 0;
+    for (const name of fields) {
+      const input = document.getElementById(prefix + name);
+      const photoSelected = name === 'coverUrl' && (prefix ? editCoverFile : inlineCoverFile);
+      if (input && !input.value.trim() && metadata[name] && !photoSelected) { input.value = metadata[name]; input.dispatchEvent(new Event('input', { bubbles: true })); filled++; }
+    }
+    const genre = document.getElementById(prefix + 'genre');
+    const subjects = (metadata.subjects || []).join(' ').toLowerCase();
+    const genres = [['Sci-Fi & Fantasy', /fantasy|science fiction/], ['Mystery & Thriller', /mystery|detective|thriller/], ['Biography & Memoir', /biograph|memoir/], ['Poetry', /poetry|poems/], ['History', /history/], ['Non-Fiction', /non.?fiction/], ['Fiction', /fiction/]];
+    if (!genre.value) {
+      const match = genres.find(([, pattern]) => pattern.test(subjects));
+      if (match) { genre.value = match[0]; filled++; }
+    }
+    if (!prefix) saveBookDraft();
+    return filled;
+  }
+  async function fillFromISBN(prefix = '') {
+    const input = document.getElementById(prefix + 'isbn');
+    const isbn = BookTools.validISBN(input.value);
+    if (!isbn) { toast('Check the ISBN digits. Use the 10- or 13-digit number printed near the barcode.', 'info'); return; }
+    const button = document.getElementById(prefix + 'lookup-isbn');
+    if (button.disabled) return;
+    const original = button.textContent;
+    const editId = prefix ? document.getElementById('edit-id').value : '';
+    const userId = currentUser?.uid;
+    button.disabled = true; button.textContent = 'Finding details…';
+    try {
+      const metadata = await lookupISBNMetadata(isbn);
+      if (currentUser?.uid !== userId || BookTools.validISBN(input.value) !== isbn || (prefix && document.getElementById('edit-id').value !== editId)) return;
+      const filled = fillCatalogFields(metadata, prefix);
+      toast(filled ? 'Missing details filled. Check the title, series, number and genre before saving.' : metadata.title ? 'Existing details kept. Clear a field before looking up a replacement.' : 'No catalog match. You can still type details or use a cover photo.', filled ? 'success' : 'info');
+    } catch (error) { toast(error.message, 'error'); }
+    finally { button.disabled = false; button.textContent = original; }
+  }
+  document.getElementById('lookup-isbn').addEventListener('click', () => fillFromISBN());
+  document.getElementById('edit-lookup-isbn').addEventListener('click', () => fillFromISBN('edit-'));
+
+  let coverReaderLoading;
+  function loadCoverReader() {
+    if (window.Tesseract) return Promise.resolve(window.Tesseract);
+    if (!coverReaderLoading) coverReaderLoading = new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@6.0.1/dist/tesseract.min.js';
+      script.onload = () => resolve(window.Tesseract);
+      script.onerror = () => { script.remove(); coverReaderLoading = null; reject(new Error('Cover reader could not load. Try ISBN lookup instead.')); };
+      document.head.appendChild(script);
+    });
+    return coverReaderLoading;
+  }
+  for (const prefix of ['', 'edit-']) {
+    const section = document.createElement('details');
+    section.className = 'text-sm border-t border-ink-200 py-2';
+    section.innerHTML = `<summary class="cursor-pointer font-semibold text-ink-700">Find details from a cover photo</summary><p class="text-xs text-ink-600 my-2">Choose a clear cover photo above, then read its text. Check the words before finding a book. English text works best.</p><button type="button" class="read-cover text-xs font-semibold text-ink-700 py-2">Read cover text</button><textarea aria-label="Words from the cover" rows="2" class="cover-words w-full border border-ink-200 rounded-lg p-2" placeholder="Title and author from the cover"></textarea><button type="button" class="find-cover-match text-xs font-semibold text-ink-700 py-2">Find matching books</button><div class="cover-candidates space-y-2" aria-live="polite"></div>`;
+    document.getElementById(prefix + 'coverFile').parentElement.after(section);
+    const read = section.querySelector('.read-cover');
+    const find = section.querySelector('.find-cover-match');
+    const words = section.querySelector('.cover-words');
+    const results = section.querySelector('.cover-candidates');
+    read.addEventListener('click', async () => {
+      const photo = prefix ? editCoverFile : inlineCoverFile;
+      if (!photo) { toast('Take or choose a cover photo first.', 'info'); return; }
+      read.disabled = true; read.textContent = 'Reading cover…';
+      let worker;
+      try {
+        const reader = await loadCoverReader();
+        worker = await reader.createWorker('eng');
+        const result = await worker.recognize(photo);
+        words.value = result.data.text.replace(/\s+/g, ' ').trim().slice(0, 300);
+        if (!words.value) toast('No clear text found. Try a straight, well-lit photo or use the ISBN.', 'info');
+      } catch (error) { toast('Could not read this cover. You can type the title and author below.', 'info'); }
+      finally { if (worker) await worker.terminate(); read.disabled = false; read.textContent = 'Read cover text'; }
+    });
+    find.addEventListener('click', async () => {
+      const query = words.value.trim().slice(0, 180);
+      if (query.length < 3) { toast('Enter a few words from the title or author first.', 'info'); return; }
+      find.disabled = true; results.textContent = 'Finding books…';
+      try {
+        let matches = [];
+        try {
+          const data = await catalogJSON(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(query)}&maxResults=5&printType=books`);
+          matches = (data.items || []).map(item => BookTools.googleMetadata(item.volumeInfo));
+        } catch { /* Try the second catalogue below. */ }
+        if (!matches.length) {
+          const data = await catalogJSON(`https://openlibrary.org/search.json?q=${encodeURIComponent(query)}&limit=5&fields=title,author_name,first_publish_year,cover_i,isbn,subject`);
+          matches = (data.docs || []).map(item => ({ title: item.title || '', author: (item.author_name || []).join(', '), publishedYear: item.first_publish_year || '', coverUrl: item.cover_i ? `https://covers.openlibrary.org/b/id/${item.cover_i}-L.jpg` : '', subjects: item.subject || [] }));
+        }
+        results.replaceChildren();
+        for (const metadata of matches) {
+          const choice = document.createElement('button');
+          choice.type = 'button'; choice.className = 'block w-full text-left border border-ink-200 rounded-lg p-2 text-xs';
+          choice.textContent = `${metadata.title} — ${metadata.author || 'Author not listed'}${metadata.publishedYear ? ` (${metadata.publishedYear})` : ''}`;
+          choice.addEventListener('click', () => {
+            fillCatalogFields(metadata, prefix);
+            const isbnInput = document.getElementById(prefix + 'isbn');
+            if (!isbnInput.value && metadata.isbn) isbnInput.value = metadata.isbn;
+            if (!prefix) saveBookDraft();
+            toast('Missing fields filled. Review the book details before saving.', 'success');
+          });
+          results.appendChild(choice);
+        }
+        if (!results.childElementCount) results.textContent = 'No match. Try just the title and author, or use ISBN lookup.';
+      } catch (error) { results.textContent = 'Catalog unavailable. Try again shortly or enter the details yourself.'; }
+      finally { find.disabled = false; }
+    });
+  }
+
+  // --- 9. BARCODE SCANNER ---
   let html5QrcodeScanner = null;
   let scanInProgress = false;
   async function stopScanner() {
@@ -2531,26 +2855,14 @@
         experimentalFeatures: { useBarCodeDetectorIfSupported: true }
       }, async (decodedText) => {
       if (scanInProgress) return;
+      const isbn = BookTools.validISBN(String(decodedText || ''));
+      if (!isbn) { document.getElementById('scan-status').textContent = 'This is not an ISBN. Aim at the barcode beginning 978 or 979.'; return; }
       scanInProgress = true;
-      const isbn = String(decodedText || '').replace(/[^0-9Xx]/g, '');
       await stopScanner();
       document.getElementById('scan-status').textContent = 'Looking up book…';
       try {
-        const res = await fetch(`https://www.googleapis.com/books/v1/volumes?q=isbn:${encodeURIComponent(isbn)}`);
-        const data = await res.json();
-        const info = data.items && data.items[0] && data.items[0].volumeInfo;
-        if (info) {
-          document.getElementById('title').value = info.title || '';
-          document.getElementById('author').value = (info.authors || []).join(', ');
-          document.getElementById('isbn').value = isbn;
-          if (info.publishedDate) document.getElementById('publishedYear').value = parseInt(info.publishedDate.slice(0, 4), 10) || '';
-          if (info.description) document.getElementById('description').value = info.description.slice(0, 500);
-          if (info.imageLinks && info.imageLinks.thumbnail) document.getElementById('coverUrl').value = info.imageLinks.thumbnail.replace('http://', 'https://');
-          toast('ISBN scanned and book details added.', 'success');
-        } else {
-          document.getElementById('isbn').value = isbn;
-          toast('ISBN scanned. No catalog match found, so you can add details manually.', 'info');
-        }
+        document.getElementById('isbn').value = isbn;
+        await fillFromISBN();
       } catch (err) {
         console.error('Book lookup failed', err);
         document.getElementById('isbn').value = isbn;
@@ -2573,5 +2885,6 @@
 
   // The signed-out page makes no database reads. That keeps casual visits free.
 </script>
+<script src="assets/book-form-layout.js"></script>
 </body>
 </html>
