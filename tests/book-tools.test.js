@@ -1,6 +1,6 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { parseSearch, matchesSearch, validISBN, googleMetadata } = require('../assets/book-tools');
+const { parseSearch, matchesSearch, validISBN, validateBook, googleMetadata } = require('../assets/book-tools');
 
 test('series number and ordinal searches have the same meaning', () => {
   for (const query of ['Magic Tree House 10', 'Magic Tree House book #10', 'Magic Tree House 10th book']) {
@@ -40,4 +40,28 @@ test('number-free book titles match using separate series metadata', () => {
     assert.deepEqual(matched.map(book => book.seriesNumber), [number]);
     assert.ok(matched.every(book => !/\d/.test(book.title)));
   }
+});
+
+test('book validation normalizes one consistent clean-launch record', () => {
+  const result = validateBook({
+    title: '  The Sea of Monsters  ', author: ' Rick Riordan ', seriesName: ' Percy Jackson ',
+    seriesNumber: '2', genre: 'Adventure', isbn: '978-0-14-134684-7', publishedYear: '2013',
+    condition: 'Good', coverUrl: 'https://example.com/cover.jpg', description: ' My copy ', rating: '4', status: 'Available'
+  });
+  assert.equal(result.valid, true);
+  assert.equal(result.book.title, 'The Sea of Monsters');
+  assert.equal(result.book.seriesNumber, 2);
+  assert.equal(result.book.isbn, '9780141346847');
+});
+
+test('book validation rejects incomplete and malformed metadata', () => {
+  const base = { title: 'Book', author: 'Author', seriesName: '', seriesNumber: null, genre: '', isbn: '', publishedYear: null, condition: '', coverUrl: '', description: '', rating: 0, status: 'Available' };
+  assert.equal(validateBook({ ...base, title: '   ' }).valid, false);
+  assert.equal(validateBook({ ...base, author: '' }).valid, false);
+  assert.equal(validateBook({ ...base, seriesNumber: 0 }).valid, false);
+  assert.equal(validateBook({ ...base, publishedYear: 999 }).valid, false);
+  assert.equal(validateBook({ ...base, isbn: '9780439023482' }).valid, false);
+  assert.equal(validateBook({ ...base, coverUrl: 'http://example.com/cover.jpg' }).valid, false);
+  assert.equal(validateBook({ ...base, rating: 6 }).valid, false);
+  assert.equal(validateBook({ ...base, rating: null }).valid, false);
 });

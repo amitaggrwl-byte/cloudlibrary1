@@ -34,6 +34,70 @@
     if (/^97[89]\d{10}$/.test(isbn)) return [...isbn].reduce((sum, c, i) => sum + Number(c) * (i % 2 ? 3 : 1), 0) % 10 === 0 ? isbn : '';
     return '';
   }
+  const BOOK_LIMITS = Object.freeze({
+    title: 240,
+    author: 180,
+    seriesName: 200,
+    seriesNumber: 9999,
+    genre: 60,
+    condition: 40,
+    coverUrl: 2000,
+    description: 2000
+  });
+  function optionalInteger(value) {
+    if (value === '' || value === null || value === undefined) return null;
+    const number = Number(value);
+    return Number.isInteger(number) ? number : NaN;
+  }
+  function validateBook(input = {}, options = {}) {
+    const allowedStatuses = options.allowedStatuses || ['Available', 'Reading'];
+    const text = key => String(input[key] ?? '').trim();
+    const enteredISBN = text('isbn');
+    const isbn = enteredISBN ? validISBN(enteredISBN) : '';
+    const book = {
+      ...input,
+      title: text('title'),
+      author: text('author'),
+      seriesName: text('seriesName'),
+      seriesNumber: optionalInteger(input.seriesNumber),
+      genre: text('genre'),
+      isbn,
+      publishedYear: optionalInteger(input.publishedYear),
+      condition: text('condition'),
+      coverUrl: text('coverUrl'),
+      description: text('description'),
+      rating: optionalInteger(input.rating),
+      status: text('status')
+    };
+    const errors = [];
+    const required = (key, label) => {
+      if (!book[key]) errors.push(`${label} is required.`);
+    };
+    const bounded = (key, label) => {
+      if (book[key].length > BOOK_LIMITS[key]) errors.push(`${label} must be ${BOOK_LIMITS[key]} characters or fewer.`);
+    };
+    required('title', 'Book title');
+    required('author', 'Author');
+    bounded('title', 'Book title');
+    bounded('author', 'Author');
+    bounded('seriesName', 'Series name');
+    bounded('genre', 'Genre');
+    bounded('condition', 'Condition');
+    bounded('coverUrl', 'Cover image address');
+    bounded('description', 'Book note');
+    if (Number.isNaN(book.seriesNumber) || (book.seriesNumber !== null && (book.seriesNumber < 1 || book.seriesNumber > BOOK_LIMITS.seriesNumber))) {
+      errors.push(`Book number must be a whole number from 1 to ${BOOK_LIMITS.seriesNumber}.`);
+    }
+    const latestYear = new Date().getFullYear() + 1;
+    if (Number.isNaN(book.publishedYear) || (book.publishedYear !== null && (book.publishedYear < 1000 || book.publishedYear > latestYear))) {
+      errors.push(`Year must be from 1000 to ${latestYear}.`);
+    }
+    if (enteredISBN && !isbn) errors.push('ISBN must be a valid 10- or 13-digit book number.');
+    if (book.coverUrl && !/^https:\/\//i.test(book.coverUrl)) errors.push('Cover image address must start with https://.');
+    if (!Number.isInteger(book.rating) || book.rating < 0 || book.rating > 5) errors.push('Rating must be a whole number from 0 to 5.');
+    if (!allowedStatuses.includes(book.status)) errors.push('Choose a valid availability.');
+    return { valid: errors.length === 0, errors, book };
+  }
   function googleMetadata(info = {}) {
     const series = info.seriesInfo?.volumeSeries?.[0] || {};
     return {
@@ -45,7 +109,7 @@
       subjects: info.categories || []
     };
   }
-  const api = { words, parseSearch, nearWord, matchesSearch, validISBN, googleMetadata };
+  const api = { words, parseSearch, nearWord, matchesSearch, validISBN, validateBook, BOOK_LIMITS, googleMetadata };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.BookTools = api;
 })(typeof window !== 'undefined' ? window : globalThis);

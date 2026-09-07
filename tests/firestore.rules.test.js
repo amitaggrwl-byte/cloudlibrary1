@@ -18,21 +18,15 @@ test.before(async () => {
   await env.clearFirestore();
   await env.withSecurityRulesDisabled(async context => {
     const store = context.firestore();
-    await store.collection('books').doc('book-1').set({
-      ownerId: 'alice', ownerName: 'AliceShelf', title: 'Book', author: 'Author',
-      status: 'Available', discoveryVersion: 1
-    });
+    await store.collection('books').doc('book-1').set(book('alice', {
+      ownerName: 'AliceShelf', title: 'Book', discoveryVersion: 1
+    }));
     await store.collection('friendships').doc('alice__bob').set({ user1: 'alice', user2: 'bob', status: 'accepted' });
     await store.collection('friendships').doc('owner__reader').set({ user1: 'owner', user2: 'reader', status: 'accepted' });
-    await store.collection('books').doc('legacy-book').set({
-      ownerId: 'alice', ownerName: 'AliceShelf', title: 'Legacy book', author: 'Author',
-      status: 'Available', readerIds: ['charlie']
-    });
     await store.collection('profiles').doc('owner').set(profile('OwnerShelf'));
-    await store.collection('books').doc('locked-book').set({
-      ownerId: 'owner', ownerName: 'OwnerShelf', title: 'Locked book', author: 'Author',
-      status: 'Available', discoveryVersion: 1
-    });
+    await store.collection('books').doc('locked-book').set(book('owner', {
+      title: 'Locked book', discoveryVersion: 1
+    }));
     await store.collection('tickerActivities').doc('alice-book').set({
       recipientId: 'alice', type: 'book-added', actorId: 'bob', actorName: 'BobShelf',
       ownerId: 'bob', title: 'Book', createdAt: new Date()
@@ -45,10 +39,9 @@ test.before(async () => {
     await store.collection('ratingEvents').doc('alice-return').set({
       subjectId: 'alice', title: 'Book', points: 0.5, reason: 'Returned on time', createdAt: new Date()
     });
-    await store.collection('books').doc('series-book').set({
-      ownerId: 'owner', ownerName: 'OwnerShelf', title: 'The Sea of Monsters', author: 'Rick Riordan',
-      seriesName: 'Percy Jackson', seriesNumber: 2, status: 'Available'
-    });
+    await store.collection('books').doc('series-book').set(book('owner', {
+      title: 'The Sea of Monsters', author: 'Rick Riordan', seriesName: 'Percy Jackson', seriesNumber: 2
+    }));
   });
 });
 
@@ -72,7 +65,15 @@ test('readers cannot bypass account cleanup by deleting their profile', async ()
 
 test('loan participants cannot erase shared loan records', async () => {
   await env.withSecurityRulesDisabled(async context => {
-    await context.firestore().collection('requests').doc('protected-history').set({ownerId:'owner',requesterId:'reader',type:'borrow',status:'approved'});
+    const store = context.firestore();
+    const batch = store.batch();
+    batch.set(store.collection('requests').doc('protected-history'), {ownerId:'owner',requesterId:'reader',type:'borrow',status:'approved',createdAt:new Date(100000)});
+    for (let i = 0; i < 25; i += 1) {
+      batch.set(store.collection('requests').doc(`history-${String(i).padStart(2, '0')}`), {
+        ownerId:'owner', requesterId:'reader', type:'borrow', status:'returned', createdAt:new Date(1000 + i)
+      });
+    }
+    await batch.commit();
   });
   await assertFails(env.authenticatedContext('owner').firestore().collection('requests').doc('protected-history').delete());
 });
@@ -126,12 +127,46 @@ test('a full book is readable by the owner and confirmed reader only', async () 
   await assertFails(env.authenticatedContext('charlie').firestore().collection('books').where('ownerId', '==', 'alice').limit(10).get());
 });
 
-test('existing server-written book access keeps working during friendship migration', async () => {
-  const charlie = env.authenticatedContext('charlie').firestore();
-  await assertSucceeds(charlie.collection('books').doc('legacy-book').get());
-  await assertFails(charlie.collection('requests').doc('legacy-borrow').set({
-    type: 'borrow', bookId: 'legacy-book', ownerId: 'alice', requesterId: 'charlie', status: 'pending'
-  }));
+test('shelf and borrowing-history page queries are authorized and bounded', async () => {
+  const bob = env.authenticatedContext('bob').firestore();
+  const reader = env.authenticatedContext('reader').firestore();
+  await assertSucceeds(bob.collection('books').where('ownerId', '==', 'alice').orderBy('createdAt', 'desc').limit(31).get());
+  const query = reader.collection('requests').where('requesterId', '==', 'reader').where('type', '==', 'borrow').orderBy('createdAt', 'desc');
+  const first = await assertSucceeds(query.limit(11).get());
+  const firstPage = first.docs.slice(0, 10);
+  const second = await assertSucceeds(query.startAfter(firstPage.at(-1)).limit(11).get());
+  assert.equal(firstPage.length, 10);
+  assert.equal(second.docs.slice(0, 10).length, 10);
+  assert.equal(firstPage.some(doc => second.docs.slice(0, 10).some(next => next.id === doc.id)), false);
+  await assertFails(bob.collection('books').where('ownerId', '==', 'alice').orderBy('createdAt', 'desc').limit(151).get());
+});
+
+function book(ownerId = 'owner', extra = {}) {
+  return {
+    title: 'A complete book', author: 'An Author', seriesName: '', seriesNumber: null,
+    genre: '', isbn: '', publishedYear: null, condition: '', coverUrl: '', description: '',
+    rating: 0, status: 'Available', ownerId, ownerName: 'OwnerShelf', createdAt: new Date(),
+    ...extra
+  };
+}
+
+test('new books must follow the complete bounded metadata schema', async () => {
+  const owner = env.authenticatedContext('owner').firestore();
+  await assertSucceeds(owner.collection('books').doc('valid-new-book').set(book()));
+  await assertFails(owner.collection('books').doc('missing-author').set({ ...book(), author: '' }));
+  await assertFails(owner.collection('books').doc('bad-year').set(book('owner', { publishedYear: 999 })));
+  await assertFails(owner.collection('books').doc('bad-series').set(book('owner', { seriesNumber: 0 })));
+  await assertFails(owner.collection('books').doc('bad-rating').set(book('owner', { rating: 6 })));
+  await assertFails(owner.collection('books').doc('bad-isbn').set(book('owner', { isbn: 'not-an-isbn' })));
+  await assertFails(owner.collection('books').doc('insecure-cover').set(book('owner', { coverUrl: 'http://example.com/cover.jpg' })));
+  await assertFails(owner.collection('books').doc('extra-field').set(book('owner', { arbitraryData: 'no' })));
+});
+
+test('book edits preserve the validated schema', async () => {
+  const owner = env.authenticatedContext('owner').firestore();
+  await assertSucceeds(owner.collection('books').doc('valid-new-book').update({ title: 'A better title', updatedAt: new Date() }));
+  await assertFails(owner.collection('books').doc('valid-new-book').update({ title: '' }));
+  await assertFails(owner.collection('books').doc('valid-new-book').update({ description: 'x'.repeat(2001) }));
 });
 
 test('the browser cannot lend a book or change a score directly', async () => {

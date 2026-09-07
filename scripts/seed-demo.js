@@ -68,10 +68,8 @@ async function main() {
     const [, name, category] = circles.find(([id]) => id === circleId);
     batch.set(db.collection('circleMemberships').doc(`${userId}_${circleId}`), { userId, circleId, circleName: name, category, joinedAt: FieldValue.serverTimestamp() });
   });
-  // Deliberately use legacy IDs here so the local demo exercises the safe
-  // one-time migration that preserves relationships from older releases.
-  batch.set(db.collection('friendships').doc('alex-bella'), { user1: 'alex', user2: 'bella', user1Name: 'AlexReads', user2Name: 'BellaBooks', senderId: 'alex', status: 'accepted', createdAt: FieldValue.serverTimestamp() });
-  batch.set(db.collection('friendships').doc('carlos-alex'), { user1: 'carlos', user2: 'alex', user1Name: 'CarlosShelf', user2Name: 'AlexReads', senderId: 'carlos', status: 'pending', createdAt: FieldValue.serverTimestamp() });
+  batch.set(db.collection('friendships').doc('alex__bella'), { user1: 'alex', user2: 'bella', user1Name: 'AlexReads', user2Name: 'BellaBooks', senderId: 'alex', status: 'accepted', createdAt: FieldValue.serverTimestamp() });
+  batch.set(db.collection('friendships').doc('alex__carlos'), { user1: 'carlos', user2: 'alex', user1Name: 'CarlosShelf', user2Name: 'AlexReads', senderId: 'carlos', status: 'pending', createdAt: FieldValue.serverTimestamp() });
   const books = [
     ['bella-facts', 'bella', 'BellaBooks', '1000 Fantastic Facts', 'Miles Kelly', 'Available'],
     ['bella-mystery', 'bella', 'BellaBooks', 'The Midnight Mystery', 'A. Reader', 'Available'],
@@ -79,7 +77,7 @@ async function main() {
     ['bella-loan', 'bella', 'BellaBooks', 'The Secret Garden', 'Frances Hodgson Burnett', 'Lent Out']
   ];
   books.forEach(([id, ownerId, ownerName, title, author, status]) => {
-    const book = { ownerId, ownerName, title, author, genre: 'Fiction', isbn: '', publishedYear: null, condition: 'Good', coverUrl: '', description: '', rating: 4, status, createdAt: FieldValue.serverTimestamp() };
+    const book = { ownerId, ownerName, title, author, seriesName: '', seriesNumber: null, genre: 'Fiction', isbn: '', publishedYear: null, condition: 'Good', coverUrl: '', description: '', rating: 4, status, createdAt: FieldValue.serverTimestamp() };
     if (id === 'bella-loan') Object.assign(book, { borrowerId: 'alex', borrowerName: 'AlexReads', activeRequestId: 'demo-loan', lentAt: FieldValue.serverTimestamp(), loanDueAt: new Date(Date.now() + 10 * 86400000) });
     batch.set(db.collection('books').doc(id), book);
     batch.set(db.collection('bookDiscovery').doc(id), {

@@ -51,6 +51,14 @@
     const input=get(id);
     input.addEventListener('input',()=>input.setCustomValidity(input.value.trim() ? '' : 'Please enter a title or author, not only spaces.'));
   }
+  const limits=window.BookTools?.BOOK_LIMITS;
+  if(limits){
+    for(const [id,key] of [['title','title'],['edit-title','title'],['author','author'],['edit-author','author'],['seriesName','seriesName'],['edit-seriesName','seriesName'],['genre','genre'],['edit-genre','genre'],['condition','condition'],['edit-condition','condition'],['coverUrl','coverUrl'],['edit-coverUrl','coverUrl'],['description','description'],['edit-description','description']]){
+      const input=get(id);if(input)input.maxLength=limits[key];
+    }
+    for(const id of ['seriesNumber','edit-seriesNumber'])get(id).max=limits.seriesNumber;
+    for(const id of ['isbn','edit-isbn'])get(id).maxLength=32;
+  }
   for(const id of ['publishedYear','edit-publishedYear']) {
     const input=get(id); input.type='text';input.inputMode='numeric';input.maxLength=4;input.pattern='[0-9]{4}';
     const validate=()=>{const value=input.value.trim();input.setCustomValidity(value && (!/^\d{4}$/.test(value)||Number(value)<1000||Number(value)>new Date().getFullYear()+1) ? 'Enter a year from 1000 to next year, or leave it blank.' : '');};

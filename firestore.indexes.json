@@ -1,6 +1,7 @@
 {
   "indexes": [
     { "collectionGroup": "requests", "queryScope": "COLLECTION", "fields": [{ "fieldPath": "requesterId", "order": "ASCENDING" }, { "fieldPath": "type", "order": "ASCENDING" }, { "fieldPath": "status", "order": "ASCENDING" }] },
+    { "collectionGroup": "requests", "queryScope": "COLLECTION", "fields": [{ "fieldPath": "requesterId", "order": "ASCENDING" }, { "fieldPath": "type", "order": "ASCENDING" }, { "fieldPath": "createdAt", "order": "DESCENDING" }] },
     { "collectionGroup": "requests", "queryScope": "COLLECTION", "fields": [{ "fieldPath": "bookId", "order": "ASCENDING" }, { "fieldPath": "type", "order": "ASCENDING" }, { "fieldPath": "status", "order": "ASCENDING" }] },
     { "collectionGroup": "feedback", "queryScope": "COLLECTION", "fields": [{ "fieldPath": "status", "order": "ASCENDING" }, { "fieldPath": "createdAt", "order": "DESCENDING" }] },
     { "collectionGroup": "circles", "queryScope": "COLLECTION", "fields": [{ "fieldPath": "active", "order": "ASCENDING" }, { "fieldPath": "name", "order": "ASCENDING" }] },
@@ -19,7 +20,7 @@
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "ownerId", "order": "ASCENDING" },
-        { "fieldPath": "readerIds", "arrayConfig": "CONTAINS" }
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
     },
     {

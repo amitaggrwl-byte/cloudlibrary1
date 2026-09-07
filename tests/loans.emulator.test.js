@@ -1,7 +1,7 @@
 const {test, beforeEach} = require('node:test');
 const assert = require('node:assert/strict');
 const {createRequire} = require('node:module');
-if(process.env.FIRESTORE_EMULATOR_HOST !== '127.0.0.1:8080') throw new Error('Local emulator required');
+if(!process.env.FIRESTORE_EMULATOR_HOST) throw new Error('Local emulator required');
 process.env.GCLOUD_PROJECT=`demo-loans-${process.pid}`;
 const functions=require('../functions/index');
 const dep=createRequire(require.resolve('../functions/package.json'));
