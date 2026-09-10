@@ -82,7 +82,7 @@
   .tab-btn.active:hover,
   .tab-btn.active:focus-visible { background: #152420; color: #f6efe0 !important; }
   .tab-btn { min-height: 44px; }
-  #nav-tabs .tab-btn { flex: 1 1 0; max-width: 7.5rem; background: transparent; }
+  #nav-tabs .tab-btn { flex: 1 1 0; max-width: 7.5rem; background: transparent; white-space: nowrap; }
   #nav-tabs .tab-btn:not(.active):hover { background: rgba(21,36,32,.06); }
   #nav-tabs .tab-btn.active { background: #152420; }
   .mobile-tab { background: rgba(21,36,32,.035); }
@@ -592,8 +592,8 @@
   }
   const STAR_PATH = 'M12 3.5l2.6 5.4 5.9.6-4.4 4 1.2 5.8L12 16.6 6.7 19.3l1.2-5.8-4.4-4 5.9-.6z';
 
-  document.getElementById('tab-library').innerHTML = icon('book') + '<span>My Library</span>';
-  document.getElementById('tab-add').innerHTML = icon('plus') + '<span>Add book</span>';
+  document.getElementById('tab-library').innerHTML = icon('book') + '<span class="hidden lg:inline">My Library</span><span class="lg:hidden">Library</span>';
+  document.getElementById('tab-add').innerHTML = icon('plus') + '<span class="hidden lg:inline">Add book</span><span class="lg:hidden">Add</span>';
   document.getElementById('tab-friends').innerHTML = icon('users') + '<span>Friends</span>';
   document.getElementById('tab-search').innerHTML = icon('search') + '<span>Search</span>';
   document.getElementById('tab-inbox').innerHTML = icon('bell') + '<span>Inbox</span><span id="inbox-badge" class="hidden bg-rust-500 text-paper rounded-full px-1.5 py-0.5 text-[10px] font-mono">0</span>';
