@@ -46,6 +46,7 @@
   .book-card { max-width: 100%; overflow: hidden; transition: transform .18s ease, box-shadow .18s ease; }
   .book-card:hover { transform: translateY(-1px); }
   .book-card.borrowed-book-card { background: rgba(247,236,201,.42); border-color: #e6c765; }
+  .book-card.borrowed-book-card.overdue-book-card { background: rgba(254,242,242,.88); border-color: #ef4444; }
   .book-card-actions { max-width: 100%; }
   .book-card-actions button { max-width: 100%; }
   .book-card .loan-note button,
@@ -59,6 +60,8 @@
     scrollbar-width: thin;
     scrollbar-color: #b9cdbf transparent;
   }
+  #borrowed-books-grid,
+  #lent-out-books-grid { padding-top: 2px; }
   .library-book-strip > .book-card,
   .library-book-strip > .saved-book-card {
     flex: 0 0 min(17rem, calc(100vw - 6rem));
@@ -1598,7 +1601,8 @@
     const ownerLoanClass = mode === 'owner' ? 'loan-owner-actions' : '';
     const borrowerClass = mode === 'borrower' ? 'borrower-book-actions' : '';
     const actionLayoutClass = ownerLoanClass || borrowerClass ? '' : 'flex flex-wrap';
-    const toneClass = mode === 'borrower' ? 'borrowed-book-card' : '';
+    const borrowerOverdue = mode === 'borrower' && timestampMillis(book.loanDueAt) && timestampMillis(book.loanDueAt) < Date.now();
+    const toneClass = mode === 'borrower' ? `borrowed-book-card${borrowerOverdue ? ' overdue-book-card' : ''}` : '';
     return `
       <div class="book-card ${toneClass} app-panel grid ${hasCover ? 'grid-cols-[3rem_minmax(0,1fr)] sm:grid-cols-[3.5rem_minmax(0,1fr)]' : 'grid-cols-1'} gap-x-2.5 gap-y-1 rounded-lg border border-ink-200 p-2.5 shadow-sm">
         ${hasCover ? bookCoverHtml(book) : ''}
