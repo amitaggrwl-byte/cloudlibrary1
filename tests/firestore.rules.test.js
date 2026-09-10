@@ -158,6 +158,8 @@ test('new books must follow the complete bounded metadata schema', async () => {
   await assertFails(owner.collection('books').doc('bad-series').set(book('owner', { seriesNumber: 0 })));
   await assertFails(owner.collection('books').doc('bad-rating').set(book('owner', { rating: 6 })));
   await assertFails(owner.collection('books').doc('bad-isbn').set(book('owner', { isbn: 'not-an-isbn' })));
+  await assertFails(owner.collection('books').doc('new-lost-book').set(book('owner', { status: 'Lost' })));
+  await assertSucceeds(owner.collection('books').doc('emulator-cover').set(book('owner', { coverUrl: 'http://127.0.0.1:9199/v0/b/cloudlibrary-rules-test/o/covers%2Fowner%2Fbook.jpg?alt=media' })));
   await assertFails(owner.collection('books').doc('insecure-cover').set(book('owner', { coverUrl: 'http://example.com/cover.jpg' })));
   await assertFails(owner.collection('books').doc('extra-field').set(book('owner', { arbitraryData: 'no' })));
 });
@@ -165,6 +167,8 @@ test('new books must follow the complete bounded metadata schema', async () => {
 test('book edits preserve the validated schema', async () => {
   const owner = env.authenticatedContext('owner').firestore();
   await assertSucceeds(owner.collection('books').doc('valid-new-book').update({ title: 'A better title', updatedAt: new Date() }));
+  await assertSucceeds(owner.collection('books').doc('valid-new-book').update({ status: 'Lost', updatedAt: new Date() }));
+  await assertSucceeds(owner.collection('books').doc('valid-new-book').update({ status: 'Available', updatedAt: new Date() }));
   await assertFails(owner.collection('books').doc('valid-new-book').update({ title: '' }));
   await assertFails(owner.collection('books').doc('valid-new-book').update({ description: 'x'.repeat(2001) }));
 });

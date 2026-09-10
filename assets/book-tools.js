@@ -93,7 +93,8 @@
       errors.push(`Year must be from 1000 to ${latestYear}.`);
     }
     if (enteredISBN && !isbn) errors.push('ISBN must be a valid 10- or 13-digit book number.');
-    if (book.coverUrl && !/^https:\/\//i.test(book.coverUrl)) errors.push('Cover image address must start with https://.');
+    const localEmulatorCover = options.allowLocalCoverUrl && /^http:\/\/(127\.0\.0\.1|localhost):9199\//i.test(book.coverUrl);
+    if (book.coverUrl && !/^https:\/\//i.test(book.coverUrl) && !localEmulatorCover) errors.push('Cover image address must start with https://.');
     if (!Number.isInteger(book.rating) || book.rating < 0 || book.rating > 5) errors.push('Rating must be a whole number from 0 to 5.');
     if (!allowedStatuses.includes(book.status)) errors.push('Choose a valid availability.');
     return { valid: errors.length === 0, errors, book };

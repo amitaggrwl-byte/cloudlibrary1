@@ -69,7 +69,9 @@ service cloud.firestore {
         && (data.publishedYear == null || (data.publishedYear is int && data.publishedYear >= 1000 && data.publishedYear <= 2100))
         && data.condition is string && data.condition.size() <= 40
         && data.coverUrl is string && data.coverUrl.size() <= 2000
-        && (data.coverUrl == '' || data.coverUrl.matches('^https://.*'))
+        && (data.coverUrl == ''
+          || data.coverUrl.matches('^https://.*')
+          || data.coverUrl.matches('^http://(127[.]0[.]0[.]1|localhost):9199/.*'))
         && data.description is string && data.description.size() <= 2000
         && data.rating is int && data.rating >= 0 && data.rating <= 5
         && data.status in ['Available', 'Reading', 'Lent Out', 'Lost']
@@ -155,8 +157,8 @@ service cloud.firestore {
         && request.resource.data.ownerId == resource.data.ownerId
         && validBookMetadata(request.resource.data)
         && (request.resource.data.status == resource.data.status
-          || (resource.data.status in ['Available', 'Reading']
-            && request.resource.data.status in ['Available', 'Reading']))
+          || (resource.data.status in ['Available', 'Reading', 'Lost']
+            && request.resource.data.status in ['Available', 'Reading', 'Lost']))
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
           'title', 'author', 'seriesName', 'seriesNumber', 'genre', 'isbn', 'publishedYear', 'condition',
           'coverUrl', 'description', 'rating', 'status', 'updatedAt'

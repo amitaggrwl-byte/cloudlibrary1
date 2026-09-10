@@ -1,9 +1,147 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  html {
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    line-height: 1.5;
+  }
+
+  button,
+  [role="button"],
+  summary {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  :where(button, a, input, select, textarea, summary):focus-visible {
+    outline: 3px solid #d9b94f;
+    outline-offset: 3px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      scroll-behavior: auto !important;
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer components {
+  .header-utility {
+    @apply inline-flex min-h-11 min-w-11 items-center justify-center gap-2 whitespace-nowrap rounded-lg px-2.5 text-sm font-semibold text-ink-600 transition-colors hover:bg-ink-50 hover:text-ink-950;
+  }
+
+  .mobile-tab {
+    @apply min-h-[52px] text-[11px] leading-none;
+  }
+
+  .dialog-close {
+    @apply inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-ink-500 transition-colors hover:bg-ink-100 hover:text-ink-950;
+  }
+
+  .book-card button {
+    @apply min-h-10;
+  }
+
+  .loan-owner-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .loan-owner-actions > button {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .borrower-book-actions {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .borrower-book-actions > * {
+    min-width: 0;
+  }
+
+  .own-series-stack button {
+    @apply min-h-11;
+  }
+}
+
+@media (max-width: 640px) {
+  .own-series-stack .series-table-wrap {
+    overflow-x: visible;
+  }
+
+  .own-series-stack table,
+  .own-series-stack tbody {
+    display: block;
+    width: 100%;
+  }
+
+  .own-series-stack .series-table-wrap table {
+    min-width: 0 !important;
+  }
+
+  .own-series-stack colgroup,
+  .own-series-stack thead {
+    display: none;
+  }
+
+  .own-series-stack tr:not(.hidden) {
+    display: grid;
+    grid-template-columns: 2rem minmax(0, 1fr) auto;
+    column-gap: .5rem;
+    padding: .75rem;
+  }
+
+  .own-series-stack td {
+    padding: 0;
+  }
+
+  .own-series-stack td:nth-child(1) {
+    grid-column: 1;
+  }
+
+  .own-series-stack td:nth-child(2) {
+    grid-column: 2;
+  }
+
+  .own-series-stack td:nth-child(3) {
+    grid-column: 3;
+  }
+
+  .own-series-stack td:nth-child(4) {
+    grid-column: 2 / -1;
+    margin-top: .5rem;
+  }
+}
+
+@media (max-width: 340px) {
+  #my-reader-score > div {
+    display: grid;
+    grid-template-columns: 2.5rem minmax(0, 1fr);
+  }
+
+  #my-reader-score > div > button {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+}
+
 /* Keep the emulator's safety notice visible without covering demo navigation. */
 @media (max-width: 767px) {
-  .local-demo #mobile-nav { bottom: 40px; }
-  .local-demo #app-content { padding-bottom: 140px; }
+  .local-demo #mobile-nav { bottom: 52px; }
+  .local-demo #app-content { padding-bottom: 152px; }
 }
 .local-demo .firebase-emulator-warning { pointer-events: none; }

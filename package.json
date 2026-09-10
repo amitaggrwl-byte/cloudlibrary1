@@ -7,7 +7,8 @@
     "check": "node --check functions/index.js",
     "build": "tailwindcss -i ./tailwind.css -o ./assets/app.css --minify",
     "demo": "firebase emulators:start --project cloudlibrary-7b9ac --only auth,firestore,storage,functions",
-    "demo:seed": "node scripts/seed-demo.js"
+    "demo:seed": "node scripts/seed-demo.js",
+    "demo:seed-ui-review": "node scripts/seed-ui-review.js"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^3.0.4",

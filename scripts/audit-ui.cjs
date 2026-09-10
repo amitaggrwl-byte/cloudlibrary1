@@ -18,7 +18,10 @@ const out = process.env.AUDIT_OUTPUT || '/tmp/cloudlibrary-ui-audit';
       await page.goto(base);
       await page.getByRole('button',{name:'Continue with Google'}).click();
       await page.locator('#app-content').waitFor({state:'visible',timeout:30000});
-      for(const name of ['library','add','friends','search','inbox','profile','admin']) {
+      const viewNames = width < 768
+        ? ['library','add','friends','search','inbox','profile']
+        : ['library','add','friends','search','inbox','profile','admin'];
+      for(const name of viewNames) {
         const nav=page.locator(`#tab-${width<768?'mobile-':''}${name}`);
         await nav.waitFor({state:'visible'});await nav.click();
         await page.waitForTimeout(350);
@@ -27,7 +30,12 @@ const out = process.env.AUDIT_OUTPUT || '/tmp/cloudlibrary-ui-audit';
         const dimensions=await page.evaluate(()=>({width:innerWidth,scroll:document.documentElement.scrollWidth}));
         assert.ok(dimensions.scroll<=dimensions.width+1,`${name} overflows at ${width}`);
         if(name==='add') {
-          for(const id of ['title','author','isbn','coverUrl','genre','condition','publishedYear','status']) await page.locator(`#${id}`).waitFor({state:'visible'});
+          for(const id of ['isbn','title','author','genre','condition','coverUrl','status']) await page.locator(`#${id}`).waitFor({state:'visible'});
+          assert.equal(await page.locator('#isbn').evaluate(element => Boolean(element.closest('details'))),false,'ISBN should stay in the main Add flow');
+          await page.locator('#book-more-details').evaluate(element => { element.open = true; });
+          for(const id of ['isbn','publishedYear']) await page.locator(`#${id}`).waitFor({state:'visible'});
+          assert.equal(await page.locator('#book-form').getByText('Cover photo',{exact:true}).count(),1,'Add form should show one cover section');
+          assert.equal(await page.locator('#book-form').getByText(/Fills missing title, author, series/).count(),1,'Add form should explain ISBN autofill');
           assert.equal(await page.locator('#status option[value="Reading"]').textContent(),'Not for lending');
           await page.getByRole('button',{name:'How to add a book'}).click();
           await page.locator('dialog[open]').waitFor();
@@ -36,12 +44,12 @@ const out = process.env.AUDIT_OUTPUT || '/tmp/cloudlibrary-ui-audit';
         await page.screenshot({path:path.join(out,`${width}-${height}-${name}.png`),fullPage:true});
         results.push(`${width}x${height} ${name}`);
       }
-      await page.getByRole('button',{name:'?',exact:true}).click();
+      await page.getByRole('button',{name:'Help and feedback',exact:true}).click();
       await page.locator('#help-search').fill('return');
       assert.ok(await page.locator('#help-results summary').count()>0);
       await page.screenshot({path:path.join(out,`${width}-${height}-help.png`)});
       await page.getByRole('button',{name:'Close help',exact:true}).click();
-      await page.getByRole('button',{name:'Sign Out',exact:true}).click();
+      await page.getByRole('button',{name:'Sign out',exact:true}).click();
       await page.locator('#login-screen').waitFor({state:'visible'});
     }
     assert.deepEqual(errors,[],'Uncaught browser errors');

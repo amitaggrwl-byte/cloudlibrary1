@@ -62,6 +62,8 @@ test('book validation rejects incomplete and malformed metadata', () => {
   assert.equal(validateBook({ ...base, publishedYear: 999 }).valid, false);
   assert.equal(validateBook({ ...base, isbn: '9780439023482' }).valid, false);
   assert.equal(validateBook({ ...base, coverUrl: 'http://example.com/cover.jpg' }).valid, false);
+  assert.equal(validateBook({ ...base, coverUrl: 'http://127.0.0.1:9199/v0/b/test/o/cover.jpg', status: 'Available' }, { allowLocalCoverUrl: true }).valid, true);
+  assert.equal(validateBook({ ...base, status: 'Lost' }, { allowedStatuses: ['Available', 'Reading', 'Lost'] }).valid, true);
   assert.equal(validateBook({ ...base, rating: 6 }).valid, false);
   assert.equal(validateBook({ ...base, rating: null }).valid, false);
 });
