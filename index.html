@@ -82,6 +82,17 @@
   .tab-btn.active:hover,
   .tab-btn.active:focus-visible { background: #152420; color: #f6efe0 !important; }
   .tab-btn { min-height: 44px; }
+  #nav-tabs .tab-btn { flex: 1 1 0; max-width: 7.5rem; background: rgba(21,36,32,.045); }
+  #nav-tabs .tab-btn:not(.active):hover { background: rgba(21,36,32,.09); }
+  #nav-tabs .tab-btn.active { background: #152420; }
+  .mobile-tab { background: rgba(21,36,32,.035); }
+  .mobile-tab.active,
+  .mobile-tab.active:hover,
+  .mobile-tab.active:focus-visible {
+    background: #e7eee9;
+    box-shadow: inset 0 3px 0 #152420;
+    color: #152420 !important;
+  }
   .tab-btn:focus-visible { outline: 3px solid #e6c765; outline-offset: 2px; }
   .brand-mark { width: 38px; height: 38px; display: block; border-radius: 10px; box-shadow: 0 4px 10px rgba(21,36,32,.12); }
   .brand-wordmark { font-family: 'Fraunces', serif; font-weight: 600; line-height: 1.15; letter-spacing: 0; }
