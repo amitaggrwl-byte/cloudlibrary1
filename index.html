@@ -1581,16 +1581,13 @@
     if (book.status !== 'Lent Out') return '';
     if (mode === 'owner') return '';
     const lentDate = formatDate(book.lentAt);
-    const dueDate = formatFriendlyDate(book.loanDueAt);
-    const overdue = timestampMillis(book.loanDueAt) && timestampMillis(book.loanDueAt) < Date.now();
-    const dueText = dueDate ? `${overdue ? 'Overdue since' : 'Return by'} ${dueDate}.` : '';
     if (mode === 'borrower') {
       const name = book.ownerName || 'a friend';
-      const note = `Borrowed from ${name}${lentDate ? ` on ${lentDate}` : ''}.${dueText ? ` ${dueText}` : ''}`;
+      const note = `Borrowed from ${name}${lentDate ? ` on ${lentDate}` : ''}.`;
       const reader = book.ownerId
         ? `<button type="button" data-action="open-reader-profile" data-uid="${esc(book.ownerId)}" class="inline min-h-0 p-0 font-semibold text-rust-700 hover:underline">${esc(name)}</button>`
         : `<span class="font-semibold text-rust-700">${esc(name)}</span>`;
-      return `<p class="loan-note ${widthClass} mt-1 truncate whitespace-nowrap text-[11px] leading-snug" title="${esc(note)}">Borrowed from ${reader}${lentDate ? ` on ${esc(lentDate)}` : ''}.${dueText ? ` ${esc(` ${dueText}`)}` : ''}</p>`;
+      return `<p class="loan-note ${widthClass} mt-1 truncate whitespace-nowrap text-[11px] leading-snug" title="${esc(note)}">Borrowed from ${reader}${lentDate ? ` on ${esc(lentDate)}` : ''}.</p>`;
     }
     return '';
   }
