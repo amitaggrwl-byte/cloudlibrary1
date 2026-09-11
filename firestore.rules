@@ -14,7 +14,7 @@ service cloud.firestore {
     function publicProfileFields(data) {
       return data.keys().hasOnly([
         'libraryName', 'shelfKey', 'ownerName', 'photoURL', 'bio',
-        'ratingScore', 'ratingAdjustment', 'bookCount', 'timelyReturns', 'totalLent', 'friendCount', 'memberSince',
+        'ratingScore', 'ratingAdjustment', 'bookCount', 'timelyReturns', 'onTimeReturnStreak', 'bestOnTimeReturnStreak', 'totalLent', 'friendCount', 'memberSince',
         'searchTokens', 'circleTags', 'updatedAt'
       ]);
     }
@@ -27,6 +27,10 @@ service cloud.firestore {
         && request.resource.data.ratingAdjustment == resource.data.ratingAdjustment
         && request.resource.data.bookCount == resource.data.bookCount
         && request.resource.data.timelyReturns == resource.data.timelyReturns
+        && ((!resource.data.keys().hasAll(['onTimeReturnStreak']) && request.resource.data.onTimeReturnStreak == 0)
+          || request.resource.data.onTimeReturnStreak == resource.data.onTimeReturnStreak)
+        && ((!resource.data.keys().hasAll(['bestOnTimeReturnStreak']) && request.resource.data.bestOnTimeReturnStreak == 0)
+          || request.resource.data.bestOnTimeReturnStreak == resource.data.bestOnTimeReturnStreak)
         && ((!resource.data.keys().hasAll(['friendCount']) && request.resource.data.friendCount == 0)
           || request.resource.data.friendCount == resource.data.friendCount)
         && ((!resource.data.keys().hasAll(['totalLent']) && request.resource.data.totalLent == 0)
@@ -128,6 +132,8 @@ service cloud.firestore {
         && request.resource.data.ratingAdjustment == 0
         && request.resource.data.bookCount == 0
         && request.resource.data.timelyReturns == 0
+        && request.resource.data.onTimeReturnStreak == 0
+        && request.resource.data.bestOnTimeReturnStreak == 0
         && request.resource.data.totalLent == 0
         && request.resource.data.friendCount == 0
         && request.resource.data.circleTags == []

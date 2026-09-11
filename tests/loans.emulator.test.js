@@ -11,7 +11,7 @@ const call=(name,data,uid='owner')=>functions[name].run({auth:{uid},data});
 beforeEach(async()=>{
   for(const collection of await db.listCollections()) await db.recursiveDelete(collection);
   const batch=db.batch();
-  for(const uid of ['owner','b','c']) batch.set(db.doc(`profiles/${uid}`),{libraryName:uid,bookCount:0,ratingAdjustment:0,ratingScore:3,friendCount:0});
+  for(const uid of ['owner','b','c']) batch.set(db.doc(`profiles/${uid}`),{libraryName:uid,bookCount:0,ratingAdjustment:0,ratingScore:3,friendCount:0,onTimeReturnStreak:0,bestOnTimeReturnStreak:0});
   for(const uid of ['b','c']) batch.set(db.doc(`friendships/${uid}__owner`),{user1:uid,user2:'owner',status:'accepted'});
   for(let i=0;i<7;i++) batch.set(db.doc(`books/book${i}`),{title:`Book ${i}`,author:'Author',ownerId:'owner',ownerName:'Owner',status:'Available'});
   await batch.commit();
@@ -57,6 +57,47 @@ test('lost loan records a single negative ledger event',async()=>{
   assert.equal((await call('closeLoan',{bookId:'book0',outcome:'lost'})).points,-2);
   assert.equal((await db.doc(`ratingEvents/${request.requestId}-lost`).get()).data().points,-2);
   await assert.rejects(call('closeLoan',{bookId:'book0',outcome:'lost'}),e=>e.code==='failed-precondition');
+});
+test('every fifth qualifying on-time return earns one streak bonus',async()=>{
+  for(let i=0;i<5;i++){
+    const request=await call('createBorrowRequest',{bookId:'book0'},'b');
+    await call('respondToBorrowRequest',{requestId:request.requestId,action:'approved'});
+    await db.doc('books/book0').update({lentAt:Timestamp.fromMillis(Date.now()-3*86400000)});
+    await call('requestReturn',{bookId:'book0'},'b');
+    const result=await call('closeLoan',{bookId:'book0',outcome:'returned'});
+    assert.equal(result.points,i===4?1:.5);
+  }
+  const profile=(await db.doc('profiles/b').get()).data();
+  assert.equal(profile.ratingAdjustment,3);
+  assert.equal(profile.onTimeReturnStreak,5);
+  assert.equal(profile.bestOnTimeReturnStreak,5);
+  const bonus=await db.collection('ratingEvents').where('subjectId','==','b').where('outcome','==','streak-bonus').get();
+  assert.equal(bonus.size,1);
+  assert.equal(bonus.docs[0].data().points,.5);
+});
+test('a return more than thirty days late receives the additional penalty',async()=>{
+  const request=await call('createBorrowRequest',{bookId:'book0'},'b');
+  await call('respondToBorrowRequest',{requestId:request.requestId,action:'approved'});
+  await db.doc('books/book0').update({
+    lentAt:Timestamp.fromMillis(Date.now()-50*86400000),
+    loanDueAt:Timestamp.fromMillis(Date.now()-31*86400000)
+  });
+  await call('requestReturn',{bookId:'book0'},'b');
+  const result=await call('closeLoan',{bookId:'book0',outcome:'returned'});
+  assert.equal(result.points,-1);
+  assert.equal((await db.doc(`ratingEvents/${request.requestId}-returned`).get()).data().points,-1);
+});
+test('owner confirmation delay does not make a timely return late',async()=>{
+  const request=await call('createBorrowRequest',{bookId:'book0'},'b');
+  await call('respondToBorrowRequest',{requestId:request.requestId,action:'approved'});
+  await db.doc('books/book0').update({
+    lentAt:Timestamp.fromMillis(Date.now()-20*86400000),
+    loanDueAt:Timestamp.fromMillis(Date.now()-2*86400000),
+    returnRequestedAt:Timestamp.fromMillis(Date.now()-3*86400000)
+  });
+  await db.doc(`requests/return-book0-${request.requestId}`).set({type:'return-request',status:'pending'});
+  const result=await call('closeLoan',{bookId:'book0',outcome:'returned'});
+  assert.equal(result.points,.5);
 });
 test('unrelated pending reminders cannot hide duplicate borrow requests',async()=>{
   const batch=db.batch();

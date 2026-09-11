@@ -29,7 +29,7 @@ This is a working audit, not a launch approval. No production deployment has bee
 - Account deletion is multi-step rather than resumable/locked. A concurrent approval or interrupted cleanup needs deliberate handling.
 - Trigger counters use increments without event deduplication. Retried deliveries may distort totals. Book discovery updates can arrive out of order; deletion/update races need tests.
 - Recounting book totals concurrently with score changes can overwrite newer score calculations. Design a transaction or reconciliation path.
-- Return scoring currently uses owner-confirmation time, not borrower return-request time. A delayed confirmation may penalize a prompt borrower. Resolve the intended rule explicitly.
+- Return scoring now uses the borrower return-request time, so a delayed owner confirmation does not create a late penalty. Keep this covered when the return workflow changes.
 
 ### Growth and cost
 
@@ -58,5 +58,7 @@ This is a working audit, not a launch approval. No production deployment has bee
 3. Cursor pagination for shelves, history, inbox and saved books, with active-loan summaries independent of shelf pages.
 4. Idempotent event processing, account-deletion recovery and bounded background work.
 5. Consolidate frontend markup/styles only after behavioral coverage is in place.
+6. Add an administrator-only **Borrowing policy** panel for safely changing the global active-loan limit, pending-request limit, same-title request limit and default loan period. Include validated ranges, sensible defaults, confirmation before saving, and an audit record of who changed each setting and when. Consider per-circle overrides only after the global policy has been used and reviewed.
+7. Add a disputed damaged-return workflow before introducing a damage score penalty. Require evidence, notify both readers, and let an administrator resolve the case; never let either loan participant deduct points unilaterally.
 
 No claim is made that all features, browsers or physical devices have passed. Emulator tests do not validate production IAM, index readiness, real Google sign-in, or camera hardware.

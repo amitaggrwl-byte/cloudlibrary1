@@ -15,7 +15,7 @@ window.AdminDashboard = (() => {
         <form id="admin-circle-create" class="flex flex-wrap gap-2 my-3"><input aria-label="New circle name" placeholder="New circle name" required maxlength="60" class="${input} flex-1"><select aria-label="New circle category" class="${input}">${categories.map(c => `<option>${c}</option>`).join('')}</select><button class="${button}">Add circle</button><span role="status" class="w-full text-sm"></span></form>
         <div id="admin-circles" class="space-y-3"></div></details>
       <details><summary class="font-semibold cursor-pointer py-2">Community administrators</summary><p id="admin-names" class="text-sm py-2"></p></details>
-      <details><summary class="font-semibold cursor-pointer py-2">Maintenance</summary><p class="text-sm text-ink-600 my-2">Book edits update search automatically. Rebuild only to repair missing search entries; refreshing totals recounts community activity.</p><p id="admin-maintenance-time" class="text-xs text-ink-500 my-2"></p><div class="flex flex-wrap gap-2"><button id="admin-rebuild" class="${button}">Rebuild search index</button><button id="admin-recount" class="${button}">Recount totals</button><button id="admin-stop-rebuild" hidden class="${button}">Stop after this batch</button></div><p id="admin-maintenance-status" role="status" class="text-sm mt-2"></p></details>
+      <details><summary class="font-semibold cursor-pointer py-2">Maintenance</summary><p class="text-sm text-ink-600 my-2">Normal edits update search automatically. Use a rebuild only to repair missing book or reader search entries; recounting totals refreshes community activity.</p><p id="admin-maintenance-time" class="text-xs text-ink-500 my-2"></p><div class="flex flex-wrap gap-2"><button id="admin-rebuild" class="${button}">Rebuild book search</button><button id="admin-rebuild-profiles" class="${button}">Rebuild reader search</button><button id="admin-recount" class="${button}">Recount totals</button><button id="admin-stop-rebuild" hidden class="${button}">Stop after this batch</button></div><p id="admin-maintenance-status" role="status" class="text-sm mt-2"></p></details>
     </div>`;
     const workspace = panel.querySelector('[data-admin-workspace]');
     const find = selector => workspace.querySelector(selector);
@@ -35,7 +35,7 @@ window.AdminDashboard = (() => {
         const limit = find('#admin-circle-limit input');
         if (!limit.value) limit.value = data.circleLimit;
         find('#admin-names').textContent = (data.admins || []).map(a => a.name).join(', ');
-        find('#admin-maintenance-time').textContent = `Last successful search rebuild: ${date(data.maintenance?.searchCompletedAt) || 'No completed run recorded'}. Totals recount: ${date(data.maintenance?.totalsCompletedAt) || 'No completed run recorded'}.`;
+        find('#admin-maintenance-time').textContent = `Book search: ${date(data.maintenance?.searchCompletedAt) || 'No completed run'}. Reader search: ${date(data.maintenance?.profileSearchCompletedAt) || 'No completed run'}. Totals: ${date(data.maintenance?.totalsCompletedAt) || 'No completed run'}.`;
         find('#admin-health-error').textContent = '';
       });
     }
@@ -104,18 +104,22 @@ window.AdminDashboard = (() => {
     createForm.onsubmit=event=>{event.preventDefault();busy(createForm.querySelector('button'),createForm.querySelector('[role="status"]'),async()=>{await call('createCircle',{name:createForm.querySelector('input').value.trim(),category:createForm.querySelector('select').value});createForm.querySelector('input').value='';createForm.querySelector('[role="status"]').textContent='Circle added. Refresh the circle list to see it.';});};
     let stopRebuild=false;
     find('#admin-stop-rebuild').onclick=()=>{stopRebuild=true;find('#admin-stop-rebuild').disabled=true;};
-    find('#admin-rebuild').onclick=()=>busy(find('#admin-rebuild'),find('#admin-maintenance-status'),async()=>{
+    const maintenanceControls=[find('#admin-rebuild'),find('#admin-rebuild-profiles'),find('#admin-recount')];
+    const runRebuild=(control,callable,itemLabel,completeLabel)=>busy(control,find('#admin-maintenance-status'),async()=>{
+      maintenanceControls.forEach(item=>{item.disabled=true;});
       stopRebuild=false;let after=null,total=0;
       const stop=find('#admin-stop-rebuild');stop.hidden=false;stop.disabled=false;
       try {
         do {
-          const result=await call('rebuildDiscoveryIndex',{after});total+=result.indexed;after=result.next;
-          find('#admin-maintenance-status').textContent=`${total} books indexed${after ? '…' : '.'}`;
+          const result=await call(callable,{after});total+=result.indexed;after=result.next;
+          find('#admin-maintenance-status').textContent=`${total} ${itemLabel} indexed${after ? '…' : '.'}`;
         } while(after && !stopRebuild);
-        find('#admin-maintenance-status').textContent=after ? `Stopped after ${total} books. A new run starts from the beginning.` : `Completed ${new Date().toLocaleString()}: ${total} books indexed.`;
+        find('#admin-maintenance-status').textContent=after ? `Stopped after ${total} ${itemLabel}. A new run starts from the beginning.` : `Completed ${new Date().toLocaleString()}: ${total} ${completeLabel} indexed.`;
         if(!after) health();
-      } finally {stop.hidden=true;}
+      } finally {stop.hidden=true;maintenanceControls.forEach(item=>{item.disabled=false;});}
     });
+    find('#admin-rebuild').onclick=()=>runRebuild(find('#admin-rebuild'),'rebuildDiscoveryIndex','books','books');
+    find('#admin-rebuild-profiles').onclick=()=>runRebuild(find('#admin-rebuild-profiles'),'rebuildProfileSearchIndex','reader profiles','reader profiles');
     find('#admin-recount').onclick=()=>busy(find('#admin-recount'),find('#admin-maintenance-status'),async()=>{await call('rebuildCommunityStats',{});find('#admin-maintenance-status').textContent=`Totals recounted ${new Date().toLocaleString()}.`;health();});
   }
   function reset() { if(root) root.replaceChildren(); owner=null; root=null; }

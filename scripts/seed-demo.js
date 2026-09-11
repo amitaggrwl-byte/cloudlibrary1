@@ -33,8 +33,10 @@ const circles = [
 
 function tokens(...values) {
   const result = new Set();
-  values.filter(Boolean).forEach(value => String(value).toLowerCase().match(/[a-z0-9]+/g)?.forEach(word => {
-    for (let index = 1; index <= Math.min(word.length, 24); index += 1) result.add(word.slice(0, index));
+  values.forEach(value => (Array.isArray(value) ? value : [value]).filter(Boolean).forEach(item => {
+    String(item).toLowerCase().match(/[a-z0-9]+/g)?.forEach(word => {
+      for (let index = 1; index <= Math.min(word.length, 24); index += 1) result.add(word.slice(0, index));
+    });
   }));
   return [...result];
 }
@@ -56,7 +58,7 @@ async function main() {
       libraryName, shelfKey: libraryName.toLowerCase(), ownerName: libraryName,
       photoURL: '', bio, ratingScore: uid === 'alex' ? 4.2 : 3.4,
       ratingAdjustment: 0, bookCount: uid === 'bella' ? 3 : 2, timelyReturns: uid === 'alex' ? 2 : 0, friendCount: uid === 'carlos' ? 0 : 1,
-      memberSince: FieldValue.serverTimestamp(), circleTags, searchTokens: tokens(libraryName), updatedAt: FieldValue.serverTimestamp()
+      memberSince: FieldValue.serverTimestamp(), circleTags, searchTokens: tokens(libraryName, circleTags), updatedAt: FieldValue.serverTimestamp()
     });
     batch.set(db.collection('shelfNames').doc(libraryName.toLowerCase()), { ownerId: uid, createdAt: FieldValue.serverTimestamp() });
   });

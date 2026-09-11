@@ -4,6 +4,7 @@ const { FieldValue, Timestamp, getFirestore } = require('firebase-admin/firestor
 const { getStorage } = require('firebase-admin/storage');
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { onDocumentCreated, onDocumentUpdated, onDocumentDeleted } = require('firebase-functions/v2/firestore');
+const { calculateReturnScore } = require('./scoring');
 
 initializeApp();
 const db = getFirestore();
@@ -106,13 +107,24 @@ async function collectionCount(query) {
   return Number(snapshot.data().count || 0);
 }
 
-function discoveryData(bookId, book) {
+function searchTokens(...values) {
   const tokens = new Set();
-  [book.title, book.author, book.seriesName, book.seriesNumber].filter(value => value !== undefined && value !== null && value !== '').forEach(value => {
-    String(value).toLowerCase().match(/[a-z0-9]+/g)?.forEach(word => {
-      for (let index = 1; index <= Math.min(word.length, 24); index += 1) tokens.add(word.slice(0, index));
+  values.forEach(value => {
+    const items = Array.isArray(value) ? value : [value];
+    items.filter(item => item !== undefined && item !== null && item !== '').forEach(item => {
+      String(item).toLowerCase().match(/[a-z0-9]+/g)?.forEach(word => {
+        for (let index = 1; index <= Math.min(word.length, 24); index += 1) tokens.add(word.slice(0, index));
+      });
     });
   });
+  return [...tokens];
+}
+
+function profileSearchTokens(profile, circleTags = profile?.circleTags) {
+  return searchTokens(profile?.libraryName, profile?.ownerName, profile?.shelfKey, circleTags);
+}
+
+function discoveryData(bookId, book) {
   return {
     bookId,
     // This compact record powers community discovery. It contains only the
@@ -131,7 +143,7 @@ function discoveryData(bookId, book) {
     // Lets the client pick one inexpensive, varied community suggestion
     // without scanning the whole discovery collection.
     suggestionBucket: suggestionBucket(bookId),
-    searchTokens: [...tokens],
+    searchTokens: searchTokens(book.title, book.author, book.seriesName, book.seriesNumber),
     updatedAt: FieldValue.serverTimestamp()
   };
 }
@@ -311,9 +323,12 @@ exports.joinCircle = onCall(callableRuntime, async request => {
     const circleLimit = circleLimitFromConfig(configSnap.data());
     if (memberships.size >= circleLimit) throw new HttpsError('resource-exhausted', `You can join up to ${circleLimit} circles.`);
     const circle = circleSnap.data();
-    const tags = Array.isArray(profileSnap.data().circleTags) ? profileSnap.data().circleTags : [];
+    const profile = profileSnap.data();
+    const tags = Array.isArray(profile.circleTags) ? profile.circleTags : [];
+    const nextTags = [...new Set([...tags, circle.name || 'Circle'])].slice(0, circleLimit);
     tx.set(membershipRef, { userId: uid, circleId, circleName: circle.name || 'Circle', category: circle.category || 'Community', joinedAt: FieldValue.serverTimestamp() });
-    tx.update(profileSnap.ref, { circleTags: [...new Set([...tags, circle.name || 'Circle'])].slice(0, circleLimit), updatedAt: FieldValue.serverTimestamp() });
+    // Launch bridge: circle labels share the profile index until readerDiscovery replaces it.
+    tx.update(profileSnap.ref, { circleTags: nextTags, searchTokens: profileSearchTokens(profile, nextTags), updatedAt: FieldValue.serverTimestamp() });
     return { joined: true };
   });
 });
@@ -378,9 +393,11 @@ exports.leaveCircle = onCall(callableRuntime, async request => {
   return db.runTransaction(async tx => {
     const [membershipSnap, profileSnap] = await Promise.all([tx.get(membershipRef), tx.get(db.collection('profiles').doc(uid))]);
     if (!membershipSnap.exists || membershipSnap.data().userId !== uid) throw new HttpsError('not-found', 'You are not in this circle.');
-    const tags = Array.isArray(profileSnap.data()?.circleTags) ? profileSnap.data().circleTags : [];
+    const profile = profileSnap.data() || {};
+    const tags = Array.isArray(profile.circleTags) ? profile.circleTags : [];
+    const nextTags = tags.filter(tag => tag !== membershipSnap.data().circleName);
     tx.delete(membershipRef);
-    if (profileSnap.exists) tx.update(profileSnap.ref, { circleTags: tags.filter(tag => tag !== membershipSnap.data().circleName), updatedAt: FieldValue.serverTimestamp() });
+    if (profileSnap.exists) tx.update(profileSnap.ref, { circleTags: nextTags, searchTokens: profileSearchTokens(profile, nextTags), updatedAt: FieldValue.serverTimestamp() });
     return { left: true };
   });
 });
@@ -427,6 +444,27 @@ exports.rebuildDiscoveryIndex = onCall(callableRuntime, async request => {
   return { indexed: docs.length, next };
 });
 
+exports.rebuildProfileSearchIndex = onCall(callableRuntime, async request => {
+  await requireCommunityAdmin(request);
+  let query = db.collection('profiles').orderBy('__name__');
+  const after = request.data?.after;
+  if (after) {
+    if (typeof after !== 'string' || after.includes('/') || after.length > 1500) throw new HttpsError('invalid-argument', 'Invalid cursor.');
+    query = query.startAfter(db.collection('profiles').doc(after));
+  }
+  const profiles = await query.limit(101).get();
+  const docs = profiles.docs.slice(0, 100);
+  const batch = db.batch();
+  docs.forEach(profile => batch.update(profile.ref, {
+    searchTokens: profileSearchTokens(profile.data()),
+    updatedAt: FieldValue.serverTimestamp()
+  }));
+  if (docs.length) await batch.commit();
+  const next = profiles.size > 100 ? docs[docs.length - 1].id : null;
+  if (!next) await db.collection('appConfig').doc('adminMaintenance').set({ profileSearchCompletedAt: FieldValue.serverTimestamp() }, { merge: true });
+  return { indexed: docs.length, next };
+});
+
 exports.getAdminDashboard = onCall(callableRuntime, async request => {
   const uid = await requireCommunityAdmin(request);
   const now = Timestamp.now();
@@ -445,7 +483,11 @@ exports.getAdminDashboard = onCall(callableRuntime, async request => {
   return {
     admins: adminProfiles.map(doc => ({ uid: doc.id, name: doc.data()?.libraryName || 'Deleted profile' })),
     circleLimit: circleLimitFromConfig(config),
-    maintenance: { searchCompletedAt: maintenanceSnap.data()?.searchCompletedAt?.toMillis?.() || null, totalsCompletedAt: networkStatsSnap.data()?.rebuiltAt?.toMillis?.() || null },
+    maintenance: {
+      searchCompletedAt: maintenanceSnap.data()?.searchCompletedAt?.toMillis?.() || null,
+      profileSearchCompletedAt: maintenanceSnap.data()?.profileSearchCompletedAt?.toMillis?.() || null,
+      totalsCompletedAt: networkStatsSnap.data()?.rebuiltAt?.toMillis?.() || null
+    },
     health: {
       activeLoans,
       overdueLoans,
@@ -751,15 +793,25 @@ exports.closeLoan = onCall(callableRuntime, async request => {
     ]);
     if (outcome === 'returned' && (!returnRequestSnap.exists || returnRequestSnap.data().status !== 'pending')) throw new HttpsError('failed-precondition', 'The borrower needs to request a return before you confirm it.');
     const now = Date.now();
-    const heldFor = now - (book.lentAt?.toMillis?.() || now);
-    const onTime = !book.loanDueAt?.toMillis || now <= book.loanDueAt.toMillis();
-    const points = outcome === 'lost' ? -2 : (heldFor >= 2 * DAY_MS && onTime ? 0.5 : (onTime ? 0 : -0.5));
+    // Score a return using the borrower's return request, so a slow owner
+    // confirmation cannot turn an on-time return into a late one.
+    const returnedAt = outcome === 'returned' ? (book.returnRequestedAt?.toMillis?.() || now) : now;
     const profile = profileSnap.exists ? profileSnap.data() : {};
+    const scoreChange = calculateReturnScore({
+      outcome,
+      lentAtMs: book.lentAt?.toMillis?.(),
+      dueAtMs: book.loanDueAt?.toMillis?.(),
+      returnedAtMs: returnedAt,
+      previousStreak: profile.onTimeReturnStreak
+    });
+    const { returnPoints, streakBonus, points, qualifyingOnTimeReturn, nextStreak, veryLate, onTime } = scoreChange;
     const ratingAdjustment = Number(profile.ratingAdjustment || 0) + points;
     const ratingScore = readerScore(profile.bookCount, ratingAdjustment);
     tx.set(db.collection('profiles').doc(book.borrowerId), {
       ratingAdjustment, ratingScore,
-      timelyReturns: Number(profile.timelyReturns || 0) + (points > 0 ? 1 : 0),
+      timelyReturns: Number(profile.timelyReturns || 0) + (qualifyingOnTimeReturn ? 1 : 0),
+      onTimeReturnStreak: nextStreak,
+      bestOnTimeReturnStreak: Math.max(Number(profile.bestOnTimeReturnStreak || 0), nextStreak),
       updatedAt: FieldValue.serverTimestamp()
     }, { merge: true });
     tx.update(bookRef, outcome === 'lost' ? {
@@ -775,7 +827,13 @@ exports.closeLoan = onCall(callableRuntime, async request => {
       totalReturns: Number(networkStats.totalReturns || 0) + (outcome === 'returned' ? 1 : 0),
       updatedAt: FieldValue.serverTimestamp()
     }, { merge: true });
-    if (requestSnap?.exists) tx.update(requestRef, { status: outcome === 'lost' ? 'lost' : 'returned', returnRatingPoints: points, returnedAt: FieldValue.serverTimestamp() });
+    if (requestSnap?.exists) tx.update(requestRef, {
+      status: outcome === 'lost' ? 'lost' : 'returned',
+      returnBasePoints: returnPoints,
+      streakBonusPoints: streakBonus,
+      returnRatingPoints: points,
+      returnedAt: FieldValue.serverTimestamp()
+    });
     if (outcome === 'returned') tx.update(returnRequestRef, { status: 'confirmed', confirmedAt: FieldValue.serverTimestamp() });
     if (outcome === 'lost' && returnRequestSnap.exists && returnRequestSnap.data().status === 'pending') tx.update(returnRequestRef, { status: 'cancelled', cancellationReason: 'book-reported-lost', respondedAt: FieldValue.serverTimestamp() });
     tx.set(db.collection('ratingEvents').doc(`${book.activeRequestId || bookId}-${outcome}`), {
@@ -783,11 +841,22 @@ exports.closeLoan = onCall(callableRuntime, async request => {
         bookId,
         title: book.title || 'Untitled book',
         outcome,
-        points,
-        reason: outcome === 'lost' ? 'Book reported lost' : (points > 0 ? 'Returned on time after two days' : (points < 0 ? 'Returned after the due date' : 'Returned within the first two days - no score change')),
+        points: returnPoints,
+        reason: outcome === 'lost' ? 'Book reported lost' : (qualifyingOnTimeReturn ? 'Returned on time after two days' : (veryLate ? 'Returned more than 30 days after the due date' : (!onTime ? 'Returned after the due date' : 'Returned within the first two days - no score change'))),
         createdAt: FieldValue.serverTimestamp()
     });
-    return { outcome, points, ownerId: book.ownerId, ownerName: book.ownerName || 'A friend', title: book.title || 'Untitled book', seriesName: book.seriesName || '', coverUrl: book.coverUrl || '', requestId: book.activeRequestId || '' };
+    if (streakBonus) {
+      tx.set(db.collection('ratingEvents').doc(`${book.activeRequestId || bookId}-streak-${nextStreak}`), {
+        subjectId: book.borrowerId,
+        bookId,
+        title: book.title || 'Untitled book',
+        outcome: 'streak-bonus',
+        points: streakBonus,
+        reason: `${nextStreak} on-time returns in a row`,
+        createdAt: FieldValue.serverTimestamp()
+      });
+    }
+    return { outcome, points, returnPoints, streakBonus, onTimeReturnStreak: nextStreak, ownerId: book.ownerId, ownerName: book.ownerName || 'A friend', title: book.title || 'Untitled book', seriesName: book.seriesName || '', coverUrl: book.coverUrl || '', requestId: book.activeRequestId || '' };
   });
   if (outcome === 'returned') {
     const friends = await acceptedFriendIds(result.ownerId);

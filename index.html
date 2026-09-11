@@ -13,7 +13,7 @@
 
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script src="assets/book-tools.js?v=20260909-local-cover-1"></script>
-<script src="assets/admin-dashboard.js"></script>
+<script src="assets/admin-dashboard.js?v=20260911-reader-search-1"></script>
 <script src="assets/help.js"></script>
 <link rel="stylesheet" href="assets/help.css">
 <link rel="stylesheet" href="assets/book-form.css?v=20260909-compact-forms-1">
@@ -213,11 +213,11 @@
     <button type="button" data-action="close-help" title="Close help" aria-label="Close help" class="dialog-close absolute top-3 right-3 text-2xl">&times;</button>
     <p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-1">Help</p>
     <h2 class="font-display text-2xl text-ink-950">Need a hand?</h2>
-    <details class="mt-3 text-sm border border-ink-200 rounded-lg p-3"><summary class="cursor-pointer font-semibold">Administration</summary><p class="mt-2">Administrators use the Admin tab to answer feedback and manage circles. Feedback starts with Awaiting reply; choose Answered, Resolved or All feedback to find other items. Previous and Next load ten items per page. The text filter searches the current page; status and circle-category filters search the full list. Reply drafts stay in place during page changes in this session. Circle actions keep your filters and open sections. Refresh a list to see recent changes. Community health has a separate Refresh button. Maintenance contains repair tools with progress and the last completed run; normal book edits update search automatically.</p></details>
+    <details class="mt-3 text-sm border border-ink-200 rounded-lg p-3"><summary class="cursor-pointer font-semibold">Administration</summary><p class="mt-2">Administrators use the Admin tab to answer feedback and manage circles. Feedback starts with Awaiting reply; choose Answered, Resolved or All feedback to find other items. Previous and Next load ten items per page. The text filter searches the current page; status and circle-category filters search the full list. Reply drafts stay in place during page changes in this session. Circle actions keep your filters and open sections. Refresh a list to see recent changes. Community health has a separate Refresh button. Maintenance can rebuild book search, rebuild reader and circle search, or recount totals. Each repair shows progress and its last completed run; normal edits update search automatically.</p></details>
     <details class="mt-3 text-sm border border-ink-200 rounded-lg p-3"><summary class="cursor-pointer font-semibold">Scan an ISBN or find missing details</summary><ol class="mt-2 list-decimal pl-5 space-y-2"><li>ISBN is the first field in Add and Edit because it is the quickest way to identify a book. Scan the barcode or enter the 10/13-digit number, then choose Find details.</li><li>Title, author, cover, year, genre and available series details fill empty fields. Catalogs do not always know the series or its book number; check these yourself.</li><li>Your existing text and chosen cover photo are kept. Clear a field first to replace it from the catalog.</li><li>Use the single Cover photo box to upload from your device or paste a secure image URL.</li><li>For many books, scan, review and save each copy, or use the list and series helper for a whole set.</li></ol></details>
     <details class="mt-2 text-sm border border-ink-200 rounded-lg p-3"><summary class="cursor-pointer font-semibold">Find a book from its cover photo</summary><ol class="mt-2 list-decimal pl-5 space-y-2"><li>Take or choose a clear, straight photo of the front cover.</li><li>Open Find details from a cover photo and select Read cover text. The optional reader downloads when first used and processes the photo on your device.</li><li>Correct any misread words. Keep the title and author, removing slogans or award labels.</li><li>Select Find matching books. These words go to Google Books or Open Library to look for up to five matches.</li><li>Choose the correct book, check the filled fields, and save. Decorative lettering may not be recognised; ISBN lookup is usually more dependable.</li></ol></details>
     <details class="mt-2 text-sm border border-ink-200 rounded-lg p-3"><summary class="cursor-pointer font-semibold">Search by series and book number</summary><p class="mt-2">Try Magic Tree House 10 or Magic Tree House 10th book. The requested number appears first when found; other matching books are labelled as alternatives. Small spelling mistakes are tolerated, but an unrelated title will not match. Load more results continues through further batches. If nothing appears, check the spelling, try fewer words, or clear the genre and availability filters. Saved edits update search automatically after the search index catches up; run Search again to refresh results.</p></details>
-    <div class="mt-4 space-y-2 text-sm text-ink-600 leading-relaxed"><details open class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">About CloudLibrary</summary><p class="mt-2">A small, real-life book-sharing community created by Amit Agarwal. Readers discover books, connect with people they know, and keep lending simple.</p></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Add one book</summary><ol class="mt-2 space-y-1 list-decimal pl-5"><li>Enter a title and author.</li><li>Optionally add series details, a rating, or a note.</li><li>Use ISBN Scan when the barcode is clear, then check the result before saving.</li><li>A cover photo is compressed on your device before upload. Camera photos up to 12 MB are accepted; the compact cover is usually about 300 KB.</li></ol></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Add a list or a series</summary><ol class="mt-2 space-y-1 list-decimal pl-5"><li>Build a review list, with one book per line: <span class="font-mono text-xs">Book title | Author</span>.</li><li>For a series, use <span class="font-mono text-xs">Series | # | Book title | Author</span>, or enter its name, author, and number range in the Series helper.</li><li><strong>Add series to list</strong> only creates editable entries. Check or rename each placeholder title.</li><li><strong>Add reviewed books to my shelf</strong> is the only button that saves books. You can add up to 100 at once.</li></ol></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Borrowing a book</summary><p class="mt-2">Only confirmed friends can lend to one another. Readers can hold up to three active books, keep up to five pending requests, and ask at most two friends for the same title at once. A loan is due after 14 days.</p></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Returning a book</summary><p class="mt-2">The owner may send a reminder. Once the physical book is back with the owner, the borrower selects <strong>Request return</strong> and the owner selects <strong>Confirm returned</strong>. This two-step handoff prevents an accidental close.</p></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Saved books</summary><p class="mt-2">Use <strong>Save</strong> on a book in Search or a friend's shelf. Saved books remain on My Library and open Search again when selected.</p></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Reader score and ledger</summary><ul class="mt-2 space-y-1 list-disc pl-5"><li>Everyone starts at 3.0.</li><li>Each listed book adds 0.15, up to 1.5 points.</li><li>An on-time return after 48 hours adds 0.5; a late return loses 0.5; a lost book loses 2.0.</li><li>A return within the first 48 hours records a 0.0 ledger entry.</li></ul></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Circles</summary><p class="mt-2">Circles are approved groups such as a school, grade, locality, club, genre, or fan group. Open Profile, choose Edit introduction, and use the small cross on a circle to remove it. Administrators create and archive circles.</p></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Privacy and feedback</summary><p class="mt-2">Email addresses are never shown. Profiles display only library-facing details. Send a bug, question, or idea below; administrator replies arrive in Inbox.</p></details></div>
+    <div class="mt-4 space-y-2 text-sm text-ink-600 leading-relaxed"><details open class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">About CloudLibrary</summary><p class="mt-2">A small, real-life book-sharing community created by Amit Agarwal. Readers discover books, connect with people they know, and keep lending simple.</p></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Add one book</summary><ol class="mt-2 space-y-1 list-decimal pl-5"><li>Enter a title and author.</li><li>Optionally add series details, a rating, or a note.</li><li>Use ISBN Scan when the barcode is clear, then check the result before saving.</li><li>A cover photo is compressed on your device before upload. Camera photos up to 12 MB are accepted; the compact cover is usually about 300 KB.</li></ol></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Add a list or a series</summary><ol class="mt-2 space-y-1 list-decimal pl-5"><li>Build a review list, with one book per line: <span class="font-mono text-xs">Book title | Author</span>.</li><li>For a series, use <span class="font-mono text-xs">Series | # | Book title | Author</span>, or enter its name, author, and number range in the Series helper.</li><li><strong>Add series to list</strong> only creates editable entries. Check or rename each placeholder title.</li><li><strong>Add reviewed books to my shelf</strong> is the only button that saves books. You can add up to 100 at once.</li></ol></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Borrowing a book</summary><p class="mt-2">Only confirmed friends can lend to one another. Readers can hold up to three active books, keep up to five pending requests, and ask at most two friends for the same title at once. A loan is due after 14 days.</p></details><details class="mt-2 text-sm border border-ink-200 rounded-lg p-3"><summary class="cursor-pointer font-semibold">Returning a book</summary><p class="mt-2">The owner may send a reminder. Once the physical book is back with the owner, the borrower selects <strong>Request return</strong> and the owner selects <strong>Confirm returned</strong>. The score uses the borrower's request time, so a delayed owner confirmation cannot create a late penalty.</p></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Saved books</summary><p class="mt-2">Use <strong>Save</strong> on a book in Search or a friend's shelf. Saved books remain on My Library and open Search again when selected.</p></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Reader score and ledger</summary><ul class="mt-2 space-y-1 list-disc pl-5"><li>Everyone starts at 3.0.</li><li>Each listed book adds 0.15, up to 1.5 points.</li><li>An on-time return after 48 hours adds 0.5. Every fifth consecutive qualifying return adds another 0.5.</li><li>A late return loses 0.5; more than 30 days late loses 1.0; a lost book loses 2.0.</li><li>A return within the first 48 hours records a 0.0 ledger entry and does not build a streak.</li><li>Scores stay between 0 and 10. Friends, messages, reminders and declined requests do not affect them.</li></ul></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Circles</summary><p class="mt-2">Circles are approved groups such as a school, grade, locality, club, genre, or fan group. Search for a circle name to discover readers who have joined it. Open Profile, choose Edit introduction, and use the small cross on a circle to remove it. Administrators create and archive circles.</p></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Privacy and feedback</summary><p class="mt-2">Email addresses are never shown. Profiles display only library-facing details. Send a bug, question, or idea below; administrator replies arrive in Inbox.</p></details></div>
     <form id="feedback-form" class="mt-6 space-y-3 border-t border-ink-200 pt-5"><label class="block text-xs font-semibold text-ink-700" for="feedback-message">Report a problem or share an idea</label><select id="feedback-category" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-sm text-ink-950"><option value="bug">Something is not working</option><option value="idea">Suggestion</option><option value="question">Question</option></select><textarea id="feedback-message" required maxlength="1000" rows="4" placeholder="What happened? What did you expect?" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-sm text-ink-950 resize-none"></textarea><button type="submit" class="w-full bg-ink-950 text-paper py-3 rounded-lg text-sm font-semibold">Send feedback</button></form>
   </div>
 </div>
@@ -361,7 +361,7 @@
       <div id="borrowed-panel" class="app-panel rounded-xl border border-ink-200 p-4 shadow-sm">
         <div class="mb-2.5 flex items-center justify-between">
           <div>
-            <p class="mb-0.5 font-mono text-[10px] uppercase tracking-widest text-rust-600">Your loans</p>
+            <p class="mb-0.5 font-mono text-[10px] uppercase tracking-widest text-rust-600">Borrowing</p>
             <h2 class="font-display text-base text-ink-950 sm:text-lg">Books you borrowed</h2>
           </div>
         </div>
@@ -369,7 +369,7 @@
         <div id="borrowed-empty-state" class="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-ink-800/5 p-3"><p class="text-sm text-ink-500">No borrowed books right now.</p><button type="button" data-action="go-search" class="inline-flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm font-semibold text-ink-700 hover:bg-white"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="M20 20l-4.5-4.5"></path></svg>Find a book</button></div>
       </div>
       <div id="lent-out-panel" class="hidden app-panel rounded-xl border border-ink-200 p-4 shadow-sm">
-        <div class="mb-2.5 flex items-center justify-between"><div><p class="mb-0.5 font-mono text-[10px] uppercase tracking-widest text-rust-600">Your loans</p><h2 class="font-display text-base text-ink-950 sm:text-lg">Books you lent</h2></div><span id="lent-out-count" class="text-xs font-semibold text-ink-500"></span></div>
+        <div class="mb-2.5 flex items-center justify-between"><div><p class="mb-0.5 font-mono text-[10px] uppercase tracking-widest text-rust-600">Lending</p><h2 class="font-display text-base text-ink-950 sm:text-lg">Books you lent</h2></div><span id="lent-out-count" class="text-xs font-semibold text-ink-500"></span></div>
         <div id="lent-out-books-grid" class="library-book-strip gap-3 pb-2" role="region" tabindex="0" aria-label="Books you lent. Scroll horizontally to see more."></div>
       </div>
       <div id="saved-books-panel" class="app-panel rounded-xl border border-ink-200 p-4 shadow-sm">
@@ -459,7 +459,7 @@
       <p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-1">Discover</p>
       <h2 class="font-display text-xl text-ink-950 mb-4">Search libraries &amp; books</h2>
       <form id="global-search-form" class="grid grid-cols-2 gap-2 md:flex">
-        <input type="text" id="global-search-input" placeholder="Search by book, author, reader, or shelf name…" class="col-span-2 min-w-0 md:flex-1 bg-paper border border-ink-200 rounded-lg p-3 text-ink-950 focus:outline-none focus:ring-2 focus:ring-ink-700">
+        <input type="text" id="global-search-input" placeholder="Search by book, author, reader, shelf, or circle…" class="col-span-2 min-w-0 md:flex-1 bg-paper border border-ink-200 rounded-lg p-3 text-ink-950 focus:outline-none focus:ring-2 focus:ring-ink-700">
         <select id="search-status-filter" class="min-w-0 bg-paper border border-ink-200 rounded-lg px-3 py-2 text-sm text-ink-700">
           <option value="">Any availability</option>
           <option value="Available">Available</option>
@@ -694,7 +694,7 @@
       const score = await loadUserRating(currentUser.uid);
       const booksListed = Math.max(Number(userProfile.bookCount || 0), Object.keys(myShelfBooksCache).length);
       const lentOutNow = activeLoansLoaded ? Object.keys(activeLoanBooksCache).length : 0;
-      panel.innerHTML = `<div class="flex items-center gap-2.5"><div class="shrink-0">${avatarHtml(userProfile, userProfile.libraryName, 'w-10 h-10')}</div><div class="min-w-0 flex-1"><p class="font-mono text-[10px] uppercase tracking-widest text-rust-600">Your reader profile</p><h2 class="truncate font-display text-base leading-tight text-ink-950 sm:text-lg">${esc(userProfile.libraryName)}</h2><p class="mt-0.5 text-xs text-ink-600"><span class="font-semibold text-[#8a6414]">${score.toFixed(1)}/10 score</span><span aria-hidden="true"> · </span>${booksListed} book${booksListed === 1 ? '' : 's'}<span aria-hidden="true"> · </span>${lentOutNow} lent now<span aria-hidden="true"> · </span>${confirmedFriends.length} friend${confirmedFriends.length === 1 ? '' : 's'}</p></div></div>`;
+      panel.innerHTML = `<div class="flex items-center gap-2.5"><div class="shrink-0">${avatarHtml(userProfile, userProfile.libraryName, 'w-10 h-10')}</div><div class="min-w-0 flex-1"><p class="font-mono text-[10px] uppercase tracking-widest text-rust-600">Your reader profile</p><h2 class="truncate font-display text-base leading-tight text-ink-950 sm:text-lg"><button type="button" data-action="open-reader-profile" data-uid="self" title="Open your reader profile" class="max-w-full truncate text-left hover:underline">${esc(userProfile.libraryName)}</button></h2><p class="mt-0.5 text-xs text-ink-600"><span class="font-semibold text-[#8a6414]">${score.toFixed(1)}/10 score</span><span aria-hidden="true"> · </span>${booksListed} book${booksListed === 1 ? '' : 's'}<span aria-hidden="true"> · </span>${lentOutNow} lent now<span aria-hidden="true"> · </span>${confirmedFriends.length} friend${confirmedFriends.length === 1 ? '' : 's'}</p></div></div>`;
       renderOnboarding();
     } catch (err) {
       console.warn('Could not load reader score', err);
@@ -849,7 +849,7 @@
       if (res !== FAILED) { userProfile = nextProfile; renderMyReaderScore(); openReaderProfile('self'); }
     });
     if (isSelf) {
-      renderRatingLedger();
+      renderRatingLedger(profile, score);
       borrowHistoryLoaded = false;
       borrowHistoryCache = [];
       borrowHistoryCursor = null;
@@ -860,13 +860,25 @@
     }
   }
 
-  async function renderRatingLedger() {
+  async function renderRatingLedger(profile, currentScore) {
     const list = document.getElementById('rating-ledger-list');
     if (!list || !currentUser) return;
     const result = await guard(() => db.collection('ratingEvents').where('subjectId', '==', currentUser.uid).orderBy('createdAt', 'desc').limit(20).get(), { context: 'Loading score ledger' });
     if (result === FAILED || !list.isConnected) return;
     const events = result.docs.map(doc => doc.data()).sort((a, b) => timestampMillis(b.createdAt) - timestampMillis(a.createdAt));
-    list.innerHTML = events.length ? events.map(event => { const points = Number(event.points || 0); const tone = points > 0 ? 'text-ink-700' : (points < 0 ? 'text-rust-600' : 'text-ink-400'); return `<div class="flex items-center justify-between gap-3 text-xs"><div class="min-w-0"><p class="font-semibold text-ink-700 truncate">${esc(event.reason || 'Score updated')}</p><p class="text-ink-400">${esc(event.title || '')}${event.createdAt ? ` · ${esc(formatDate(event.createdAt))}` : ''}</p></div><span class="font-semibold ${tone}">${points > 0 ? '+' : ''}${points.toFixed(1)}</span></div>`; }).join('') : '<p class="text-xs text-ink-400">No lending outcomes yet.</p>';
+    const bookCount = Math.max(0, Number(profile?.bookCount || 0));
+    const bookPoints = Math.min(1.5, bookCount * 0.15);
+    const outcomePoints = Number(profile?.ratingAdjustment || 0);
+    const shownOutcomePoints = events.reduce((total, event) => total + Number(event.points || 0), 0);
+    const earlierOutcomePoints = outcomePoints - shownOutcomePoints;
+    const eventRows = events.length
+      ? events.map(event => { const points = Number(event.points || 0); const tone = points > 0 ? 'text-ink-700' : (points < 0 ? 'text-rust-600' : 'text-ink-400'); return `<div class="flex items-center justify-between gap-3 border-t border-ink-100 pt-2 text-xs"><div class="min-w-0"><p class="truncate font-semibold text-ink-700">${esc(event.reason || 'Score updated')}</p><p class="text-ink-400">${esc(event.title || '')}${event.createdAt ? ` · ${esc(formatDate(event.createdAt))}` : ''}</p></div><span class="font-semibold ${tone}">${points > 0 ? '+' : ''}${points.toFixed(1)}</span></div>`; }).join('')
+      : '<p class="text-xs text-ink-400">No return or loss adjustments yet.</p>';
+    const earlierRow = Math.abs(earlierOutcomePoints) > 0.001
+      ? `<div class="flex items-center justify-between gap-3 border-t border-ink-100 pt-2 text-xs"><div><p class="font-semibold text-ink-700">Earlier return and loss adjustments</p><p class="text-ink-400">Combined changes older than the 20 shown above</p></div><span class="font-semibold ${earlierOutcomePoints < 0 ? 'text-rust-600' : 'text-ink-700'}">${earlierOutcomePoints > 0 ? '+' : ''}${earlierOutcomePoints.toFixed(1)}</span></div>`
+      : '';
+    const memberSince = formatDate(profile?.memberSince);
+    list.innerHTML = `<div class="flex items-center justify-between gap-3 rounded-lg bg-ink-800/5 px-3 py-2.5"><div><p class="text-xs font-bold text-ink-950">Current score</p><p class="text-[10px] text-ink-400">Score history below · newest first</p></div><span class="font-bold text-[#8a6414]">${Number(currentScore || 0).toFixed(1)}/10</span></div><div class="space-y-2 rounded-lg border border-ink-100 p-3"><div class="flex items-start justify-between gap-3 text-xs"><div><p class="font-semibold text-ink-700">Books listed contribution</p><p class="text-ink-400">Current · ${bookCount} book${bookCount === 1 ? '' : 's'} × 0.15${bookPoints >= 1.5 ? ' · maximum reached' : ''}</p></div><span class="font-semibold text-ink-700">+${bookPoints.toFixed(1)}</span></div>${eventRows}${earlierRow}<div class="flex items-start justify-between gap-3 border-t border-ink-100 pt-2 text-xs"><div><p class="font-semibold text-ink-700">Starting score</p><p class="text-ink-400">${memberSince ? `Member since ${esc(memberSince)}` : 'Every reader begins here'}</p></div><span class="font-semibold text-ink-700">+3.0</span></div></div>`;
   }
 
   async function manageCircles() {
@@ -1964,15 +1976,19 @@
   }
 
   function fetchBorrowedBooks() {
-    trackSessionListener('borrowed', db.collection("books").where("borrowerId", "==", currentUser.uid).where('status', '==', 'Lent Out').limit(3), (snapshot) => {
+    trackSessionListener('borrowed', db.collection("books").where("borrowerId", "==", currentUser.uid).where('status', '==', 'Lent Out').limit(150), (snapshot) => {
       const grid = document.getElementById('borrowed-books-grid');
       const empty = document.getElementById('borrowed-empty-state');
       grid.innerHTML = '';
-      borrowedBooksCache = [];
-      snapshot.forEach(doc => {
-        const book = { id: doc.id, ...doc.data() };
-        if (book.status !== 'Lent Out') return;
-        borrowedBooksCache.push(book);
+      borrowedBooksCache = snapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() }))
+        .filter(book => book.status === 'Lent Out')
+        .sort((a, b) => {
+          const aDue = timestampMillis(a.loanDueAt) || Number.POSITIVE_INFINITY;
+          const bDue = timestampMillis(b.loanDueAt) || Number.POSITIVE_INFINITY;
+          return aDue - bDue || String(a.title || '').localeCompare(String(b.title || ''));
+        });
+      borrowedBooksCache.forEach(book => {
         const overdue = timestampMillis(book.loanDueAt) && timestampMillis(book.loanDueAt) < Date.now();
         const dueDate = formatFriendlyDate(book.loanDueAt);
         const returnAction = book.returnRequestedAt ? `<span class="truncate text-xs font-semibold text-ink-600" title="Return started · waiting for owner">Return started · waiting for owner</span>` : `<button data-action="request-return" data-id="${esc(book.id)}" class="inline-flex min-h-10 min-w-0 items-center justify-center whitespace-nowrap rounded-md bg-ink-600/10 px-2.5 text-xs font-semibold text-ink-700 hover:bg-ink-600/20">Start return</button>`;
@@ -1990,6 +2006,21 @@
   let borrowHistoryHasMore = false;
   let borrowHistoryLoading = false;
   const BORROW_HISTORY_PAGE_SIZE = 10;
+  function borrowingHistoryDate(req) {
+    const dates = {
+      pending: ['Requested', req.createdAt],
+      approved: ['Approved', req.respondedAt || req.createdAt],
+      accepted: ['Approved', req.respondedAt || req.createdAt],
+      denied: ['Denied', req.respondedAt || req.createdAt],
+      declined: ['Declined', req.respondedAt || req.createdAt],
+      cancelled: ['Cancelled', req.respondedAt || req.createdAt],
+      returned: ['Returned', req.returnedAt || req.respondedAt || req.createdAt],
+      lost: ['Reported lost', req.lostAt || req.returnedAt || req.respondedAt || req.createdAt]
+    };
+    const [label, value] = dates[req.status] || ['Updated', req.respondedAt || req.createdAt];
+    const date = formatDate(value);
+    return date ? `${label} ${date}` : label;
+  }
   function renderBorrowHistory() {
     const list = document.getElementById('profile-borrow-history-list');
     if (!list) return;
@@ -2002,7 +2033,8 @@
     }
     list.innerHTML = history.map(req => {
       const lender = req.ownerName && req.ownerName !== 'your friend' ? req.ownerName : 'Lender name unavailable';
-      return `<div class="bg-paper/70 border border-ink-200 rounded-lg px-3 py-2 flex items-center justify-between gap-3"><div class="min-w-0"><p class="font-semibold text-xs text-ink-950 truncate">${esc(req.title || 'Untitled book')}</p><p class="text-[11px] text-ink-500">Borrowed from <span class="font-semibold text-ink-700">${esc(lender)}</span>${req.returnedAt ? ` · returned ${esc(formatDate(req.returnedAt))}` : ''}${req.lostAt ? ` · reported lost ${esc(formatDate(req.lostAt))}` : ''}</p></div>${requestStatusPill(req.status)}</div>`;
+      const relationship = ['pending', 'denied', 'declined', 'cancelled'].includes(req.status) ? 'Requested from' : 'Borrowed from';
+      return `<div class="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-0.5 rounded-lg border border-ink-200 bg-paper/70 px-3 py-2"><p class="truncate text-xs font-semibold text-ink-950">${esc(req.title || 'Untitled book')}</p>${requestStatusPill(req.status)}<p class="col-span-2 min-w-0 text-[11px] text-ink-500">${relationship} <span class="font-semibold text-ink-700">${esc(lender)}</span> · ${esc(borrowingHistoryDate(req))}</p></div>`;
     }).join('');
     document.getElementById('borrow-history-load-more')?.classList.toggle('hidden', !borrowHistoryHasMore);
   }
@@ -2237,15 +2269,19 @@
 
   function searchTokens(...values) {
     const tokens = new Set();
-    values.filter(Boolean).forEach(value => {
-      String(value).toLowerCase().match(/[a-z0-9]+/g)?.forEach(word => {
-        for (let i = 1; i <= Math.min(word.length, 24); i += 1) tokens.add(word.slice(0, i));
+    values.forEach(value => {
+      const items = Array.isArray(value) ? value : [value];
+      items.filter(Boolean).forEach(item => {
+        String(item).toLowerCase().match(/[a-z0-9]+/g)?.forEach(word => {
+          for (let i = 1; i <= Math.min(word.length, 24); i += 1) tokens.add(word.slice(0, i));
+        });
       });
     });
     return [...tokens];
   }
 
   function publicProfileData(profile) {
+    const circleTags = Array.isArray(profile.circleTags) ? profile.circleTags.slice(0, 20) : [];
     return {
       libraryName: profile.libraryName || '',
       shelfKey: profile.shelfKey || '',
@@ -2256,11 +2292,13 @@
       ratingAdjustment: Number(profile.ratingAdjustment || 0),
       bookCount: Number(profile.bookCount || 0),
       timelyReturns: Number(profile.timelyReturns || 0),
+      onTimeReturnStreak: Number(profile.onTimeReturnStreak || 0),
+      bestOnTimeReturnStreak: Number(profile.bestOnTimeReturnStreak || 0),
       totalLent: Number(profile.totalLent || 0),
       friendCount: Number(profile.friendCount || 0),
       memberSince: profile.memberSince || firebase.firestore.FieldValue.serverTimestamp(),
-      circleTags: Array.isArray(profile.circleTags) ? profile.circleTags.slice(0, 20) : [],
-      searchTokens: searchTokens(profile.libraryName, profile.ownerName, profile.shelfKey),
+      circleTags,
+      searchTokens: searchTokens(profile.libraryName, profile.ownerName, profile.shelfKey, circleTags),
       updatedAt: firebase.firestore.FieldValue.serverTimestamp()
     };
   }
@@ -2753,10 +2791,10 @@
     const genreFilter = document.getElementById('search-genre-filter').value;
     const grid = document.getElementById('search-results-grid');
     if (query.length < 2) {
-      grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4">Enter at least two letters of a book, author, reader, or shelf name.</p>';
+      grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4">Enter at least two letters of a book, author, reader, shelf, or circle name.</p>';
       return;
     }
-    grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4">Searching your circle first…</p>';
+    grid.innerHTML = '<p class="text-ink-400 col-span-2 p-4">Searching books and readers…</p>';
     const cacheKey = `${query}|${statusFilter}|${genreFilter}|${confirmedFriends.slice().sort().join(',')}`;
     if (!loadMore || searchPages?.key !== cacheKey) searchPages = { key: cacheKey, cursors: {}, exhausted: {}, friendBooks: [], discoveryBooks: [], profiles: [] };
     const page = searchPages;
@@ -2850,12 +2888,15 @@
     ranked.forEach(book => addBook(book, confirmedFriends.includes(book.ownerId)));
     profiles.forEach(profile => {
       if (profile.id === currentUser.uid || shown.has(`profile:${profile.id}`)) return;
-      if (!matchesTerms([profile.libraryName, profile.ownerName, profile.shelfKey])) return;
+      const circleTags = Array.isArray(profile.circleTags) ? profile.circleTags.filter(Boolean) : [];
+      if (!matchesTerms([profile.libraryName, profile.ownerName, profile.shelfKey, ...circleTags])) return;
       const isFriend = confirmedFriends.includes(profile.id);
       shown.add(`profile:${profile.id}`);
       const name = profile.libraryName || 'Unnamed library';
+      const matchingCircle = circleTags.find(tag => matchesTerms([tag]));
+      const circleContext = matchingCircle ? `<p class="mt-1 flex items-center gap-1 text-[11px] font-semibold text-ink-600">${icon('circles', 'h-3 w-3')}Matched circle: ${esc(matchingCircle)}</p>` : '';
       const action = isFriend ? `<button data-action="view-shelf" data-uid="${esc(profile.id)}" data-name="${esc(name)}" class="bg-ink-800/10 text-ink-800 px-3 py-1.5 rounded-lg text-xs font-semibold">View shelf</button>` : `<button data-action="open-reader-profile" data-uid="${esc(profile.id)}" class="text-rust-600 bg-rust-600/10 hover:bg-rust-600/20 px-3 py-1.5 rounded-lg text-xs font-semibold">View profile</button>`;
-      grid.insertAdjacentHTML('beforeend', `<div class="app-panel rounded-xl border border-ink-200 shadow-sm p-4 flex justify-between items-center gap-3"><div class="flex items-center gap-3 min-w-0">${avatarHtml(profile, name)}<div class="min-w-0"><p class="font-mono text-[10px] uppercase tracking-wider text-rust-600">${isFriend ? 'Friend shelf' : 'Reader profile'}</p><h3 class="font-display text-lg text-ink-950 truncate">${esc(name)}</h3>${ratingBadgeHtml(profile.id, profile.ratingScore || 3)}</div></div><div class="shrink-0">${action}</div></div>`);
+      grid.insertAdjacentHTML('beforeend', `<div class="app-panel rounded-xl border border-ink-200 shadow-sm p-4 flex justify-between items-center gap-3"><div class="flex items-center gap-3 min-w-0">${avatarHtml(profile, name)}<div class="min-w-0"><p class="font-mono text-[10px] uppercase tracking-wider text-rust-600">${isFriend ? 'Friend shelf' : 'Reader profile'}</p><h3 class="font-display text-lg text-ink-950 truncate">${esc(name)}</h3>${circleContext}${ratingBadgeHtml(profile.id, profile.ratingScore || 3)}</div></div><div class="shrink-0">${action}</div></div>`);
     });
     const hasMore = Object.values(page.exhausted).some(exhausted => !exhausted);
     if (!shown.size) grid.innerHTML = `<p class="text-ink-400 col-span-2 p-4">No matches ${hasMore ? 'in this batch' : 'found'}. Check the spelling, try a shorter series name, or clear the filters.${hasMore ? ' Load more to keep looking.' : ''}</p>`;

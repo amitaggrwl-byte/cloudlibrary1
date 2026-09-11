@@ -17,8 +17,10 @@ const password = 'cloudlibrary-demo';
 
 function tokens(...values) {
   const result = new Set();
-  values.filter(Boolean).forEach(value => String(value).toLowerCase().match(/[a-z0-9]+/g)?.forEach(word => {
-    for (let index = 1; index <= Math.min(word.length, 24); index += 1) result.add(word.slice(0, index));
+  values.forEach(value => (Array.isArray(value) ? value : [value]).filter(Boolean).forEach(item => {
+    String(item).toLowerCase().match(/[a-z0-9]+/g)?.forEach(word => {
+      for (let index = 1; index <= Math.min(word.length, 24); index += 1) result.add(word.slice(0, index));
+    });
   }));
   return [...result];
 }
@@ -58,7 +60,7 @@ async function main() {
       libraryName, shelfKey: libraryName.toLowerCase(), ownerName: libraryName,
       photoURL: '', bio, ratingScore, ratingAdjustment: 0, bookCount, timelyReturns,
       totalLent: timelyReturns, friendCount, memberSince: Timestamp.fromDate(new Date('2025-09-08T00:00:00Z')),
-      circleTags, searchTokens: tokens(libraryName), updatedAt: FieldValue.serverTimestamp()
+      circleTags, searchTokens: tokens(libraryName, circleTags), updatedAt: FieldValue.serverTimestamp()
     });
     batch.set(db.collection('shelfNames').doc(libraryName.toLowerCase()), { ownerId: uid, createdAt: FieldValue.serverTimestamp() });
   });

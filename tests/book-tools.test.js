@@ -19,6 +19,12 @@ test('spelling near misses and transposed letters match without losing numeric p
   assert.equal(parseSearch('39 clues 10').seriesNumber, 10);
   assert.equal(parseSearch('Long series 250').seriesNumber, 250);
 });
+test('multiword circle names with grade numbers match reader profiles precisely', () => {
+  const parsed = parseSearch('Grade 5');
+  assert.equal(matchesSearch(parsed, ['ReaderShelf', 'Grade 5']), true);
+  assert.equal(matchesSearch(parsed, ['ReaderShelf', 'Grade 6']), false);
+  assert.equal(matchesSearch(parsed, ['Grade Five Readers']), false);
+});
 test('ISBN validates both formats and rejects non-book product barcodes', () => {
   assert.equal(validISBN('978-0-439-02348-1'), '9780439023481');
   assert.equal(validISBN('0-8044-2957-X'), '080442957X');
