@@ -127,6 +127,9 @@
   @keyframes toastIn { from { opacity: 0; transform: translateY(12px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
   .toast-item { animation: toastIn .28s cubic-bezier(.16,1,.3,1) both; }
   .toast-item.toast-out { opacity: 0; transform: translateY(6px); transition: opacity .25s ease, transform .25s ease; }
+  @keyframes actionSpin { to { transform: rotate(360deg); } }
+  .action-spinner { display: inline-block; width: .9rem; height: .9rem; margin-right: .35rem; flex: 0 0 auto; vertical-align: -.12em; border: 2px solid currentColor; border-right-color: transparent; border-radius: 9999px; animation: actionSpin .7s linear infinite; }
+  button[aria-busy="true"] { cursor: wait; opacity: .72; pointer-events: none; }
   @media (orientation: landscape) and (max-height: 620px) {
     #login-screen { min-height: 0; overflow: hidden; }
     #login-screen .login-form-pane { height: 100dvh; min-height: 0; align-items: flex-start; overflow-y: auto; padding: 1rem; }
@@ -172,7 +175,7 @@
       <div class="hidden md:flex items-center gap-3 mb-6"><img src="/assets/brand/cloudlibrary-mark.svg" alt="" class="brand-mark" aria-hidden="true"><div><p class="font-mono text-xs uppercase tracking-widest text-rust-600">CloudLibrary</p><p class="text-sm text-ink-500 mt-1">A library between friends</p></div></div>
       <h2 id="login-title" class="font-display text-3xl text-ink-950 mb-2">Open your shelf.</h2>
       <p id="login-copy" class="text-ink-500 text-sm mb-8 leading-relaxed">New readers can make a shelf in a minute. Returning readers pick up where they left off.</p>
-      <button onclick="signIn()" class="w-full flex items-center justify-center gap-3 bg-ink-950 hover:bg-ink-900 text-paper font-semibold py-3.5 px-4 rounded-xl transition-colors">
+      <button onclick="signIn(this)" class="w-full flex items-center justify-center gap-3 bg-ink-950 hover:bg-ink-900 text-paper font-semibold py-3.5 px-4 rounded-xl transition-colors">
         <svg viewBox="0 0 48 48" class="w-5 h-5"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59A14.5 14.5 0 0 1 9.5 24c0-1.59.27-3.13.76-4.59l-7.98-6.19A23.94 23.94 0 0 0 0 24c0 3.87.92 7.53 2.56 10.78z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.46-9.9l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
         Continue with Google
       </button>
@@ -197,7 +200,7 @@
     <input type="text" id="profile-name-input" placeholder="e.g. SarahReads" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-ink-950 mb-2 focus:outline-none focus:ring-2 focus:ring-ink-700">
     <p id="profile-name-help" class="text-xs text-ink-500 mb-4">Use only letters and numbers. No spaces or special characters.</p>
     <textarea id="profile-bio-input" rows="3" maxlength="280" placeholder="A short introduction for people you know in real life (optional)" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-sm text-ink-950 mb-4 resize-none focus:outline-none focus:ring-2 focus:ring-ink-700"></textarea>
-    <button onclick="saveProfileName()" class="w-full bg-ink-950 hover:bg-ink-900 text-paper font-semibold py-3 rounded-lg transition-colors">Open my shelf</button>
+    <button onclick="saveProfileName(this)" class="w-full bg-ink-950 hover:bg-ink-900 text-paper font-semibold py-3 rounded-lg transition-colors">Open my shelf</button>
   </div>
 </div>
 
@@ -232,28 +235,28 @@
         <button type="button" data-action="open-reader-profile" data-uid="self" id="user-info" title="View your reader profile" aria-label="View your reader profile" class="flex min-h-11 items-center gap-1.5 min-w-0 rounded-lg text-left text-ink-700 hover:text-ink-950"><img id="nav-profile-photo" alt="" referrerpolicy="no-referrer" class="hidden w-7 h-7 rounded-full object-cover border border-ink-200"><span id="nav-profile-fallback" class="w-7 h-7 rounded-full bg-ink-800 text-paper font-display text-xs flex items-center justify-center"></span><span id="nav-profile-name" class="max-w-[86px] sm:max-w-[130px] truncate text-xs sm:text-sm font-semibold"></span></button>
         <button type="button" id="copy-share-button" onclick="copyShareLink()" title="Copy share link" aria-label="Copy share link" class="header-utility"></button>
         <button type="button" data-action="open-help" title="Help and feedback" aria-label="Help and feedback" class="header-utility"></button>
-        <button type="button" id="sign-out-button" onclick="signOut()" class="header-utility px-1 sm:px-2.5"></button>
+        <button type="button" id="sign-out-button" onclick="signOut(this)" class="header-utility px-1 sm:px-2.5"></button>
       </div>
     </div>
     <div id="nav-tabs" aria-label="Primary" class="hidden md:flex items-center gap-1 min-w-0 mt-3 pt-3 border-t border-ink-100">
-      <button onclick="switchTab('library')" id="tab-library" class="tab-btn active flex items-center justify-center gap-1.5 min-w-0 text-sm px-3 py-2 rounded-lg font-semibold transition-colors"></button>
-      <button onclick="switchTab('add')" id="tab-add" class="tab-btn flex items-center justify-center gap-1.5 min-w-0 text-sm px-3 py-2 rounded-lg text-ink-500 hover:text-ink-950 transition-colors"></button>
-      <button onclick="switchTab('friends')" id="tab-friends" class="tab-btn flex items-center justify-center gap-1.5 min-w-0 text-sm px-3 py-2 rounded-lg text-ink-500 hover:text-ink-950 transition-colors"></button>
-      <button onclick="switchTab('search')" id="tab-search" class="tab-btn flex items-center justify-center gap-1.5 min-w-0 text-sm px-3 py-2 rounded-lg text-ink-500 hover:text-ink-950 transition-colors"></button>
-      <button onclick="switchTab('inbox')" id="tab-inbox" class="tab-btn flex items-center justify-center gap-1.5 min-w-0 text-sm px-3 py-2 rounded-lg text-ink-500 hover:text-ink-950 transition-colors"></button>
-      <button onclick="openReaderProfile('self')" id="tab-profile" class="tab-btn flex items-center justify-center gap-1.5 min-w-0 text-sm px-3 py-2 rounded-lg text-ink-500 hover:text-ink-950 transition-colors"></button>
-      <button onclick="openAdminDashboard()" id="tab-admin" class="hidden tab-btn flex items-center justify-center gap-1.5 min-w-0 text-sm px-3 py-2 rounded-lg text-ink-500 hover:text-ink-950 transition-colors"></button>
+      <button onclick="navigatePrimary('library', this)" id="tab-library" class="tab-btn active flex items-center justify-center gap-1.5 min-w-0 text-sm px-3 py-2 rounded-lg font-semibold transition-colors"></button>
+      <button onclick="navigatePrimary('add', this)" id="tab-add" class="tab-btn flex items-center justify-center gap-1.5 min-w-0 text-sm px-3 py-2 rounded-lg text-ink-500 hover:text-ink-950 transition-colors"></button>
+      <button onclick="navigatePrimary('friends', this)" id="tab-friends" class="tab-btn flex items-center justify-center gap-1.5 min-w-0 text-sm px-3 py-2 rounded-lg text-ink-500 hover:text-ink-950 transition-colors"></button>
+      <button onclick="navigatePrimary('search', this)" id="tab-search" class="tab-btn flex items-center justify-center gap-1.5 min-w-0 text-sm px-3 py-2 rounded-lg text-ink-500 hover:text-ink-950 transition-colors"></button>
+      <button onclick="navigatePrimary('inbox', this)" id="tab-inbox" class="tab-btn flex items-center justify-center gap-1.5 min-w-0 text-sm px-3 py-2 rounded-lg text-ink-500 hover:text-ink-950 transition-colors"></button>
+      <button onclick="navigatePrimary('profile', this)" id="tab-profile" class="tab-btn flex items-center justify-center gap-1.5 min-w-0 text-sm px-3 py-2 rounded-lg text-ink-500 hover:text-ink-950 transition-colors"></button>
+      <button onclick="navigatePrimary('admin', this)" id="tab-admin" class="hidden tab-btn flex items-center justify-center gap-1.5 min-w-0 text-sm px-3 py-2 rounded-lg text-ink-500 hover:text-ink-950 transition-colors"></button>
     </div>
   </nav>
 
   <nav id="mobile-nav" aria-label="Primary" class="mobile-nav md:hidden fixed inset-x-0 bottom-0 z-40 bg-white/95 backdrop-blur border-t border-ink-200 px-2 pt-2 grid grid-cols-6 gap-1 shadow-[0_-8px_24px_rgba(21,36,32,.10)]">
-    <button onclick="switchTab('library')" id="tab-mobile-library" class="mobile-tab tab-btn active flex flex-col items-center justify-center gap-1 min-w-0 rounded-lg font-semibold transition-colors"></button>
-    <button onclick="switchTab('add')" id="tab-mobile-add" class="mobile-tab tab-btn flex flex-col items-center justify-center gap-1 min-w-0 rounded-lg font-semibold text-ink-500 transition-colors"></button>
-    <button onclick="switchTab('friends')" id="tab-mobile-friends" class="mobile-tab tab-btn flex flex-col items-center justify-center gap-1 min-w-0 rounded-lg font-semibold text-ink-500 transition-colors"></button>
-    <button onclick="switchTab('search')" id="tab-mobile-search" class="mobile-tab tab-btn flex flex-col items-center justify-center gap-1 min-w-0 rounded-lg font-semibold text-ink-500 transition-colors"></button>
-    <button onclick="switchTab('inbox')" id="tab-mobile-inbox" class="mobile-tab tab-btn flex flex-col items-center justify-center gap-1 min-w-0 rounded-lg font-semibold text-ink-500 transition-colors"></button>
-    <button onclick="openReaderProfile('self')" id="tab-mobile-profile" class="mobile-tab tab-btn flex flex-col items-center justify-center gap-1 min-w-0 rounded-lg font-semibold text-ink-500 transition-colors"></button>
-    <button onclick="openAdminDashboard()" id="tab-mobile-admin" class="mobile-tab hidden tab-btn flex flex-col items-center justify-center gap-1 min-w-0 rounded-lg font-semibold text-ink-500 transition-colors"></button>
+    <button onclick="navigatePrimary('library', this)" id="tab-mobile-library" class="mobile-tab tab-btn active flex flex-col items-center justify-center gap-1 min-w-0 rounded-lg font-semibold transition-colors"></button>
+    <button onclick="navigatePrimary('add', this)" id="tab-mobile-add" class="mobile-tab tab-btn flex flex-col items-center justify-center gap-1 min-w-0 rounded-lg font-semibold text-ink-500 transition-colors"></button>
+    <button onclick="navigatePrimary('friends', this)" id="tab-mobile-friends" class="mobile-tab tab-btn flex flex-col items-center justify-center gap-1 min-w-0 rounded-lg font-semibold text-ink-500 transition-colors"></button>
+    <button onclick="navigatePrimary('search', this)" id="tab-mobile-search" class="mobile-tab tab-btn flex flex-col items-center justify-center gap-1 min-w-0 rounded-lg font-semibold text-ink-500 transition-colors"></button>
+    <button onclick="navigatePrimary('inbox', this)" id="tab-mobile-inbox" class="mobile-tab tab-btn flex flex-col items-center justify-center gap-1 min-w-0 rounded-lg font-semibold text-ink-500 transition-colors"></button>
+    <button onclick="navigatePrimary('profile', this)" id="tab-mobile-profile" class="mobile-tab tab-btn flex flex-col items-center justify-center gap-1 min-w-0 rounded-lg font-semibold text-ink-500 transition-colors"></button>
+    <button onclick="navigatePrimary('admin', this)" id="tab-mobile-admin" class="mobile-tab hidden tab-btn flex flex-col items-center justify-center gap-1 min-w-0 rounded-lg font-semibold text-ink-500 transition-colors"></button>
   </nav>
 
   <!-- Header -->
@@ -793,12 +796,14 @@
     event.preventDefault();
     const message = document.getElementById('feedback-message').value.trim();
     if (!message) return;
-    const result = await guard(() => db.collection('feedback').add({
-      reporterId: currentUser.uid, reporterShelf: userProfile.libraryName || '',
-      category: document.getElementById('feedback-category').value, message, status: 'open',
-      page: PAGE_VIEWS.find(view => !document.getElementById(`view-${view}`).classList.contains('hidden')) || 'library',
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    }), { context: 'Sending feedback', success: 'Thank you. Your feedback was sent.' });
+    const submitButton = event.submitter || event.target.querySelector('button[type="submit"]');
+    const result = await runButtonAction(submitButton, () => guard(() => db.collection('feedback').add({
+        reporterId: currentUser.uid, reporterShelf: userProfile.libraryName || '',
+        category: document.getElementById('feedback-category').value, message, status: 'open',
+        page: PAGE_VIEWS.find(view => !document.getElementById(`view-${view}`).classList.contains('hidden')) || 'library',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      }), { context: 'Sending feedback', success: 'Thank you. Your feedback was sent.' }),
+      { key: 'form:feedback', label: 'Sending…', linked: false });
     if (result !== FAILED) { event.target.reset(); closeHelp(); }
   });
 
@@ -845,7 +850,10 @@
       e.preventDefault();
       const bio = document.getElementById('profile-bio-edit').value.trim().slice(0, 280);
       const nextProfile = { ...userProfile, bio };
-      const res = await guard(() => db.collection('profiles').doc(currentUser.uid).set(publicProfileData(nextProfile)), { context: 'Saving your introduction', success: 'Profile introduction saved.' });
+      const submitButton = e.submitter || e.target.querySelector('button[type="submit"]');
+      const res = await runButtonAction(submitButton,
+        () => guard(() => db.collection('profiles').doc(currentUser.uid).set(publicProfileData(nextProfile)), { context: 'Saving your introduction', success: 'Profile introduction saved.' }),
+        { key: 'form:profile-introduction', label: 'Saving…', linked: false });
       if (res !== FAILED) { userProfile = nextProfile; renderMyReaderScore(); openReaderProfile('self'); }
     });
     if (isSelf) {
@@ -914,16 +922,18 @@
   async function changeCircle(action, circleId) {
     const callable = action === 'join-circle' ? 'joinCircle' : 'leaveCircle';
     const result = await guard(() => lendingFunctions.httpsCallable(callable)({ circleId }), { context: 'Updating circles', success: action === 'join-circle' ? 'Circle added to your profile.' : 'Circle removed from your profile.' });
-    if (result === FAILED) return;
+    if (result === FAILED) return result;
     const profile = await guard(() => db.collection('profiles').doc(currentUser.uid).get(), { context: 'Refreshing your profile' });
     if (profile !== FAILED && profile.exists) userProfile = profile.data();
     renderMyReaderScore();
-    manageCircles();
+    await manageCircles();
+    return result;
   }
 
   async function installStarterCircles() {
     const result = await guard(() => lendingFunctions.httpsCallable('installStarterCircles')(), { context: 'Adding starter circles', success: 'Starter circles are ready.' });
-    if (result !== FAILED) manageCircles();
+    if (result !== FAILED) await manageCircles();
+    return result;
   }
   async function openAdminDashboard() {
     switchTab('admin');
@@ -937,15 +947,18 @@
   }
   async function rebuildCommunityStats() {
     const result = await guard(() => lendingFunctions.httpsCallable('rebuildCommunityStats')({}), { context: 'Refreshing community totals', success: 'Community totals refreshed.' });
-    if (result !== FAILED) openAdminDashboard();
+    if (result !== FAILED) await openAdminDashboard();
+    return result;
   }
   async function resolveFeedback(feedbackId, status) {
     const result = await guard(() => lendingFunctions.httpsCallable('resolveFeedback')({ feedbackId, status }), { context: 'Updating feedback', success: status === 'resolved' ? 'Feedback marked resolved.' : 'Feedback reopened.' });
-    if (result !== FAILED) openAdminDashboard();
+    if (result !== FAILED) await openAdminDashboard();
+    return result;
   }
   async function archiveCircle(circleId) {
     const result = await guard(() => lendingFunctions.httpsCallable('archiveCircle')({ circleId }), { context: 'Archiving circle', success: 'Circle archived.' });
-    if (result !== FAILED) openAdminDashboard();
+    if (result !== FAILED) await openAdminDashboard();
+    return result;
   }
   async function rebuildDiscoveryIndex() {
     const result = await guard(async () => {
@@ -956,6 +969,7 @@
       } while (after);
     }, { context: 'Refreshing search index', success: 'Book and series search index refreshed.' });
     if (result !== FAILED) searchCache.clear();
+    return result;
   }
   window.openReaderProfile = openReaderProfile;
 
@@ -1128,26 +1142,25 @@
     const isbn = document.getElementById('isbn').value.replace(/[^0-9Xx]/g, '');
     if (isbn.length !== 10 && isbn.length !== 13) return toast('Enter a 10- or 13-digit ISBN first, or add a photo yourself.', 'info');
     const button = document.getElementById('lookup-cover-button');
-    button.disabled = true;
-    button.textContent = 'Checking…';
-    const url = `https://covers.openlibrary.org/b/isbn/${encodeURIComponent(isbn)}-L.jpg?default=false`;
-    try {
-      const response = await fetch(url, { method: 'HEAD', mode: 'cors' });
-      if (!response.ok) throw new Error('No cover found');
-      document.getElementById('coverUrl').value = url;
-      inlineCoverFile = null;
-      addCoverUrl = url;
-      setCoverPreview('', url);
-      document.getElementById('coverFile').value = '';
-      document.getElementById('cover-file-label').textContent = 'Take or add cover photo';
-      document.getElementById('clear-cover-photo').classList.remove('hidden');
-      toast('Cover found. You can still replace it with a photo.', 'success');
-    } catch (err) {
-      toast('No cover was found for that ISBN. You can take or add one instead.', 'info');
-    } finally {
-      button.disabled = false;
-      button.textContent = 'Find cover';
-    }
+    return runButtonAction(button, async () => {
+      const url = `https://covers.openlibrary.org/b/isbn/${encodeURIComponent(isbn)}-L.jpg?default=false`;
+      try {
+        const response = await fetch(url, { method: 'HEAD', mode: 'cors' });
+        if (!response.ok) throw new Error('No cover found');
+        document.getElementById('coverUrl').value = url;
+        inlineCoverFile = null;
+        addCoverUrl = url;
+        setCoverPreview('', url);
+        document.getElementById('coverFile').value = '';
+        document.getElementById('cover-file-label').textContent = 'Take or add cover photo';
+        document.getElementById('clear-cover-photo').classList.remove('hidden');
+        toast('Cover found. You can still replace it with a photo.', 'success');
+        return true;
+      } catch (err) {
+        toast('No cover was found for that ISBN. You can take or add one instead.', 'info');
+        return false;
+      }
+    }, { key: `cover-lookup:${isbn}`, label: 'Checking…', linked: false });
   });
 
   document.getElementById('clear-cover-photo').addEventListener('click', () => {
@@ -1255,6 +1268,121 @@
     }
   }
 
+  // Shared, UI-only action feedback. New buttons can opt in through data-action
+  // and can override the pending copy with data-pending-label when needed.
+  const actionLocks = new Map();
+  const ACTION_FEEDBACK = {
+    'delete-book': ['Deleting…', 'book'],
+    'mark-returned': ['Confirming…', 'book'],
+    'request-return': ['Starting return…', 'book'],
+    'mark-lost': ['Reporting…', 'book'],
+    'send-reminder': ['Sending…', 'book'],
+    borrow: ['Sending request…', 'book'],
+    'add-friend': ['Sending request…', 'reader'],
+    unfriend: ['Removing…', 'reader'],
+    'cancel-request': ['Cancelling…', 'request'],
+    'accept-friend': ['Accepting…', 'friend-request'],
+    'decline-friend': ['Declining…', 'friend-request'],
+    'approve-borrow': ['Approving…', 'borrow-request'],
+    'deny-borrow': ['Denying…', 'borrow-request'],
+    'complete-reminder': ['Completing…', 'reminder'],
+    'cancel-reminder': ['Cancelling…', 'reminder'],
+    'cleanup-inbox': ['Cleaning up…', 'inbox-cleanup'],
+    'delete-saved-book': ['Removing…', 'saved-book'],
+    'toggle-save-book': ['Saving…', 'saved-book'],
+    'delete-account': ['Deleting account…', 'account'],
+    'join-circle': ['Joining…', 'circle'],
+    'leave-circle': ['Leaving…', 'circle'],
+    'install-starter-circles': ['Adding circles…', 'starter-circles'],
+    'rebuild-discovery': ['Rebuilding…', 'book-search'],
+    'rebuild-community-stats': ['Recounting…', 'community-stats'],
+    'resolve-feedback': ['Updating…', 'feedback'],
+    'archive-circle': ['Archiving…', 'circle'],
+  };
+
+  function actionLockKey(button, group) {
+    const d = button?.dataset || {};
+    const recordId = d.id || d.uid || d.owner || d.book || 'page';
+    return `${group || d.action || 'action'}:${recordId}`;
+  }
+
+  function buttonsForActionKey(group, key) {
+    return [...document.querySelectorAll('button[data-action]')].filter(button => actionLockKey(button, ACTION_FEEDBACK[button.dataset.action]?.[1]) === key);
+  }
+
+  function beginActionFeedback(button, options = {}) {
+    if (!button) return null;
+    const feedback = ACTION_FEEDBACK[button.dataset.action] || [];
+    const group = options.group || feedback[1] || button.dataset.action || 'action';
+    const key = options.key || actionLockKey(button, group);
+    if (actionLocks.has(key)) return null;
+    const label = button.dataset.pendingLabel || options.label || feedback[0] || 'Working…';
+    const targets = options.linked === false ? [button] : buttonsForActionKey(group, key);
+    if (!targets.includes(button)) targets.push(button);
+    const states = targets.map(target => ({
+      target,
+      html: target.innerHTML,
+      disabled: target.disabled,
+      ariaBusy: target.getAttribute('aria-busy'),
+      minWidth: target.style.minWidth,
+      title: target.getAttribute('title')
+    }));
+    const token = { key, states, released: false };
+    actionLocks.set(key, token);
+    states.forEach(({ target }) => {
+      const width = Math.ceil(target.getBoundingClientRect().width);
+      if (width) target.style.minWidth = `${width}px`;
+      target.disabled = true;
+      target.setAttribute('aria-busy', 'true');
+      target.innerHTML = `<span class="action-spinner" aria-hidden="true"></span><span>${esc(label)}</span>`;
+    });
+    return token;
+  }
+
+  function releaseActionFeedback(token, delay = 0) {
+    if (!token || token.released) return;
+    const restore = () => {
+      if (token.released) return;
+      token.released = true;
+      token.states.forEach(({ target, html, disabled, ariaBusy, minWidth, title }) => {
+        if (!target.isConnected) return;
+        target.innerHTML = html;
+        target.disabled = disabled;
+        target.style.minWidth = minWidth;
+        if (ariaBusy === null) target.removeAttribute('aria-busy'); else target.setAttribute('aria-busy', ariaBusy);
+        if (title === null) target.removeAttribute('title'); else target.setAttribute('title', title);
+      });
+      if (actionLocks.get(token.key) === token) actionLocks.delete(token.key);
+    };
+    if (delay) setTimeout(restore, delay); else restore();
+  }
+
+  function updateActionFeedback(token, label) {
+    if (!token || token.released) return;
+    token.states.forEach(({ target }) => {
+      if (target.isConnected) target.innerHTML = `<span class="action-spinner" aria-hidden="true"></span><span>${esc(label)}</span>`;
+    });
+  }
+
+  async function runButtonAction(button, action, options = {}) {
+    const token = beginActionFeedback(button, options);
+    if (!token) return FAILED;
+    try {
+      const result = await action();
+      const succeeded = result !== FAILED && result !== false;
+      // Successful state-changing actions normally replace their old control via
+      // the existing realtime render. The short fallback prevents a stale lock if
+      // that render is delayed or the same control intentionally remains present.
+      releaseActionFeedback(token, succeeded && options.holdOnSuccess ? 1800 : 0);
+      return result;
+    } catch (error) {
+      releaseActionFeedback(token);
+      console.error(options.context || 'Button action failed', error);
+      toast(options.error || 'Something went wrong. Please try again.', 'error');
+      return FAILED;
+    }
+  }
+
   // Surfaces listener failures too — onSnapshot swallows errors without this.
   function listenerError(context) {
     return (err) => {
@@ -1358,22 +1486,34 @@
   });
 
   // --- 2. AUTHENTICATION & PROFILE CHECK ---
-  function signIn() {
-    return authPersistenceReady.then(() => {
-      if (!isLocalDemo) return auth.signInWithPopup(googleProvider);
-      const reader = document.getElementById('demo-user').value;
-      return auth.signInWithEmailAndPassword(`${reader}@cloudlibrary.demo`, 'cloudlibrary-demo');
-    }).then(result => {
-      activeFriendShelf = null;
-      switchTab('library');
-      return result;
-    });
+  function signIn(button) {
+    return runButtonAction(button, () => authPersistenceReady.then(() => {
+        if (!isLocalDemo) return auth.signInWithPopup(googleProvider);
+        const reader = document.getElementById('demo-user').value;
+        return auth.signInWithEmailAndPassword(`${reader}@cloudlibrary.demo`, 'cloudlibrary-demo');
+      }).then(result => {
+        activeFriendShelf = null;
+        switchTab('library');
+        return result;
+      }), { key: 'account:sign-in', label: 'Opening shelf…', linked: false, context: 'Signing in' });
   }
-  function signOut() {
-    isSigningOut = true;
-    clearTimeout(inactivityTimer);
-    stopSessionListeners();
-    auth.signOut();
+  function signOut(button) {
+    const action = async () => {
+      isSigningOut = true;
+      clearTimeout(inactivityTimer);
+      stopSessionListeners();
+      try {
+        await auth.signOut();
+        return true;
+      } catch (error) {
+        isSigningOut = false;
+        resetInactivityTimer();
+        throw error;
+      }
+    };
+    return button
+      ? runButtonAction(button, action, { key: 'account:sign-out', label: 'Signing out…', linked: false, context: 'Signing out' })
+      : action();
   }
 
   const sessionListeners = new Map();
@@ -1394,17 +1534,18 @@
   }
 
   async function deleteAccount() {
-    if (!confirm('Please do not delete your CloudLibrary account unless you are completely certain. Your profile, shelf, cover photos, saved books, requests, and friendships will be permanently removed. This cannot be undone. Continue?')) return;
-    if (prompt('Final warning: account deletion cannot be undone. Type DELETE to permanently remove your account.') !== 'DELETE') return toast('Account deletion cancelled.', 'info');
+    if (!confirm('Please do not delete your CloudLibrary account unless you are completely certain. Your profile, shelf, cover photos, saved books, requests, and friendships will be permanently removed. This cannot be undone. Continue?')) return false;
+    if (prompt('Final warning: account deletion cannot be undone. Type DELETE to permanently remove your account.') !== 'DELETE') { toast('Account deletion cancelled.', 'info'); return false; }
     const res = await guard(() => lendingFunctions.httpsCallable('deleteMyAccount')({ confirmation: 'DELETE' }), {
       context: 'Deleting your account',
       error: 'Return or close every active loan before deleting this account.'
     });
-    if (res === FAILED) return;
+    if (res === FAILED) return res;
     closeReaderProfileModal();
     clearTimeout(inactivityTimer);
     await auth.signOut();
     toast('Your account has been deleted.', 'success');
+    return res;
   }
 
   auth.onAuthStateChanged(async (user) => {
@@ -1461,35 +1602,38 @@
     }
   });
 
-  async function saveProfileName() {
+  async function saveProfileName(button) {
     const name = document.getElementById('profile-name-input').value.trim();
     if (!name) return toast("Please enter a library name.", 'error');
     if (!isValidShelfName(name)) {
       return toast('Shelf names can use only letters and numbers, with no spaces or special characters.', 'error');
     }
 
-    const shelfKey = shelfKeyFromName(name);
-    const dupe = await guard(() => db.collection("profiles").where("shelfKey", "==", shelfKey).limit(1).get(), { context: 'Checking shelf name availability' });
-    if (dupe === FAILED) return;
-    if (!dupe.empty && dupe.docs[0].id !== currentUser.uid) return toast('That shelf name is already taken.', 'error');
+    return runButtonAction(button, async () => {
+      const shelfKey = shelfKeyFromName(name);
+      const dupe = await guard(() => db.collection("profiles").where("shelfKey", "==", shelfKey).limit(1).get(), { context: 'Checking shelf name availability' });
+      if (dupe === FAILED) return dupe;
+      if (!dupe.empty && dupe.docs[0].id !== currentUser.uid) { toast('That shelf name is already taken.', 'error'); return false; }
 
-    const draft = {
-      libraryName: name,
-      shelfKey,
-      ownerName: currentUser.displayName || '',
-      photoURL: currentUser.photoURL || '',
-      bio: document.getElementById('profile-bio-input').value.trim().slice(0, 280)
-    };
-    const res = await guard(() => {
-      const batch = db.batch();
-      batch.set(db.collection("profiles").doc(currentUser.uid), publicProfileData(draft));
-      batch.set(db.collection('shelfNames').doc(shelfKey), { ownerId: currentUser.uid, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
-      return batch.commit();
-    }, { context: 'Saving your profile' });
-    if (res === FAILED) return;
-    userProfile = draft;
-    document.getElementById('profile-modal').classList.add('hidden');
-    initApp();
+      const draft = {
+        libraryName: name,
+        shelfKey,
+        ownerName: currentUser.displayName || '',
+        photoURL: currentUser.photoURL || '',
+        bio: document.getElementById('profile-bio-input').value.trim().slice(0, 280)
+      };
+      const res = await guard(() => {
+        const batch = db.batch();
+        batch.set(db.collection("profiles").doc(currentUser.uid), publicProfileData(draft));
+        batch.set(db.collection('shelfNames').doc(shelfKey), { ownerId: currentUser.uid, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+        return batch.commit();
+      }, { context: 'Saving your profile' });
+      if (res === FAILED) return res;
+      userProfile = draft;
+      document.getElementById('profile-modal').classList.add('hidden');
+      await initApp();
+      return res;
+    }, { key: 'form:profile-setup', label: 'Opening shelf…', linked: false });
   }
 
   async function initApp() {
@@ -1553,6 +1697,22 @@
     document.getElementById('header-title').textContent = titles[tabName] || 'CloudLibrary';
     if (tabName === 'friends') renderFriendsView();
   }
+
+  window.navigatePrimary = function (tabName, button) {
+    if (tabName === 'profile') {
+      return runButtonAction(button, () => openReaderProfile('self'), {
+        key: 'navigation:profile', label: 'Loading…', linked: false
+      });
+    }
+    if (tabName === 'admin') {
+      return runButtonAction(button, () => openAdminDashboard(), {
+        key: 'navigation:admin', label: 'Loading…', linked: false
+      });
+    }
+    // Library, Add, Friends, Search, and Inbox switch immediately, so a loading
+    // indicator would add noise rather than useful acknowledgement.
+    return switchTab(tabName);
+  };
 
   // --- 4. BOOK CARD RENDERING (shared across my-library / friend-library / search) ---
   function bookCoverHtml(book) {
@@ -1901,7 +2061,7 @@
     if (!uid) return;
     const button = document.getElementById('my-shelf-load-more');
     myShelfLoading = true;
-    if (button) { button.disabled = true; button.textContent = 'Loading books…'; }
+    const token = button ? beginActionFeedback(button, { key: 'library:load-more', label: 'Loading books…', linked: false }) : null;
     if (!loadMore) {
       myShelfBooksCache = {};
       myShelfCursor = null;
@@ -1926,8 +2086,7 @@
     }
     myShelfLoading = false;
     if (button) {
-      button.disabled = false;
-      button.textContent = 'Load more books';
+      releaseActionFeedback(token);
       button.classList.toggle('hidden', !myShelfHasMore);
     }
     if (myShelfRefreshPending) {
@@ -2044,7 +2203,7 @@
     if (borrowHistoryLoading || (loadMore && !borrowHistoryHasMore)) return;
     borrowHistoryLoading = true;
     const button = document.getElementById('borrow-history-load-more');
-    if (button) { button.disabled = true; button.textContent = 'Loading…'; }
+    const token = button ? beginActionFeedback(button, { key: 'history:load-more', label: 'Loading…', linked: false }) : null;
     if (!loadMore) {
       borrowHistoryCache = [];
       borrowHistoryCursor = null;
@@ -2062,7 +2221,7 @@
       renderBorrowHistory();
     }
     borrowHistoryLoading = false;
-    if (button) { button.disabled = false; button.textContent = 'Load more history'; }
+    releaseActionFeedback(token);
   }
 
   function collectBookFields(prefix) {
@@ -2095,57 +2254,41 @@
   document.getElementById('book-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     if (bookSubmissionInProgress) return;
-    bookSubmissionInProgress = true;
     const submitButton = document.getElementById('add-book-submit');
-    submitButton.disabled = true;
-    submitButton.textContent = 'Adding to shelf…';
-    const fields = validatedBookFields(collectBookFields(''));
-    if (!fields) {
-      bookSubmissionInProgress = false;
-      submitButton.disabled = false;
-      submitButton.textContent = 'Add to shelf';
-      return;
-    }
-    if (looksLikeShelfDuplicate(fields) && !confirm('A book with this title is already on your shelf. Add another copy anyway?')) {
-      bookSubmissionInProgress = false;
-      submitButton.disabled = false;
-      submitButton.textContent = 'Add to shelf';
-      return;
-    }
-    const bookRef = db.collection('books').doc();
-    if (inlineCoverFile) {
-      const uploaded = await guard(() => uploadCoverPhoto(bookRef.id, inlineCoverFile), { context: 'Uploading cover photo' });
-      if (uploaded === FAILED) {
-        bookSubmissionInProgress = false;
-        submitButton.disabled = false;
-        submitButton.textContent = 'Add to shelf';
-        return;
+    const token = beginActionFeedback(submitButton, { key: 'form:add-book', label: 'Adding to shelf…', linked: false });
+    if (!token) return;
+    bookSubmissionInProgress = true;
+    try {
+      const fields = validatedBookFields(collectBookFields(''));
+      if (!fields) return;
+      if (looksLikeShelfDuplicate(fields) && !confirm('A book with this title is already on your shelf. Add another copy anyway?')) return;
+      const bookRef = db.collection('books').doc();
+      if (inlineCoverFile) {
+        updateActionFeedback(token, 'Uploading cover…');
+        const uploaded = await guard(() => uploadCoverPhoto(bookRef.id, inlineCoverFile), { context: 'Uploading cover photo' });
+        if (uploaded === FAILED) return;
+        fields.coverUrl = uploaded;
+        updateActionFeedback(token, 'Adding to shelf…');
+      } else if (!fields.coverUrl && addCoverUrl) {
+        fields.coverUrl = addCoverUrl;
       }
-      fields.coverUrl = uploaded;
-    } else if (!fields.coverUrl && addCoverUrl) {
-      fields.coverUrl = addCoverUrl;
-    }
-    const book = { ...fields, ownerId: currentUser.uid, ownerName: userProfile.libraryName, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
-    const res = await guard(() => bookRef.set(book), { context: 'Adding a book', success: `"${fields.title}" added to your shelf.` });
-    if (res === FAILED) {
+      const book = { ...fields, ownerId: currentUser.uid, ownerName: userProfile.libraryName, createdAt: firebase.firestore.FieldValue.serverTimestamp() };
+      const res = await guard(() => bookRef.set(book), { context: 'Adding a book', success: `"${fields.title}" added to your shelf.` });
+      if (res === FAILED) return;
+      e.target.reset();
+      localStorage.removeItem(BOOK_DRAFT_KEY);
+      inlineCoverFile = null;
+      addCoverUrl = '';
+      setCoverPreview('', '');
+      document.getElementById('cover-file-label').textContent = 'Add cover photo';
+      document.getElementById('clear-cover-photo').classList.add('hidden');
+      setRating('add', 0);
+      userProfile.bookCount = Number(userProfile.bookCount || 0) + 1;
+      await fetchMyBooks();
+    } finally {
       bookSubmissionInProgress = false;
-      submitButton.disabled = false;
-      submitButton.textContent = 'Add to shelf';
-      return;
+      releaseActionFeedback(token);
     }
-    e.target.reset();
-    localStorage.removeItem(BOOK_DRAFT_KEY);
-    inlineCoverFile = null;
-    addCoverUrl = '';
-    setCoverPreview('', '');
-    document.getElementById('cover-file-label').textContent = 'Add cover photo';
-    document.getElementById('clear-cover-photo').classList.add('hidden');
-    setRating('add', 0);
-    bookSubmissionInProgress = false;
-    submitButton.disabled = false;
-    submitButton.textContent = 'Add to shelf';
-    userProfile.bookCount = Number(userProfile.bookCount || 0) + 1;
-    await fetchMyBooks();
   });
 
   const MAX_BULK_BOOKS = 100;
@@ -2201,40 +2344,42 @@
     const duplicates = validBooks.filter(looksLikeShelfDuplicate);
     if (duplicates.length && !confirm(`${duplicates.length} listed book${duplicates.length === 1 ? ' looks' : 's look'} like ${duplicates.length === 1 ? 'a copy' : 'copies'} already on your shelf. Add them anyway?`)) return;
     const button = document.getElementById('quick-add-submit');
+    const token = beginActionFeedback(button, { key: 'form:bulk-add', label: `Preparing ${validBooks.length} books…`, linked: false });
+    if (!token) return;
     bulkSubmissionInProgress = true;
-    button.disabled = true;
-    button.textContent = `Preparing ${validBooks.length} books…`;
-    let added = 0;
-    for (let start = 0; start < validBooks.length; start += 100) {
-      const chunk = validBooks.slice(start, start + 100);
-      button.textContent = `Adding ${Math.min(start + chunk.length, validBooks.length)} of ${validBooks.length} books…`;
-      const result = await guard(() => {
-        const batch = db.batch();
-        chunk.forEach(book => {
-          const ref = db.collection('books').doc();
-          batch.set(ref, {
-            ...book, genre, condition, isbn: '', publishedYear: null, coverUrl: '', description: '', rating: 0,
-            status: 'Available', ownerId: currentUser.uid, ownerName: userProfile.libraryName,
-            quietImport: true, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    try {
+      let added = 0;
+      for (let start = 0; start < validBooks.length; start += 100) {
+        const chunk = validBooks.slice(start, start + 100);
+        updateActionFeedback(token, `Adding ${Math.min(start + chunk.length, validBooks.length)} of ${validBooks.length}…`);
+        const result = await guard(() => {
+          const batch = db.batch();
+          chunk.forEach(book => {
+            const ref = db.collection('books').doc();
+            batch.set(ref, {
+              ...book, genre, condition, isbn: '', publishedYear: null, coverUrl: '', description: '', rating: 0,
+              status: 'Available', ownerId: currentUser.uid, ownerName: userProfile.libraryName,
+              quietImport: true, createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
           });
-        });
-        return batch.commit();
-      }, { context: 'Adding books to your shelf' });
-      if (result === FAILED) break;
-      added += chunk.length;
+          return batch.commit();
+        }, { context: 'Adding books to your shelf' });
+        if (result === FAILED) break;
+        added += chunk.length;
+      }
+      if (added === validBooks.length) {
+        e.target.reset();
+        updateQuickImportPreview();
+        toast(`${added} books added to your shelf.`, 'success');
+        userProfile.bookCount = Number(userProfile.bookCount || 0) + added;
+        await fetchMyBooks();
+      } else if (added) {
+        toast(`${added} books were added. The remaining entries stay in the list so you can try again.`, 'info');
+      }
+    } finally {
+      bulkSubmissionInProgress = false;
+      releaseActionFeedback(token);
     }
-    if (added === validBooks.length) {
-      e.target.reset();
-      updateQuickImportPreview();
-      toast(`${added} books added to your shelf.`, 'success');
-      userProfile.bookCount = Number(userProfile.bookCount || 0) + added;
-      await fetchMyBooks();
-    } else if (added) {
-      toast(`${added} books were added. The remaining entries stay in the list so you can try again.`, 'info');
-    }
-    bulkSubmissionInProgress = false;
-    button.disabled = false;
-    button.textContent = 'Add these books to my shelf';
   });
 
   document.getElementById('generate-series').addEventListener('click', () => {
@@ -2403,6 +2548,7 @@
       await fetchMyBooks();
       await fetchActiveLoans();
     }
+    return res;
   };
 
   async function requestReturn(bookId) {
@@ -2428,7 +2574,7 @@
   window.sendReturnReminder = async function (id) {
     const book = myBooksCache[id];
     if (!book || !book.borrowerId) return toast('No borrower is recorded for this book.', 'error');
-    const result = await guard(() => db.collection("requests").add({
+    return guard(() => db.collection("requests").add({
       type: 'return-reminder',
       bookId: id,
       title: book.title || 'Untitled book',
@@ -2496,21 +2642,30 @@
     const allowedStatuses = myBooksCache[id]?.status === 'Lent Out' ? ['Lent Out'] : ['Available', 'Reading', 'Lost'];
     const fields = validatedBookFields(collectBookFields('edit'), allowedStatuses);
     if (!fields) return;
-    if (editCoverFile) {
-      const uploaded = await guard(() => uploadCoverPhoto(id, editCoverFile), { context: 'Uploading cover photo' });
-      if (uploaded === FAILED) return;
-      fields.coverUrl = uploaded;
-    } else if (!fields.coverUrl && editCoverUrl) {
-      fields.coverUrl = editCoverUrl;
+    const submitButton = e.submitter || e.target.querySelector('button[type="submit"]');
+    const token = beginActionFeedback(submitButton, { key: `form:edit-book:${id}`, label: 'Saving…', linked: false });
+    if (!token) return;
+    try {
+      if (editCoverFile) {
+        updateActionFeedback(token, 'Uploading cover…');
+        const uploaded = await guard(() => uploadCoverPhoto(id, editCoverFile), { context: 'Uploading cover photo' });
+        if (uploaded === FAILED) return;
+        fields.coverUrl = uploaded;
+        updateActionFeedback(token, 'Saving…');
+      } else if (!fields.coverUrl && editCoverUrl) {
+        fields.coverUrl = editCoverUrl;
+      }
+      const res = await guard(() => db.collection('books').doc(id).update({ ...fields, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }), { context: 'Updating a book', success: 'Changes saved.' });
+      if (res === FAILED) return;
+      editCoverFile = null;
+      editCoverUrl = fields.coverUrl || '';
+      searchCache.clear();
+      closeEditModal();
+      await fetchMyBooks();
+      await fetchActiveLoans();
+    } finally {
+      releaseActionFeedback(token);
     }
-    const res = await guard(() => db.collection('books').doc(id).update({ ...fields, updatedAt: firebase.firestore.FieldValue.serverTimestamp() }), { context: 'Updating a book', success: 'Changes saved.' });
-    if (res === FAILED) return;
-    editCoverFile = null;
-    editCoverUrl = fields.coverUrl || '';
-    searchCache.clear();
-    closeEditModal();
-    await fetchMyBooks();
-    await fetchActiveLoans();
   });
 
   // --- 6. FRIENDS SYSTEM ---
@@ -2581,12 +2736,12 @@
   }
 
   async function sendFriendRequest(targetUid, targetName) {
-    if (targetUid === currentUser.uid) return;
+    if (targetUid === currentUser.uid) return false;
     const exists = await guard(() => friendshipExists(currentUser.uid, targetUid), { context: 'Checking for an existing friendship' });
-    if (exists === FAILED) return;
+    if (exists === FAILED) return exists;
     if (exists) {
       toast("Request already sent, or you're already friends.", 'info');
-      return;
+      return false;
     }
 
     const friendshipId = friendshipIdFor(currentUser.uid, targetUid);
@@ -2599,12 +2754,13 @@
       senderId: currentUser.uid,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     }), { context: 'Sending a friend request', success: `Friend request sent to ${targetName}.` });
-    if (res === FAILED) return;
+    if (res === FAILED) return res;
     relationshipStates[targetUid] = 'pending';
     relationshipDocs[targetUid] = friendshipId;
     relationshipSenders[targetUid] = currentUser.uid;
     if (!document.getElementById('reader-profile-modal').classList.contains('hidden')) openReaderProfile(targetUid);
     if (!document.getElementById('view-friends').classList.contains('hidden')) renderFriendsView();
+    return res;
   }
 
   async function renderFriendsView() {
@@ -2666,18 +2822,20 @@
   }
 
   async function unfriend(friendUid, friendName) {
-    if (!confirm(`Remove ${friendName}? You'll both lose access to each other's shelves.`)) return;
+    if (!confirm(`Remove ${friendName}? You'll both lose access to each other's shelves.`)) return false;
     const docId = friendshipDocs[friendUid];
     if (!docId) return toast('Could not find that friendship — try reloading.', 'error');
     const res = await guard(() => lendingFunctions.httpsCallable('removeFriend')({ friendshipId: docId }), { context: 'Removing a friend', success: `${friendName} removed.` });
-    if (res === FAILED) return;
-    renderFriendsView();
+    if (res === FAILED) return res;
+    await renderFriendsView();
+    return res;
   }
 
   async function cancelSentRequest(reqId, targetName) {
     const res = await guard(() => db.collection("friendships").doc(reqId).delete(), { context: 'Cancelling a request', success: `Request to ${targetName} cancelled.` });
-    if (res === FAILED) return;
-    renderFriendsView();
+    if (res === FAILED) return res;
+    await renderFriendsView();
+    return res;
   }
 
   let activeFriendShelf = null;
@@ -2762,8 +2920,7 @@
     const shelf = activeFriendShelf;
     const button = document.getElementById('friend-shelf-load-more');
     shelf.loading = true;
-    button.disabled = true;
-    button.textContent = 'Loading books…';
+    const token = beginActionFeedback(button, { key: `friend-shelf:load-more:${shelf.uid}`, label: 'Loading books…', linked: false });
     const snapshot = await guard(() => db.collection('books').where('ownerId', '==', shelf.uid).orderBy('createdAt', 'desc').startAfter(shelf.cursor).limit(SHELF_PAGE_SIZE + 1).get(), { context: 'Loading more books' });
     if (snapshot !== FAILED && activeFriendShelf === shelf) {
       const pageDocs = snapshot.docs.slice(0, SHELF_PAGE_SIZE);
@@ -2773,8 +2930,7 @@
       renderFriendShelfBooks();
     }
     shelf.loading = false;
-    button.disabled = false;
-    button.textContent = 'Load more books';
+    releaseActionFeedback(token);
   }
 
   // --- 7. GLOBAL SEARCH ---
@@ -2904,14 +3060,19 @@
       const more = document.createElement('button');
       more.type = 'button'; more.textContent = 'Load more results';
       more.className = 'col-span-full justify-self-center px-4 py-3 text-sm font-semibold text-ink-800';
-      more.addEventListener('click', () => performGlobalSearch(true));
+      more.addEventListener('click', () => runButtonAction(more, () => performGlobalSearch(true), {
+        key: 'search:more', label: 'Loading more…', linked: false
+      }));
       grid.appendChild(more);
     }
   }
   window.performGlobalSearch = performGlobalSearch;
-  document.getElementById('global-search-form').addEventListener('submit', (e) => {
+  document.getElementById('global-search-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    performGlobalSearch();
+    const submitButton = e.submitter || e.target.querySelector('button[type="submit"]');
+    await runButtonAction(submitButton, () => performGlobalSearch(), {
+      key: 'search:primary', label: 'Searching…', linked: false
+    });
   });
 
   // --- 8. BORROW & FRIEND REQUEST INBOX ---
@@ -2923,6 +3084,7 @@
       borrowRequestStates[bookId] = 'pending';
       refreshBorrowActions();
     }
+    return result;
   }
   window.sendBorrowRequest = sendBorrowRequest;
   window.sendFriendRequest = sendFriendRequest;
@@ -3120,30 +3282,29 @@
   document.getElementById('my-shelf-load-more').addEventListener('click', () => fetchMyBooks(true));
   document.getElementById('friend-shelf-load-more').addEventListener('click', loadMoreFriendShelf);
 
-  async function respondFriendRequest(reqId, status, button) {
-    if (button) { button.disabled = true; button.title = 'Connecting libraries…'; }
+  async function respondFriendRequest(reqId, status) {
     if (status === 'accepted') toast('Connecting both shelves…', 'info');
     const res = await guard(() => lendingFunctions.httpsCallable('respondToFriendRequest')({ requestId: reqId, action: status }), { context: 'Responding to a friend request', success: status === 'accepted' ? 'Friend added — both shelves are now open to you.' : 'Request declined.' });
-    if (res === FAILED) { if (button) button.disabled = false; return; }
+    if (res === FAILED) return res;
     await loadFriendsList();
     if (!document.getElementById('view-friends').classList.contains('hidden')) renderFriendsView();
+    return res;
   }
   window.respondFriendRequest = respondFriendRequest;
 
-  async function respondBorrowRequest(reqId, bookId, status, button) {
-    if (button) { button.disabled = true; button.title = status === 'approved' ? 'Approving request…' : 'Denying request…'; }
+  async function respondBorrowRequest(reqId, bookId, status) {
     const res = await guard(() => lendingFunctions.httpsCallable('respondToBorrowRequest')({ requestId: reqId, action: status === 'approved' ? 'approved' : 'denied', bookId: bookId || null }), { context: status === 'approved' ? 'Approving a borrow request' : 'Denying a borrow request', success: status === 'approved' ? 'Approved - book is reserved for this reader for 14 days.' : 'Request denied.' });
     if (res !== FAILED) {
       ratingCache.clear();
       await fetchMyBooks();
       await fetchActiveLoans();
     }
-    else if (button) { button.disabled = false; button.title = status === 'approved' ? 'Approve' : 'Deny'; }
+    return res;
   }
   window.respondBorrowRequest = respondBorrowRequest;
 
   async function completeReminder(reqId) {
-    await guard(() => db.collection("requests").doc(reqId).update({
+    return guard(() => db.collection("requests").doc(reqId).update({
       status: 'completed',
       completedAt: firebase.firestore.FieldValue.serverTimestamp()
     }), { context: 'Completing reminder', success: 'Reminder marked completed.' });
@@ -3161,9 +3322,10 @@
 
   async function cleanUpInbox() {
     const result = await guard(() => lendingFunctions.httpsCallable('cleanUpMyInbox')({}), { context: 'Cleaning up inbox' });
-    if (result === FAILED) return;
+    if (result === FAILED) return result;
     const cleaned = Number(result.data?.cleaned || 0);
     toast(cleaned ? `${cleaned} stale pending item${cleaned === 1 ? '' : 's'} moved to completed history.` : 'No stale pending items found.', 'success');
+    return result;
   }
 
   // --- DELEGATED ACTIONS ---
@@ -3172,67 +3334,78 @@
   // attribute, so any title or library name containing an apostrophe (e.g.
   // "Philosopher's Stone") produced a SyntaxError when clicked. dataset values
   // are decoded by the parser and never re-parsed as code.
-  document.addEventListener('click', (e) => {
-    const btn = e.target.closest('[data-action]');
-    if (!btn) return;
+  function performDelegatedAction(btn) {
     const d = btn.dataset;
     switch (d.action) {
-      case 'edit-book': openEditModal(d.id); break;
-      case 'delete-book': deleteBook(d.id).then(done => { if (done) closeEditModal(); }); break;
-      case 'mark-returned': markReturned(d.id); break;
-      case 'request-return': requestReturn(d.id); break;
-      case 'mark-lost': markLost(d.id).then(done => { if (done) closeEditModal(); }); break;
-      case 'send-reminder': sendReturnReminder(d.id); break;
-      case 'borrow': sendBorrowRequest(d.id, d.title, d.owner); break;
-      case 'add-friend': sendFriendRequest(d.owner, d.name); break;
-      case 'view-shelf': closeReaderProfileModal(); viewFriendLibrary(d.uid, d.name); break;
-      case 'back-to-friends': switchTab('friends'); break;
-      case 'view-history': switchTab('history'); break;
-      case 'back-to-library': switchTab('library'); break;
-      case 'unfriend': unfriend(d.uid, d.name); break;
-      case 'cancel-request': cancelSentRequest(d.id, d.name); break;
-      case 'accept-friend': respondFriendRequest(d.id, 'accepted', btn); break;
-      case 'decline-friend': respondFriendRequest(d.id, 'declined', btn); break;
-      case 'switch-inbox': switchTab('inbox'); document.getElementById('reader-profile-modal').classList.add('hidden'); break;
-      case 'approve-borrow': respondBorrowRequest(d.id, d.book || null, 'approved', btn); break;
-      case 'deny-borrow': respondBorrowRequest(d.id, null, 'denied', btn); break;
-      case 'complete-reminder': completeReminder(d.id); break;
-      case 'cancel-reminder': cancelReminder(d.id); break;
-      case 'cleanup-inbox': cleanUpInbox(); break;
-      case 'delete-saved-book': guard(() => db.collection('savedBooks').doc(d.id).delete(), { context: 'Removing saved book', success: 'Removed from saved books.' }); break;
-      case 'toggle-save-book': { const book = searchBookCache[d.id]; if (book) toggleSavedBook(book); else toast('Book details are no longer available. Search again and try once more.', 'info'); break; }
-      case 'search-book': switchTab('search'); searchCache.clear(); document.getElementById('global-search-input').value = d.query || ''; performGlobalSearch(); break;
-      case 'go-search': switchTab('search'); document.getElementById('global-search-input').focus(); break;
-      case 'delete-account': deleteAccount(); break;
-      case 'view-my-shelf': switchTab('library'); break;
-      case 'edit-profile-introduction': openReaderProfile('self', true); break;
-      case 'manage-circles': manageCircles(); break;
-      case 'join-circle': changeCircle('join-circle', d.id); break;
-      case 'leave-circle': changeCircle('leave-circle', d.id); break;
-      case 'install-starter-circles': installStarterCircles(); break;
-      case 'open-admin-dashboard': openAdminDashboard(); break;
-      case 'rebuild-discovery': rebuildDiscoveryIndex(); break;
-      case 'rebuild-community-stats': rebuildCommunityStats(); break;
-      case 'open-admin-page': openAdminDashboard(); break;
-      case 'back-to-profile': openReaderProfile('self'); break;
-      case 'resolve-feedback': resolveFeedback(d.id, d.status); break;
-      case 'archive-circle': archiveCircle(d.id); break;
-      case 'open-help': openHelp(); break;
-      case 'close-help': closeHelp(); break;
-      case 'open-reader-profile': openReaderProfile(d.uid); break;
-      case 'close-reader-profile': closeReaderProfileModal(); break;
-      case 'onboarding-profile': openReaderProfile('self', true); break;
-      case 'onboarding-add-book': switchTab('add'); setTimeout(() => document.getElementById('title')?.focus(), 0); break;
-      case 'onboarding-find-friends': switchTab('search'); setTimeout(() => document.getElementById('global-search-input')?.focus(), 0); break;
+      case 'edit-book': return openEditModal(d.id);
+      case 'delete-book': return deleteBook(d.id).then(done => { if (done) closeEditModal(); return done; });
+      case 'mark-returned': return markReturned(d.id);
+      case 'request-return': return requestReturn(d.id);
+      case 'mark-lost': return markLost(d.id).then(done => { if (done) closeEditModal(); return done; });
+      case 'send-reminder': return sendReturnReminder(d.id);
+      case 'borrow': return sendBorrowRequest(d.id, d.title, d.owner);
+      case 'add-friend': return sendFriendRequest(d.owner, d.name);
+      case 'view-shelf': closeReaderProfileModal(); return viewFriendLibrary(d.uid, d.name);
+      case 'back-to-friends': return switchTab('friends');
+      case 'view-history': return switchTab('history');
+      case 'back-to-library': return switchTab('library');
+      case 'unfriend': return unfriend(d.uid, d.name);
+      case 'cancel-request': return cancelSentRequest(d.id, d.name);
+      case 'accept-friend': return respondFriendRequest(d.id, 'accepted');
+      case 'decline-friend': return respondFriendRequest(d.id, 'declined');
+      case 'switch-inbox': switchTab('inbox'); return document.getElementById('reader-profile-modal').classList.add('hidden');
+      case 'approve-borrow': return respondBorrowRequest(d.id, d.book || null, 'approved');
+      case 'deny-borrow': return respondBorrowRequest(d.id, null, 'denied');
+      case 'complete-reminder': return completeReminder(d.id);
+      case 'cancel-reminder': return cancelReminder(d.id);
+      case 'cleanup-inbox': return cleanUpInbox();
+      case 'delete-saved-book': return guard(() => db.collection('savedBooks').doc(d.id).delete(), { context: 'Removing saved book', success: 'Removed from saved books.' });
+      case 'toggle-save-book': { const book = searchBookCache[d.id]; if (book) return toggleSavedBook(book); toast('Book details are no longer available. Search again and try once more.', 'info'); return false; }
+      case 'search-book': switchTab('search'); searchCache.clear(); document.getElementById('global-search-input').value = d.query || ''; return performGlobalSearch();
+      case 'go-search': switchTab('search'); return document.getElementById('global-search-input').focus();
+      case 'delete-account': return deleteAccount();
+      case 'view-my-shelf': return switchTab('library');
+      case 'edit-profile-introduction': return openReaderProfile('self', true);
+      case 'manage-circles': return manageCircles();
+      case 'join-circle': return changeCircle('join-circle', d.id);
+      case 'leave-circle': return changeCircle('leave-circle', d.id);
+      case 'install-starter-circles': return installStarterCircles();
+      case 'open-admin-dashboard': return openAdminDashboard();
+      case 'rebuild-discovery': return rebuildDiscoveryIndex();
+      case 'rebuild-community-stats': return rebuildCommunityStats();
+      case 'open-admin-page': return openAdminDashboard();
+      case 'back-to-profile': return openReaderProfile('self');
+      case 'resolve-feedback': return resolveFeedback(d.id, d.status);
+      case 'archive-circle': return archiveCircle(d.id);
+      case 'open-help': return openHelp();
+      case 'close-help': return closeHelp();
+      case 'open-reader-profile': return openReaderProfile(d.uid);
+      case 'close-reader-profile': return closeReaderProfileModal();
+      case 'onboarding-profile': return openReaderProfile('self', true);
+      case 'onboarding-add-book': switchTab('add'); return setTimeout(() => document.getElementById('title')?.focus(), 0);
+      case 'onboarding-find-friends': switchTab('search'); return setTimeout(() => document.getElementById('global-search-input')?.focus(), 0);
       case 'show-series-more': {
         const hiddenRows = [...(btn.closest('details')?.querySelectorAll('[data-series-row].hidden') || [])];
         hiddenRows.slice(0, 10).forEach(row => row.classList.remove('hidden'));
         const remaining = hiddenRows.length - Math.min(10, hiddenRows.length);
         if (remaining > 0) btn.textContent = `Show ${Math.min(10, remaining)} more`;
         else btn.parentElement?.remove();
-        break;
+        return;
       }
     }
+  }
+
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-action]');
+    if (!btn) return;
+    const feedback = ACTION_FEEDBACK[btn.dataset.action];
+    if (feedback) {
+      runButtonAction(btn, () => performDelegatedAction(btn), {
+        label: feedback[0], group: feedback[1], holdOnSuccess: btn.dataset.action !== 'send-reminder'
+      });
+      return;
+    }
+    performDelegatedAction(btn);
   });
 
   // Dismiss the edit modal on backdrop click or Escape.
@@ -3325,18 +3498,20 @@
     const isbn = BookTools.validISBN(input.value);
     if (!isbn) { toast('Check the ISBN digits. Use the 10- or 13-digit number printed near the barcode.', 'info'); return; }
     const button = document.getElementById(prefix + 'lookup-isbn');
-    if (button.disabled) return;
-    const original = button.textContent;
     const editId = prefix ? document.getElementById('edit-id').value : '';
     const userId = currentUser?.uid;
-    button.disabled = true; button.textContent = 'Finding details…';
-    try {
-      const metadata = await lookupISBNMetadata(isbn);
-      if (currentUser?.uid !== userId || BookTools.validISBN(input.value) !== isbn || (prefix && document.getElementById('edit-id').value !== editId)) return;
-      const filled = fillCatalogFields(metadata, prefix);
-      toast(filled ? 'Missing details filled. Check the title, series, number and genre before saving.' : metadata.title ? 'Existing details kept. Clear a field before looking up a replacement.' : 'No catalog match. You can still type details or use a cover photo.', filled ? 'success' : 'info');
-    } catch (error) { toast(error.message, 'error'); }
-    finally { button.disabled = false; button.textContent = original; }
+    return runButtonAction(button, async () => {
+      try {
+        const metadata = await lookupISBNMetadata(isbn);
+        if (currentUser?.uid !== userId || BookTools.validISBN(input.value) !== isbn || (prefix && document.getElementById('edit-id').value !== editId)) return false;
+        const filled = fillCatalogFields(metadata, prefix);
+        toast(filled ? 'Missing details filled. Check the title, series, number and genre before saving.' : metadata.title ? 'Existing details kept. Clear a field before looking up a replacement.' : 'No catalog match. You can still type details or use a cover photo.', filled ? 'success' : 'info');
+        return true;
+      } catch (error) {
+        toast(error.message, 'error');
+        return false;
+      }
+    }, { key: `isbn:${prefix || 'add'}:${isbn}`, label: 'Finding details…', linked: false });
   }
   document.getElementById('lookup-isbn').addEventListener('click', () => fillFromISBN());
   document.getElementById('edit-lookup-isbn').addEventListener('click', () => fillFromISBN('edit-'));
@@ -3366,7 +3541,8 @@
     read.addEventListener('click', async () => {
       const photo = prefix ? editCoverFile : inlineCoverFile;
       if (!photo) { toast('Take or choose a cover photo first.', 'info'); return; }
-      read.disabled = true; read.textContent = 'Reading cover…';
+      const token = beginActionFeedback(read, { key: `cover-reader:${prefix || 'add'}`, label: 'Reading cover…', linked: false });
+      if (!token) return;
       let worker;
       try {
         const reader = await loadCoverReader();
@@ -3375,12 +3551,14 @@
         words.value = result.data.text.replace(/\s+/g, ' ').trim().slice(0, 300);
         if (!words.value) toast('No clear text found. Try a straight, well-lit photo or use the ISBN.', 'info');
       } catch (error) { toast('Could not read this cover. You can type the title and author below.', 'info'); }
-      finally { if (worker) await worker.terminate(); read.disabled = false; read.textContent = 'Read cover text'; }
+      finally { if (worker) await worker.terminate(); releaseActionFeedback(token); }
     });
     find.addEventListener('click', async () => {
       const query = words.value.trim().slice(0, 180);
       if (query.length < 3) { toast('Enter a few words from the title or author first.', 'info'); return; }
-      find.disabled = true; results.textContent = 'Finding books…';
+      const token = beginActionFeedback(find, { key: `cover-search:${prefix || 'add'}`, label: 'Finding books…', linked: false });
+      if (!token) return;
+      results.textContent = 'Finding books…';
       try {
         let matches = [];
         try {
@@ -3407,7 +3585,7 @@
         }
         if (!results.childElementCount) results.textContent = 'No match. Try just the title and author, or use ISBN lookup.';
       } catch (error) { results.textContent = 'Catalog unavailable. Try again shortly or enter the details yourself.'; }
-      finally { find.disabled = false; }
+      finally { releaseActionFeedback(token); }
     });
   }
 

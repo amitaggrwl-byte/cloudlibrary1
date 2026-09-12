@@ -11,11 +11,58 @@ change must update this file in the same commit.
 
 ## Unreleased
 
-### Local work not yet released
+### Added
 
-- The working tree contains an unfinished global action-status/loading treatment.
-  It is not recorded as a completed product change and must be reviewed and tested
-  before it is committed.
+- Added an allowlisted Firebase Hosting build that publishes only the application
+  entry point and required assets, with temporary-preview support and conservative
+  cache, content-type, referrer, and camera-permission headers.
+
+### Changed
+
+- Added immediate, visible UI feedback for long-running book, loan, friend,
+  circle, Inbox, account, search, ISBN, profile, and Admin actions.
+- Added reusable action locks that disable equivalent controls for the same
+  record, prevent duplicate clicks, preserve button width, and restore the
+  original label, icon, colour, and enabled state after failure.
+- Added shared pending labels and spinners to add/edit book forms, bulk entry,
+  profile setup and editing, feedback, catalog lookup, sign-in, and sign-out.
+- Kept immediate primary navigation unchanged while showing a temporary loading
+  state for Profile and Admin destinations that fetch data before rendering.
+- Kept the feedback system extensible: future `data-action` buttons can use the
+  shared behaviour and optionally provide their own pending label.
+- Completed the confirmed pre-launch Firebase data purge while preserving the
+  `AmitAgg` administrator account and profile, its shelf-name reservation, both
+  application configuration documents, and all 37 circle definitions.
+- Reset the preserved profile's lending, friendship, circle, score-streak, and
+  search-derived fields to a fresh-launch baseline and rebuilt community totals
+  for one member, no books or loans, and 36 active circles.
+
+### Verification
+
+- Passed syntax and diff checks for the updated interface and Admin dashboard.
+- Passed the existing emulator-backed responsive audit across desktop 1280×900,
+  390×844 portrait, 320×640 small-phone, and 844×390 landscape layouts, with no
+  page errors or horizontal overflow.
+- Passed a focused emulator-browser interaction check for visible pending states,
+  duplicate-click blocking, failure recovery, label/icon restoration, and
+  pending-state overflow at all four required viewport sizes.
+- Passed the Firebase Hosting bundle check with exactly nine allowlisted runtime
+  files and no project source, tests, rules, scripts, or review documents exposed.
+- Passed packaged login-page checks at 1280 x 900, 390 x 844, 320 x 640, and
+  844 x 390, plus mobile navigation, progress-state, duplicate-click, and sign-out
+  interaction checks with no browser errors.
+- Verified the deployed preview through Firebase's CDN at a 390 x 844 phone
+  viewport, including the real Google sign-in popup and authorized redirect domain.
+- Verified that Authentication contains only the preserved administrator and
+  that old books, requests, friendships, feedback, memberships, saved items,
+  score records, discovery records, ticker records, and cover files are empty.
+
+### Deployment
+
+- Published the verified beta candidate to the 30-day Firebase Hosting `family-beta`
+  preview channel at `cloudlibrary-7b9ac--family-beta-d3uzbhxy.web.app`, expiring
+  12 October 2026. The preview is public to people who receive the URL and is
+  marked `noindex` by Firebase.
 
 ## 12 September 2026
 

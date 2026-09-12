@@ -21,9 +21,20 @@ window.AdminDashboard = (() => {
     const find = selector => workspace.querySelector(selector);
     const busy = async (control, status, action) => {
       if (control.disabled) return;
-      control.disabled = true; status.textContent = 'Working…';
+      const original = { html: control.innerHTML, minWidth: control.style.minWidth };
+      const width = Math.ceil(control.getBoundingClientRect().width);
+      if (width) control.style.minWidth = `${width}px`;
+      control.disabled = true;
+      control.setAttribute('aria-busy', 'true');
+      control.innerHTML = '<span class="action-spinner" aria-hidden="true"></span><span>Working…</span>';
+      status.textContent = 'Working…';
       try { await action(); } catch (error) { status.textContent = error.message || 'Could not complete this action. Try again.'; }
-      finally { control.disabled = false; }
+      finally {
+        control.disabled = false;
+        control.removeAttribute('aria-busy');
+        control.innerHTML = original.html;
+        control.style.minWidth = original.minWidth;
+      }
     };
     async function health() {
       await busy(find('#admin-health-refresh'), find('#admin-health-error'), async () => {
