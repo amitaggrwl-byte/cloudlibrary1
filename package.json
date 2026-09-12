@@ -5,6 +5,7 @@
     "test:rules": "firebase emulators:exec --config firebase.test.json --only firestore \"node --test tests/firestore.rules.test.js\"",
     "test:functions": "firebase emulators:exec --config firebase.test.json --only firestore \"node --test --test-concurrency=1 tests/loans.emulator.test.js tests/admin.emulator.test.js\"",
     "test:scoring": "node --test tests/scoring.test.js",
+    "test:help-ui": "node scripts/audit-help.cjs",
     "check": "node --check functions/index.js",
     "build": "tailwindcss -i ./tailwind.css -o ./assets/app.css --minify",
     "build:hosting": "npm run build && node scripts/build-hosting.js",

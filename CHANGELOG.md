@@ -16,9 +16,18 @@ change must update this file in the same commit.
 - Added an allowlisted Firebase Hosting build that publishes only the application
   entry point and required assets, with temporary-preview support and conservative
   cache, content-type, referrer, and camera-permission headers.
+- Expanded Help with searchable, child-friendly guidance for choosing a shelf
+  name, completing a public profile, selecting real-life friends, arranging safe
+  physical exchanges, and practising considerate borrowing and lending etiquette.
+- Added answers that distinguish saving from requesting, sign-out from permanent
+  deletion, manual reminders from automatic alerts, and overdue, damaged, lost,
+  renewal, friend-removal, and account-deletion situations.
 
 ### Changed
 
+- Corrected Help to state that borrowers cannot currently cancel an unanswered
+  book request themselves; the existing Cancel control applies to sent friend
+  requests, while a book owner must approve or decline a pending borrow request.
 - Added immediate, visible UI feedback for long-running book, loan, friend,
   circle, Inbox, account, search, ISBN, profile, and Admin actions.
 - Added reusable action locks that disable equivalent controls for the same
@@ -39,6 +48,13 @@ change must update this file in the same commit.
 
 ### Verification
 
+- Added a reusable Help UI audit covering topic discovery, representative search
+  questions, browser errors, and horizontal containment at all four required
+  desktop, portrait-phone, small-phone, and landscape-phone viewports.
+- Passed the expanded Help audit at 1280 x 900, 390 x 844, 320 x 640, and
+  844 x 390, including expanded exchange advice and the retained feedback form.
+- Reconfirmed 15 book/search/scoring unit tests, 21 Firestore Rules tests, and
+  16 callable Functions tests against the behavior described by Help.
 - Passed syntax and diff checks for the updated interface and Admin dashboard.
 - Passed the existing emulator-backed responsive audit across desktop 1280×900,
   390×844 portrait, 320×640 small-phone, and 844×390 landscape layouts, with no
@@ -59,6 +75,9 @@ change must update this file in the same commit.
 
 ### Deployment
 
+- Updated the Firebase Hosting `family-beta` preview with the expanded Help and
+  verified the hosted Help search and responsive layouts at all four target
+  viewports; the refreshed preview expires 12 October 2026.
 - Published the verified beta candidate to the 30-day Firebase Hosting `family-beta`
   preview channel at `cloudlibrary-7b9ac--family-beta-d3uzbhxy.web.app`, expiring
   12 October 2026. The preview is public to people who receive the URL and is
