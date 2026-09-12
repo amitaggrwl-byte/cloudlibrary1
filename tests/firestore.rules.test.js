@@ -89,6 +89,8 @@ function profile(name) {
     ratingAdjustment: 0,
     bookCount: 0,
     timelyReturns: 0,
+    onTimeReturnStreak: 0,
+    bestOnTimeReturnStreak: 0,
     totalLent: 0,
     friendCount: 0,
     memberSince: new Date(),
