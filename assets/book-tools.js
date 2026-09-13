@@ -110,7 +110,12 @@
       subjects: info.categories || []
     };
   }
-  const api = { words, parseSearch, nearWord, matchesSearch, validISBN, validateBook, BOOK_LIMITS, googleMetadata };
-  if (typeof module !== 'undefined' && module.exports) module.exports = api;
-  else root.BookTools = api;
+  function catalogFieldNeedsValue(name, value) {
+    const text = String(value ?? '').trim();
+    if (!text || /\bunknown\b/i.test(text)) return true;
+    return name === 'title' && /^book\s*#?\s*\d+$/i.test(text);
+  }
+  const api = { words, parseSearch, nearWord, matchesSearch, validISBN, validateBook, BOOK_LIMITS, googleMetadata, catalogFieldNeedsValue };
+  if (typeof window !== 'undefined') root.BookTools = api;
+  else if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(typeof window !== 'undefined' ? window : globalThis);

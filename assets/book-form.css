@@ -47,3 +47,120 @@
   color: white;
   font-weight: 600;
 }
+.add-mode-button {
+  color: #4a7460;
+}
+.add-mode-button.active {
+  background: #fff;
+  color: #0f1813;
+  box-shadow: 0 1px 3px #0f18131f;
+}
+#admin-panel[data-add-mode="bulk"] > :not(#bulk-add-section) {
+  display: none;
+}
+#admin-panel[data-add-mode="bulk"] #bulk-add-section {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+#admin-panel[data-add-mode="bulk"] #bulk-add-section > summary {
+  display: none;
+}
+.add-wizard-progress {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin-bottom: 14px;
+}
+.add-wizard-progress span {
+  min-width: 0;
+  padding: 8px;
+  border-bottom: 3px solid #dce6df;
+  color: #6c9078;
+  font-size: 11px;
+  text-align: center;
+}
+.add-wizard-progress span.active {
+  border-color: #b5563a;
+  color: #1f342c;
+}
+.add-wizard-progress b {
+  font-weight: 600;
+}
+.add-wizard-step {
+  display: grid;
+  gap: 10px;
+}
+.add-wizard-step[hidden] {
+  display: none;
+}
+.add-step-heading {
+  margin-bottom: 2px;
+}
+.add-step-heading p {
+  color: #b5563a;
+  font: 500 10px/1.4 "IBM Plex Mono", monospace;
+  text-transform: uppercase;
+}
+.add-step-heading h3 {
+  margin-top: 2px;
+  color: #0f1813;
+  font: 600 19px/1.25 Fraunces, serif;
+}
+.add-step-heading span {
+  display: block;
+  margin-top: 3px;
+  color: #4a7460;
+  font-size: 12px;
+  line-height: 1.45;
+}
+.add-wizard-controls {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: 8px;
+  margin-top: 4px;
+}
+.add-wizard-controls button,
+.add-wizard-final-back {
+  min-height: 44px;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.add-wizard-controls [data-add-back],
+.add-wizard-final-back {
+  border: 1px solid #b9cdbf;
+  background: #fff;
+  color: #2b4638;
+}
+.add-wizard-controls [data-add-next] {
+  background: #1f342c;
+  color: #fff;
+}
+.add-wizard-final-back {
+  width: 100%;
+}
+.add-book-review {
+  display: grid;
+  gap: 2px;
+  border: 1px solid #b9cdbf;
+  border-radius: 8px;
+  background: #fff9;
+  padding: 10px 12px;
+}
+.add-book-review strong {
+  overflow-wrap: anywhere;
+  color: #0f1813;
+  font: 600 15px/1.35 Fraunces, serif;
+}
+.add-book-review span {
+  overflow-wrap: anywhere;
+  color: #4a7460;
+  font-size: 11px;
+}
+@media (max-width: 420px) {
+  .add-wizard-progress b { display: block; }
+  .add-wizard-controls { grid-template-columns: 1fr; }
+  .add-wizard-controls span { display: none; }
+}

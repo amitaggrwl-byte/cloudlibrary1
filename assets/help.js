@@ -35,7 +35,7 @@ window.CloudHelp = (() => {
       'Respond to requests reasonably soon. Decline politely when a book is unavailable instead of leaving the request unanswered.',
       'Describe important existing damage before lending. Send a reminder when needed, but also speak to the borrower respectfully.',
       'Confirm returned only after the physical book is back. Mark a book lost only after discussing it with the borrower because this affects their score.'
-    ], 'library'],
+    ], 'shelf'],
     ['Adding books', 'Can I list a book without lending it?', [
       'Yes. In Add book or Edit, choose Not for lending under Availability, then save.',
       'The book remains on your shelf, but new borrow requests are blocked. This uses the existing Reading status, so some shelf badges may still say Reading.',
@@ -45,11 +45,12 @@ window.CloudHelp = (() => {
       'An ISBN is an identification number for a particular edition of a book. It has 10 or 13 digits. Different editions or formats can have different ISBNs, even when the title is the same.',
       'Look on the back cover beside the barcode for the letters ISBN. You may also find it inside, on the page with the publishing details. It is not the price or a library sticker number.',
       'Choose Scan ISBN barcode and point your camera at the barcode, not the front-cover picture. Or type the ISBN into the field and choose Find details using ISBN. Hyphens and spaces are fine.',
+      'For a book already on your shelf, choose Edit, then Scan beside ISBN. The lookup fills empty or unknown details and replaces generated titles such as Book 12; meaningful information already entered is kept. Review the result and choose Save changes.',
       'Check the title, author and cover that appear. Some books are missing from the catalog, so a valid ISBN may not find details.',
       'No ISBN, or a damaged barcode? You can still add the book by typing its title and author. You can also try Find details from a cover photo.'
     ], 'add'],
     ['Finding books', 'What is the difference between saving and requesting?', [
-      'Use the bookmark icon to save a book you may want later. Saved books appear on My Library.',
+      'Use the bookmark icon to save a book you may want later. Saved books appear on Home.',
       'Saving is private and does not notify the owner, reserve the copy or use a pending-request slot.',
       'Request to borrow sends a real request to a confirmed friend. Use it only when you are ready to arrange the physical exchange.'
     ], 'library'],
@@ -113,7 +114,7 @@ window.CloudHelp = (() => {
       'A Lent Out book cannot be deleted, including one awaiting return confirmation. Complete the return or have the owner close a genuinely lost loan first.',
       'For another copy, select Delete and confirm. Deletion is not the same as editing a title or marking a return.',
       'If a non-lent copy you own still gives a permission error, refresh and retry once. Report the book title and exact error through feedback if it persists.'
-    ], 'library'],
+    ], 'shelf'],
     ['Deleting', 'Should I sign out or delete my account?', [
       'Choose Sign out when you are finished, changing device, or taking a break. Your shelf and history remain ready for the next sign-in.',
       'Delete the account only when you want to remove it permanently. Deletion cannot be undone.',
@@ -162,8 +163,8 @@ window.CloudHelp = (() => {
       const topics = [...panel.querySelectorAll('details')].filter(d => !d.textContent.includes('Privacy and feedback')).map(d => {
         const title = d.querySelector('summary').textContent;
         d.open = false;
-        if (title === 'Saved books') d.querySelector('p').textContent = 'Select the bookmark icon on a book to save it; its appearance changes when saved. Select it again to remove the bookmark. Saved books are on My Library. Opening one searches for the book again; saving does not reserve a copy or send a borrow request.';
-        if (title === 'Add one book') d.querySelector('ol').innerHTML = '<li>Use Scan ISBN barcode or Find book details beside the ISBN field, or type the required Book title and Author yourself.</li><li>Check the title and author. Add an optional series name and book number if this book belongs to a set.</li><li>Choose the condition and availability. Available lets friends request the copy; Reading keeps it unavailable for new requests.</li><li>A cover photo is optional. Cover-photo text recognition is separate from barcode scanning.</li><li>Genre, publication year, notes and your book rating are optional. Leave the year blank if unknown.</li><li>Select Add to shelf once. After success, the form clears for the next book. For a whole collection, use Add a list or a series above the form.</li>';
+        if (title === 'Saved books') d.querySelector('p').textContent = 'Select the bookmark icon on a book to save it; its appearance changes when saved. Select it again to remove the bookmark. Saved books are on Home. Opening one searches for the book again; saving does not reserve a copy or send a borrow request.';
+        if (title === 'Add one book') d.querySelector('ol').innerHTML = '<li>Open My Library and choose Add books, then keep One book selected.</li><li>In Find your book, scan the ISBN barcode, enter its number, use a cover photo, or continue without either.</li><li>In Check the book details, enter or correct the required title and author. Series, genre, year and notes may be left blank.</li><li>In Shelf settings, choose whether friends may request the copy. Check the short summary and select Add to shelf once.</li><li>After success, the form returns to the first step for the next book. Use List or series when entering many books.</li>';
         return {title, group:category(title), node:d};
       });
       additions.forEach(([group,title,steps,target]) => {
@@ -178,7 +179,7 @@ window.CloudHelp = (() => {
         const target = topic.target || (topic.group === 'Adding books' ? 'add' : topic.group === 'Finding books' ? 'search' : topic.group === 'Profile and score' ? 'profile' : topic.group === 'Administration' ? 'admin' : null);
         const anchor = topic.title === 'Add a list or a series' ? '#series-title' : topic.title === 'Scan an ISBN or find missing details' ? '#isbn' : topic.title === 'Saved books' ? '#saved-books-panel' : topic.group === 'Returning' ? '#borrowed-panel' : null;
         const destination = topic.title === 'Saved books' ? 'library' : target;
-        if (destination) {const link=document.createElement('button');link.type='button';link.className='help-jump';link.textContent=({add:'Open Add book',search:'Open Search',profile:'Open my Profile',library:'Open My Library',inbox:'Open Inbox',friends:'Open Friends',admin:'Open Admin',feedback:'Write feedback'})[destination];link.onclick=async()=>{if(destination==='feedback'){document.getElementById('feedback-message').focus();return;} await navigate(destination, anchor);};topic.node.append(link);}
+        if (destination) {const link=document.createElement('button');link.type='button';link.className='help-jump';link.textContent=({add:'Open Add books',shelf:'Open My Library',search:'Open Search',profile:'Open my Profile',library:'Open Home',inbox:'Open Inbox',friends:'Open Friends',admin:'Open Admin',feedback:'Write feedback'})[destination];link.onclick=async()=>{if(destination==='feedback'){document.getElementById('feedback-message').focus();return;} await navigate(destination, anchor);if(destination==='add'){document.querySelector(`[data-add-mode="${anchor==='#series-title'?'bulk':'single'}"]`)?.click();if(anchor) document.querySelector(anchor)?.focus();}};topic.node.append(link);}
       });
       const form = document.getElementById('feedback-form');
       panel.replaceChildren(); panel.className='help-panel';

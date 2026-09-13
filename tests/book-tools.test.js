@@ -1,6 +1,14 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const { parseSearch, matchesSearch, validISBN, validateBook, googleMetadata } = require('../assets/book-tools');
+const { readFileSync } = require('node:fs');
+const vm = require('node:vm');
+const { parseSearch, matchesSearch, validISBN, validateBook, googleMetadata, catalogFieldNeedsValue } = require('../assets/book-tools');
+
+test('browser export wins even when another script exposes a module global', () => {
+  const context = { window: {}, module: { exports: {} } };
+  vm.runInNewContext(readFileSync(require.resolve('../assets/book-tools'), 'utf8'), context);
+  assert.equal(typeof context.window.BookTools?.validISBN, 'function');
+});
 
 test('series number and ordinal searches have the same meaning', () => {
   for (const query of ['Magic Tree House 10', 'Magic Tree House book #10', 'Magic Tree House 10th book']) {
@@ -37,6 +45,16 @@ test('metadata leaves unavailable series fields empty and uses HTTPS covers', ()
   assert.equal(data.coverUrl, 'https://example.com/cover.jpg');
   assert.equal(data.seriesName, '');
   assert.equal(data.publishedYear, '2012');
+});
+
+test('catalog lookup replaces only empty, unknown, and generated title placeholders', () => {
+  assert.equal(catalogFieldNeedsValue('title', ''), true);
+  assert.equal(catalogFieldNeedsValue('title', 'Book 12'), true);
+  assert.equal(catalogFieldNeedsValue('title', 'Book #12'), true);
+  assert.equal(catalogFieldNeedsValue('author', 'Unknown author'), true);
+  assert.equal(catalogFieldNeedsValue('seriesName', 'UNKNOWN'), true);
+  assert.equal(catalogFieldNeedsValue('title', 'The Book Thief'), false);
+  assert.equal(catalogFieldNeedsValue('author', 'Mary Pope Osborne'), false);
 });
 
 test('number-free book titles match using separate series metadata', () => {

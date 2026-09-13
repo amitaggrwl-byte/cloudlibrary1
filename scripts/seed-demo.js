@@ -57,7 +57,7 @@ async function main() {
     batch.set(db.collection('profiles').doc(uid), {
       libraryName, shelfKey: libraryName.toLowerCase(), ownerName: libraryName,
       photoURL: '', bio, ratingScore: uid === 'alex' ? 4.2 : 3.4,
-      ratingAdjustment: 0, bookCount: uid === 'bella' ? 3 : 2, timelyReturns: uid === 'alex' ? 2 : 0, friendCount: uid === 'carlos' ? 0 : 1,
+      ratingAdjustment: 0, bookCount: uid === 'bella' || uid === 'alex' ? 3 : 0, timelyReturns: uid === 'alex' ? 2 : 0, friendCount: uid === 'carlos' ? 0 : 1,
       memberSince: FieldValue.serverTimestamp(), circleTags, searchTokens: tokens(libraryName, circleTags), updatedAt: FieldValue.serverTimestamp()
     });
     batch.set(db.collection('shelfNames').doc(libraryName.toLowerCase()), { ownerId: uid, createdAt: FieldValue.serverTimestamp() });
@@ -73,19 +73,21 @@ async function main() {
   batch.set(db.collection('friendships').doc('alex__bella'), { user1: 'alex', user2: 'bella', user1Name: 'AlexReads', user2Name: 'BellaBooks', senderId: 'alex', status: 'accepted', createdAt: FieldValue.serverTimestamp() });
   batch.set(db.collection('friendships').doc('alex__carlos'), { user1: 'carlos', user2: 'alex', user1Name: 'CarlosShelf', user2Name: 'AlexReads', senderId: 'carlos', status: 'pending', createdAt: FieldValue.serverTimestamp() });
   const books = [
-    ['bella-facts', 'bella', 'BellaBooks', '1000 Fantastic Facts', 'Miles Kelly', 'Available'],
-    ['bella-mystery', 'bella', 'BellaBooks', 'The Midnight Mystery', 'A. Reader', 'Available'],
-    ['alex-adventure', 'alex', 'AlexReads', 'The Map of Moonlight', 'S. Story', 'Available'],
-    ['bella-loan', 'bella', 'BellaBooks', 'The Secret Garden', 'Frances Hodgson Burnett', 'Lent Out']
+    ['bella-facts', 'bella', 'BellaBooks', '1000 Fantastic Facts', 'Miles Kelly', 'Available', 'Demo Discoveries', 1],
+    ['bella-mystery', 'bella', 'BellaBooks', 'The Midnight Mystery', 'A. Reader', 'Available', 'Demo Discoveries', 2],
+    ['alex-adventure', 'alex', 'AlexReads', 'The Map of Moonlight', 'S. Story', 'Available', '', null],
+    ['alex-tree-1', 'alex', 'AlexReads', 'Dinosaurs Before Dark', 'Mary Pope Osborne', 'Available', 'Magic Tree House', 1],
+    ['alex-tree-2', 'alex', 'AlexReads', 'The Knight at Dawn', 'Mary Pope Osborne', 'Available', 'Magic Tree House', 2],
+    ['bella-loan', 'bella', 'BellaBooks', 'The Secret Garden', 'Frances Hodgson Burnett', 'Lent Out', '', null]
   ];
-  books.forEach(([id, ownerId, ownerName, title, author, status]) => {
-    const book = { ownerId, ownerName, title, author, seriesName: '', seriesNumber: null, genre: 'Fiction', isbn: '', publishedYear: null, condition: 'Good', coverUrl: '', description: '', rating: 4, status, createdAt: FieldValue.serverTimestamp() };
+  books.forEach(([id, ownerId, ownerName, title, author, status, seriesName, seriesNumber]) => {
+    const book = { ownerId, ownerName, title, author, seriesName, seriesNumber, genre: 'Fiction', isbn: '', publishedYear: null, condition: 'Good', coverUrl: '', description: '', rating: 4, status, createdAt: FieldValue.serverTimestamp() };
     if (id === 'bella-loan') Object.assign(book, { borrowerId: 'alex', borrowerName: 'AlexReads', activeRequestId: 'demo-loan', lentAt: FieldValue.serverTimestamp(), loanDueAt: new Date(Date.now() + 10 * 86400000) });
     batch.set(db.collection('books').doc(id), book);
     batch.set(db.collection('bookDiscovery').doc(id), {
-      bookId: id, ownerId, ownerName, title, author, genre: 'Fiction',
+      bookId: id, ownerId, ownerName, title, author, seriesName, seriesNumber, genre: 'Fiction',
       publishedYear: null, rating: 4, coverUrl: '', status, suggestionBucket: Math.random(),
-      searchTokens: tokens(title, author), updatedAt: FieldValue.serverTimestamp()
+      searchTokens: tokens(title, author, seriesName, seriesNumber), updatedAt: FieldValue.serverTimestamp()
     });
   });
   batch.set(db.collection('requests').doc('demo-loan'), { type: 'borrow', bookId: 'bella-loan', title: 'The Secret Garden', ownerId: 'bella', ownerName: 'BellaBooks', requesterId: 'alex', requesterName: 'AlexReads', status: 'approved', createdAt: FieldValue.serverTimestamp() });

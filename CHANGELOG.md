@@ -13,6 +13,22 @@ change must update this file in the same commit.
 
 ### Added
 
+- Added a dedicated My Library page for the complete owned shelf, with an Add
+  books action, local title/author/series search, availability and genre
+  filters, sorting, and cursor-based Load more.
+- Added a focused Add books child page. Single-book entry now uses three short
+  steps (find, check details, shelf settings), while list and series entry stays
+  available as a separate mode; Edit book remains a direct compact form.
+- Expanded first-use guidance to six ordered, directly linked tasks: add an
+  introduction, add a book, join a circle, connect with a reader, borrow a book,
+  and lend a book. The panel disappears after all six are complete.
+- Added reader and book links to Inbox activity. Reader names open profiles;
+  book names open the exact owned or friend copy when accessible and otherwise
+  fall back to global search.
+- Added ISBN barcode scanning to Edit book, reusing the existing catalog lookup
+  to fill missing title, author, series, genre, year, and cover details.
+- Added compact, touch-swipeable series carousels with previous and next controls
+  to both personal and friend shelves.
 - Added an allowlisted Firebase Hosting build that publishes only the application
   entry point and required assets, with temporary-preview support and conservative
   cache, content-type, referrer, and camera-permission headers.
@@ -25,6 +41,26 @@ change must update this file in the same commit.
 
 ### Changed
 
+- Split the previous My Library dashboard into a concise Home for reader status,
+  attention, ticker, onboarding, current borrowing/lending, and saved books,
+  plus a separate My Library destination for the complete shelf.
+- Standardized desktop and mobile primary navigation to Home, Library, Friends,
+  Search, and Inbox. Profile remains available from the account name/photo and
+  Admin remains available from the administrator's Profile.
+- Made the header logo and CloudLibrary wordmark return to Home on desktop and
+  mobile.
+- Renamed the first-profile completion action to Open CloudLibrary so it no
+  longer implies that new readers land directly on their full shelf.
+- Opened own and friend series carousels by default while retaining their
+  collapse control.
+- Added lightweight browser-history entries for in-app page changes so browser
+  Back and Forward navigate between CloudLibrary sections instead of immediately
+  leaving the app.
+- ISBN catalog lookup now fills empty values and replaces `Unknown` metadata or
+  generated `Book #` titles while preserving meaningful information already
+  entered by the reader.
+- Replaced the wide owner-card Edit control with a compact pencil-and-label
+  action consistent with saved-book actions.
 - Corrected Help to state that borrowers cannot currently cancel an unanswered
   book request themselves; the existing Cancel control applies to sent friend
   requests, while a book owner must approve or decline a pending borrow request.
@@ -46,8 +82,38 @@ change must update this file in the same commit.
   search-derived fields to a fresh-launch baseline and rebuilt community totals
   for one member, no books or loans, and 36 active circles.
 
+### Fixed
+
+- Ensured the shared book/search helper always attaches to the browser window,
+  even if an earlier third-party script exposes a Node-style `module` global;
+  this prevents intermittent ISBN scan and search failures during page startup.
+
 ### Verification
 
+- Verified the refreshed `family-beta` channel returns HTTP 200 with the
+  expected cache, referrer, and camera-permission headers and serves the tested
+  My Library, focused Add, onboarding, and browser-helper changes.
+- Passed 17 book/search/scoring/browser-export unit tests and 37 emulator-backed Firestore
+  Rules, borrowing, return, circle, Admin, search-maintenance, and pagination
+  integration tests.
+- Passed the expanded responsive browser audit at 1280 x 900, 390 x 844,
+  320 x 640, and 844 x 390 across Home, My Library, Friends, Search, Inbox,
+  Profile, Admin, Help, Edit, all three Add steps, bulk entry, own/friend series,
+  browser Back, Help deep links, and Inbox reader/book links, with no uncaught
+  page errors or horizontal overflow.
+- Visually inspected the generated desktop, portrait-phone, small-phone, and
+  landscape-phone screenshots for the redesigned navigation and page flows.
+- Verified browser Back navigation across Library, Search, and Add plus the
+  CloudLibrary Home control in the running Firebase emulator demo.
+- Repassed the 26-view responsive UI audit after the navigation change at
+  1280 x 900, 390 x 844, 320 x 640, and 844 x 390 with no browser errors or
+  horizontal overflow.
+- Extended the emulator demo and responsive UI audit to cover text-only cards
+  without reserved cover space, series carousel rendering and navigation, and the Edit ISBN scan
+  control on both personal and friend shelves at desktop, portrait-phone,
+  small-phone, and landscape-phone sizes.
+- Added a mocked barcode-to-catalog browser check proving that an Edit scan fills
+  that book's ISBN and missing cover without changing the Add book form.
 - Added a reusable Help UI audit covering topic discovery, representative search
   questions, browser errors, and horizontal containment at all four required
   desktop, portrait-phone, small-phone, and landscape-phone viewports.
@@ -75,6 +141,13 @@ change must update this file in the same commit.
 
 ### Deployment
 
+- Refreshed the Firebase Hosting `family-beta` preview with the Home/My Library
+  split, focused Add flow, default-open series, onboarding links, Inbox entity
+  links, and startup reliability fix. The preview expires 13 October 2026.
+- Refreshed the Firebase Hosting `family-beta` preview with browser Back/Forward
+  navigation and the CloudLibrary wordmark Home control after responsive testing.
+- Refreshed the Firebase Hosting `family-beta` preview with the verified ISBN
+  editing, cover handling, series carousel, compact book actions, and Help updates.
 - Updated the Firebase Hosting `family-beta` preview with the expanded Help and
   verified the hosted Help search and responsive layouts at all four target
   viewports; the refreshed preview expires 12 October 2026.
@@ -86,6 +159,9 @@ change must update this file in the same commit.
 ## 12 September 2026
 
 ### Fixed
+
+- Book cards and series entries no longer reserve or display cover space when no
+  usable cover image is available.
 
 - Updated the Firestore rules test profile fixture with the current return-streak
   fields so profile-creation security tests exercise the production schema.

@@ -9,12 +9,12 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/app.css?v=20260910-batch3-isbn-cover-2">
+<link rel="stylesheet" href="/assets/app.css?v=20260912-series-isbn-1">
 
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
-<script src="assets/book-tools.js?v=20260909-local-cover-1"></script>
+<script src="assets/book-tools.js?v=20260912-series-isbn-1"></script>
 <script src="assets/admin-dashboard.js?v=20260911-reader-search-1"></script>
-<script src="assets/help.js"></script>
+<script src="assets/help.js?v=20260912-series-isbn-1"></script>
 <link rel="stylesheet" href="assets/help.css">
 <link rel="stylesheet" href="assets/book-form.css?v=20260909-compact-forms-1">
 
@@ -108,13 +108,28 @@
   @keyframes tickerIn { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: translateX(0); } }
   .ticker-item { width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; animation: tickerIn .42s cubic-bezier(.16,1,.3,1) both; line-height: 1.3; }
   .series-stack { min-width: 0; max-width: 100%; }
-  .series-table-wrap { min-width: 0; max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain; }
-  .series-table-wrap table { min-width: 520px !important; }
-  .series-table-wrap table col:nth-child(1) { width: 2.25rem; }
-  .series-table-wrap table col:nth-child(2) { width: 11rem; }
-  .series-table-wrap table col:nth-child(3) { width: 5rem; }
-  .series-table-wrap table col:nth-child(4) { width: 10rem; }
   .series-stack summary .font-display { white-space: normal; overflow: visible; text-overflow: clip; }
+  .series-carousel-track {
+    display: flex;
+    align-items: flex-start;
+    max-width: 100%;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: thin;
+    scrollbar-color: #b9cdbf transparent;
+  }
+  .series-book-slide {
+    flex: 0 0 min(15rem, calc(100vw - 4.5rem));
+    min-width: 0;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+  }
+  .series-book-slide + .series-book-slide { border-left: 1px solid #dce8df; }
+  @media (max-width: 360px) {
+    .edit-isbn-controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .edit-isbn-controls > input { grid-column: 1 / -1; }
+  }
   #books-grid, #friend-shelf-books { align-items: start; }
   @media (max-width: 520px) {
     #app-content > nav.app-navigation { padding: .625rem; }
@@ -200,7 +215,7 @@
     <input type="text" id="profile-name-input" placeholder="e.g. SarahReads" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-ink-950 mb-2 focus:outline-none focus:ring-2 focus:ring-ink-700">
     <p id="profile-name-help" class="text-xs text-ink-500 mb-4">Use only letters and numbers. No spaces or special characters.</p>
     <textarea id="profile-bio-input" rows="3" maxlength="280" placeholder="A short introduction for people you know in real life (optional)" class="w-full bg-white border border-ink-200 rounded-lg p-3 text-sm text-ink-950 mb-4 resize-none focus:outline-none focus:ring-2 focus:ring-ink-700"></textarea>
-    <button onclick="saveProfileName(this)" class="w-full bg-ink-950 hover:bg-ink-900 text-paper font-semibold py-3 rounded-lg transition-colors">Open my shelf</button>
+    <button onclick="saveProfileName(this)" class="w-full bg-ink-950 hover:bg-ink-900 text-paper font-semibold py-3 rounded-lg transition-colors">Open CloudLibrary</button>
   </div>
 </div>
 
@@ -230,7 +245,7 @@
   <!-- Navigation Bar -->
   <nav aria-label="CloudLibrary navigation and account" class="app-navigation bg-white p-3 sm:p-4 rounded-xl border border-ink-200 shadow-sm">
     <div class="nav-account-row flex items-center justify-between gap-3">
-      <div class="flex items-center gap-2.5 shrink-0"><img id="brand-mark" src="/assets/brand/cloudlibrary-mark.svg" alt="" class="brand-mark shrink-0" aria-hidden="true"><span class="brand-wordmark block whitespace-nowrap pb-px text-[21px] sm:text-2xl text-ink-950">Cloud<span class="brand-library">Library</span></span></div>
+      <button type="button" onclick="goHome(this)" title="Go to Home" aria-label="CloudLibrary, go to Home" class="flex min-h-11 shrink-0 items-center gap-2.5 rounded-lg text-left"><img id="brand-mark" src="/assets/brand/cloudlibrary-mark.svg" alt="" class="brand-mark shrink-0" aria-hidden="true"><span class="brand-wordmark block whitespace-nowrap pb-px text-[21px] sm:text-2xl text-ink-950">Cloud<span class="brand-library">Library</span></span></button>
       <div id="nav-account-controls" class="flex min-w-0 flex-1 flex-wrap items-center justify-end gap-1 sm:gap-3">
         <button type="button" data-action="open-reader-profile" data-uid="self" id="user-info" title="View your reader profile" aria-label="View your reader profile" class="flex min-h-11 items-center gap-1.5 min-w-0 rounded-lg text-left text-ink-700 hover:text-ink-950"><img id="nav-profile-photo" alt="" referrerpolicy="no-referrer" class="hidden w-7 h-7 rounded-full object-cover border border-ink-200"><span id="nav-profile-fallback" class="w-7 h-7 rounded-full bg-ink-800 text-paper font-display text-xs flex items-center justify-center"></span><span id="nav-profile-name" class="max-w-[86px] sm:max-w-[130px] truncate text-xs sm:text-sm font-semibold"></span></button>
         <button type="button" id="copy-share-button" onclick="copyShareLink()" title="Copy share link" aria-label="Copy share link" class="header-utility"></button>
@@ -240,37 +255,33 @@
     </div>
     <div id="nav-tabs" aria-label="Primary" class="hidden md:flex items-center gap-1 min-w-0 mt-3 pt-3 border-t border-ink-100">
       <button onclick="navigatePrimary('library', this)" id="tab-library" class="tab-btn active flex items-center justify-center gap-1.5 min-w-0 text-sm px-3 py-2 rounded-lg font-semibold transition-colors"></button>
-      <button onclick="navigatePrimary('add', this)" id="tab-add" class="tab-btn flex items-center justify-center gap-1.5 min-w-0 text-sm px-3 py-2 rounded-lg text-ink-500 hover:text-ink-950 transition-colors"></button>
+      <button onclick="navigatePrimary('shelf', this)" id="tab-shelf" class="tab-btn flex items-center justify-center gap-1.5 min-w-0 text-sm px-3 py-2 rounded-lg text-ink-500 hover:text-ink-950 transition-colors"></button>
       <button onclick="navigatePrimary('friends', this)" id="tab-friends" class="tab-btn flex items-center justify-center gap-1.5 min-w-0 text-sm px-3 py-2 rounded-lg text-ink-500 hover:text-ink-950 transition-colors"></button>
       <button onclick="navigatePrimary('search', this)" id="tab-search" class="tab-btn flex items-center justify-center gap-1.5 min-w-0 text-sm px-3 py-2 rounded-lg text-ink-500 hover:text-ink-950 transition-colors"></button>
       <button onclick="navigatePrimary('inbox', this)" id="tab-inbox" class="tab-btn flex items-center justify-center gap-1.5 min-w-0 text-sm px-3 py-2 rounded-lg text-ink-500 hover:text-ink-950 transition-colors"></button>
-      <button onclick="navigatePrimary('profile', this)" id="tab-profile" class="tab-btn flex items-center justify-center gap-1.5 min-w-0 text-sm px-3 py-2 rounded-lg text-ink-500 hover:text-ink-950 transition-colors"></button>
-      <button onclick="navigatePrimary('admin', this)" id="tab-admin" class="hidden tab-btn flex items-center justify-center gap-1.5 min-w-0 text-sm px-3 py-2 rounded-lg text-ink-500 hover:text-ink-950 transition-colors"></button>
     </div>
   </nav>
 
-  <nav id="mobile-nav" aria-label="Primary" class="mobile-nav md:hidden fixed inset-x-0 bottom-0 z-40 bg-white/95 backdrop-blur border-t border-ink-200 px-2 pt-2 grid grid-cols-6 gap-1 shadow-[0_-8px_24px_rgba(21,36,32,.10)]">
+  <nav id="mobile-nav" aria-label="Primary" class="mobile-nav md:hidden fixed inset-x-0 bottom-0 z-40 bg-white/95 backdrop-blur border-t border-ink-200 px-2 pt-2 grid grid-cols-5 gap-1 shadow-[0_-8px_24px_rgba(21,36,32,.10)]">
     <button onclick="navigatePrimary('library', this)" id="tab-mobile-library" class="mobile-tab tab-btn active flex flex-col items-center justify-center gap-1 min-w-0 rounded-lg font-semibold transition-colors"></button>
-    <button onclick="navigatePrimary('add', this)" id="tab-mobile-add" class="mobile-tab tab-btn flex flex-col items-center justify-center gap-1 min-w-0 rounded-lg font-semibold text-ink-500 transition-colors"></button>
+    <button onclick="navigatePrimary('shelf', this)" id="tab-mobile-shelf" class="mobile-tab tab-btn flex flex-col items-center justify-center gap-1 min-w-0 rounded-lg font-semibold text-ink-500 transition-colors"></button>
     <button onclick="navigatePrimary('friends', this)" id="tab-mobile-friends" class="mobile-tab tab-btn flex flex-col items-center justify-center gap-1 min-w-0 rounded-lg font-semibold text-ink-500 transition-colors"></button>
     <button onclick="navigatePrimary('search', this)" id="tab-mobile-search" class="mobile-tab tab-btn flex flex-col items-center justify-center gap-1 min-w-0 rounded-lg font-semibold text-ink-500 transition-colors"></button>
     <button onclick="navigatePrimary('inbox', this)" id="tab-mobile-inbox" class="mobile-tab tab-btn flex flex-col items-center justify-center gap-1 min-w-0 rounded-lg font-semibold text-ink-500 transition-colors"></button>
-    <button onclick="navigatePrimary('profile', this)" id="tab-mobile-profile" class="mobile-tab tab-btn flex flex-col items-center justify-center gap-1 min-w-0 rounded-lg font-semibold text-ink-500 transition-colors"></button>
-    <button onclick="navigatePrimary('admin', this)" id="tab-mobile-admin" class="mobile-tab hidden tab-btn flex flex-col items-center justify-center gap-1 min-w-0 rounded-lg font-semibold text-ink-500 transition-colors"></button>
   </nav>
 
   <!-- Header -->
   <header class="hidden flex flex-row justify-between items-center gap-4 bg-ink-950 text-paper px-5 py-4 rounded-xl relative overflow-hidden">
     <div class="absolute inset-0 grain-overlay pointer-events-none"></div>
     <div class="relative z-10">
-      <h1 id="header-title" class="font-display text-2xl">My Library</h1>
+      <h1 id="header-title" class="font-display text-2xl">Home</h1>
       <div id="owner-controls" class="mt-2 flex gap-2">
         <button onclick="copyShareLink()" class="flex items-center gap-2 bg-paper/10 hover:bg-paper/20 text-paper text-xs font-semibold py-1.5 px-3 rounded-lg border border-paper/20 transition-colors"></button>
       </div>
     </div>
   </header>
 
-  <!-- TAB 1: MY LIBRARY -->
+  <!-- HOME DASHBOARD -->
   <div id="view-library" class="space-y-4">
     <div id="my-reader-score" class="app-panel rounded-xl border border-ink-200 p-4 shadow-sm"></div>
     <section id="library-attention-panel" class="hidden rounded-xl border border-rust-200 bg-rust-100/70 p-3 shadow-sm" aria-labelledby="library-attention-title">
@@ -303,7 +314,7 @@
         <div class="rounded-lg border border-gold-300 bg-gold-100/45 p-2">
           <label for="isbn" class="mb-1 flex items-baseline justify-between gap-2 text-xs font-semibold text-ink-700"><span>ISBN</span><span class="font-normal text-ink-500">Fastest way to fill book details</span></label>
           <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-2"><input type="text" id="isbn" placeholder="Scan or enter 10/13-digit ISBN" title="Enter the ISBN printed near the barcode" class="min-w-0 rounded-lg border border-ink-200 bg-paper p-2.5 text-sm text-ink-950 focus:outline-none focus:ring-2 focus:ring-ink-700"><button type="button" id="lookup-isbn" class="rounded-lg bg-ink-800 px-3 text-xs font-semibold text-paper hover:bg-ink-900">Find details</button></div>
-          <p class="mt-1 text-[10px] leading-snug text-ink-500">Fills missing title, author, series, genre, year and cover details. Existing entries are kept.</p>
+          <p class="mt-1 text-[10px] leading-snug text-ink-500">Fills empty or unknown details and Book # titles. Your real entries are kept.</p>
         </div>
         <div class="grid grid-cols-2 gap-2">
           <div><label for="title" class="mb-1 flex items-baseline justify-between gap-2 text-xs font-semibold text-ink-700"><span>Book title</span><span class="hidden truncate text-[10px] font-normal text-ink-400 sm:inline">Required · as printed on cover</span></label><input type="text" id="title" required placeholder="e.g. The Hobbit" title="Enter the book title as printed on the cover" class="w-full rounded-lg border border-ink-200 bg-paper p-2.5 text-sm text-ink-950 focus:outline-none focus:ring-2 focus:ring-ink-700"></div>
@@ -345,7 +356,7 @@
         </details>
         <button type="submit" id="add-book-submit" class="w-full bg-rust-600 hover:bg-rust-700 disabled:opacity-60 disabled:cursor-not-allowed text-paper font-semibold py-3 px-4 rounded-lg transition-colors">Add to shelf</button>
       </form>
-      <details class="mt-5 border-t border-ink-200 pt-4">
+      <details id="bulk-add-section" class="mt-5 border-t border-ink-200 pt-4">
         <summary class="cursor-pointer text-sm font-semibold text-ink-700">Add a list or a series</summary>
         <form id="quick-add-form" class="mt-3 space-y-3">
           <div class="rounded-lg bg-ink-800/5 p-3 text-xs leading-relaxed text-ink-600"><p class="font-semibold text-ink-800">1. Build your list</p><p class="mt-1">Add one book per line, or use the series helper below. Nothing is saved until you choose <strong>Add reviewed books</strong>.</p><p class="mt-2 font-mono text-ink-700">Book title | Author</p><p class="mt-1 font-mono text-ink-700">Series | # | Book title | Author</p></div>
@@ -379,12 +390,7 @@
         <div class="mb-2.5 flex items-center justify-between"><div><p class="mb-0.5 font-mono text-[10px] uppercase tracking-widest text-rust-600">For later</p><h2 class="font-display text-base text-ink-950 sm:text-lg">Saved books</h2></div><button type="button" data-action="go-search" class="inline-flex min-h-11 items-center gap-2 rounded-lg px-3 text-xs font-semibold text-rust-700 hover:bg-rust-100">Find books</button></div>
         <div id="saved-books-list" class="library-book-strip gap-2.5 pb-2" role="region" tabindex="0" aria-label="Saved books. Scroll horizontally to see more."></div>
       </div>
-      <div>
-        <div class="flex items-center justify-between mb-3">
-          <div>
-            <h2 class="font-display text-base text-ink-950 sm:text-lg">Your shelf</h2>
-          </div>
-        </div>
+      <div id="own-shelf-section">
       <div id="books-grid" class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3"></div>
       <button id="my-shelf-load-more" type="button" class="hidden mt-4 w-full border border-ink-200 bg-ink-800/5 hover:bg-ink-800/10 text-ink-700 py-2.5 rounded-lg text-xs font-semibold">Load more books</button>
       <div id="empty-state" class="hidden text-center p-8 sm:p-12 rounded-2xl border border-dashed border-ink-300 bg-white/50">
@@ -398,12 +404,37 @@
     </div>
   </div>
 
-  <div id="view-add" class="hidden max-w-xl mx-auto">
+  <div id="view-shelf" class="hidden space-y-4">
+    <div class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div><p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-1">Your collection</p><h1 class="font-display text-2xl text-ink-950">My Library</h1><p class="mt-1 text-sm text-ink-500">Find, organise, and update the books you own.</p></div>
+      <button type="button" data-action="open-add-book" class="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-rust-600 px-4 text-sm font-semibold text-paper hover:bg-rust-700"></button>
+    </div>
+    <section class="app-panel rounded-xl border border-ink-200 p-3 shadow-sm sm:p-4" aria-labelledby="my-shelf-heading">
+      <div class="mb-3 flex flex-col gap-3">
+        <div class="flex flex-wrap items-center justify-between gap-2"><div><p class="font-mono text-[10px] uppercase tracking-widest text-rust-600">Shelf</p><h2 id="my-shelf-heading" class="font-display text-lg text-ink-950">All my books</h2></div><span id="my-shelf-results-count" class="text-xs font-semibold text-ink-500"></span></div>
+        <div class="shelf-toolbar">
+          <label class="shelf-search"><span class="sr-only">Search your shelf</span><input id="my-shelf-search" type="search" placeholder="Search title, author, or series" class="w-full rounded-lg border border-ink-200 bg-paper px-3 py-2.5 text-sm text-ink-950"></label>
+          <select id="my-shelf-status-filter" aria-label="Filter shelf by availability" class="min-w-0 rounded-lg border border-ink-200 bg-paper px-2.5 py-2 text-xs text-ink-700"><option value="">Any status</option><option value="Available">Available</option><option value="Reading">Not for lending</option><option value="Lent Out">Lent out</option><option value="Lost">Lost</option></select>
+          <select id="my-shelf-genre-filter" aria-label="Filter shelf by genre" class="min-w-0 rounded-lg border border-ink-200 bg-paper px-2.5 py-2 text-xs text-ink-700"><option value="">Any genre</option></select>
+          <select id="my-shelf-sort" aria-label="Sort your shelf" class="min-w-0 rounded-lg border border-ink-200 bg-paper px-2.5 py-2 text-xs text-ink-700"><option value="recent">Recently added</option><option value="title">Title A-Z</option><option value="author">Author A-Z</option><option value="series">Series and book number</option></select>
+        </div>
+      </div>
+      <div id="shelf-slot"></div>
+      <p id="shelf-filter-empty" class="hidden rounded-lg bg-ink-800/5 p-4 text-sm text-ink-500">No loaded books match these filters. Try a shorter search or clear a filter.</p>
+    </section>
+  </div>
+
+  <div id="view-add" class="hidden max-w-xl mx-auto space-y-4">
+    <div class="flex items-center justify-between gap-3"><div><p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-1">My Library</p><h1 class="font-display text-2xl text-ink-950">Add books</h1></div><button type="button" data-action="back-to-shelf" class="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold text-ink-700 hover:bg-ink-800/5"></button></div>
+    <div id="add-mode-picker" class="grid grid-cols-2 gap-1 rounded-lg bg-ink-800/5 p-1" role="group" aria-label="Choose how to add books">
+      <button type="button" data-add-mode="single" class="add-mode-button active min-h-11 rounded-md px-3 text-sm font-semibold">One book</button>
+      <button type="button" data-add-mode="bulk" class="add-mode-button min-h-11 rounded-md px-3 text-sm font-semibold">List or series</button>
+    </div>
     <div id="add-book-slot"></div>
   </div>
 
   <div id="view-history" class="hidden max-w-3xl mx-auto space-y-4">
-    <div class="flex items-center justify-between gap-3"><div><p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-1">Reading record</p><h2 class="font-display text-2xl text-ink-950">Borrowing history</h2><p class="text-sm text-ink-500 mt-1">Your latest borrowing activity, kept separate from today’s shelf.</p></div><button type="button" data-action="back-to-library" class="text-xs font-semibold text-ink-600 hover:text-ink-950">Back to library</button></div>
+    <div class="flex items-center justify-between gap-3"><div><p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-1">Reading record</p><h2 class="font-display text-2xl text-ink-950">Borrowing history</h2><p class="text-sm text-ink-500 mt-1">Your latest borrowing activity, kept separate from today’s shelf.</p></div><button type="button" data-action="back-to-library" class="text-xs font-semibold text-ink-600 hover:text-ink-950">Back to Home</button></div>
     <div id="borrow-history-list" class="space-y-3"></div>
   </div>
 
@@ -497,7 +528,7 @@
 <div id="toast-stack" class="fixed bottom-5 right-5 z-[60] flex flex-col gap-2 items-end pointer-events-none"></div>
 
 <!-- Scanner Modal -->
-<div id="scanner-modal" class="hidden fixed inset-0 bg-ink-950/90 z-50 flex flex-col justify-center items-center p-4">
+<div id="scanner-modal" class="hidden fixed inset-0 bg-ink-950/90 z-[60] flex flex-col justify-center items-center p-4">
   <div class="bg-paper p-4 rounded-2xl w-full max-w-md border border-ink-200 relative">
     <h3 class="font-display text-lg text-ink-950 mb-2 text-center">Scan ISBN barcode</h3>
     <div id="reader" class="w-full bg-ink-950 rounded-lg overflow-hidden border-2 border-rust-500"></div>
@@ -515,8 +546,8 @@
       <input type="hidden" id="edit-id">
       <div class="rounded-lg border border-gold-300 bg-gold-100/45 p-2">
         <label for="edit-isbn" class="mb-1 flex items-baseline justify-between gap-2 text-xs font-semibold text-ink-700"><span>ISBN</span><span class="font-normal text-ink-500">Fastest way to find missing details</span></label>
-        <div class="grid grid-cols-[minmax(0,1fr)_auto] gap-2"><input type="text" id="edit-isbn" placeholder="Scan or enter 10/13-digit ISBN" title="Enter the ISBN printed near the barcode" class="min-w-0 rounded-lg border border-ink-200 bg-white p-2.5 text-sm text-ink-950 focus:outline-none focus:ring-2 focus:ring-ink-700"><button type="button" id="edit-lookup-isbn" class="rounded-lg bg-ink-800 px-3 text-xs font-semibold text-paper hover:bg-ink-900">Find details</button></div>
-        <p class="mt-1 text-[10px] leading-snug text-ink-500">Fills only missing title, author, series, genre, year and cover details.</p>
+        <div class="edit-isbn-controls grid grid-cols-[minmax(0,1fr)_auto_auto] gap-2"><input type="text" id="edit-isbn" placeholder="10/13-digit ISBN" title="Enter the ISBN printed near the barcode" class="min-w-0 rounded-lg border border-ink-200 bg-white p-2.5 text-sm text-ink-950 focus:outline-none focus:ring-2 focus:ring-ink-700"><button type="button" id="edit-start-scan-btn" class="inline-flex min-h-10 items-center justify-center gap-1 rounded-lg border border-ink-200 bg-white px-2 text-xs font-semibold text-ink-700 hover:bg-ink-50" aria-label="Scan ISBN barcode"></button><button type="button" id="edit-lookup-isbn" class="min-h-10 rounded-lg bg-ink-800 px-2.5 text-xs font-semibold text-paper hover:bg-ink-900">Find details</button></div>
+        <p class="mt-1 text-[10px] leading-snug text-ink-500">Fills empty or unknown details and Book # titles. Your real entries are kept.</p>
       </div>
       <div><label for="edit-title" class="mb-1 flex items-baseline justify-between gap-2 text-xs font-semibold text-ink-700"><span>Book title</span><span class="truncate text-[10px] font-normal text-ink-400">Required · as printed on the cover</span></label><input type="text" id="edit-title" required placeholder="e.g. The Hobbit" title="Enter the book title as printed on the cover" class="w-full rounded-lg border border-ink-200 bg-white p-2.5 text-sm text-ink-950 focus:outline-none focus:ring-2 focus:ring-ink-700"></div>
       <div><label for="edit-author" class="mb-1 flex items-baseline justify-between gap-2 text-xs font-semibold text-ink-700"><span>Author</span><span class="truncate text-[10px] font-normal text-ink-400">Required · writer’s name</span></label><input type="text" id="edit-author" required placeholder="e.g. J. R. R. Tolkien" title="Enter the author name shown on the book" class="w-full rounded-lg border border-ink-200 bg-white p-2.5 text-sm text-ink-950 focus:outline-none focus:ring-2 focus:ring-ink-700"></div>
@@ -599,28 +630,28 @@
   }
   const STAR_PATH = 'M12 3.5l2.6 5.4 5.9.6-4.4 4 1.2 5.8L12 16.6 6.7 19.3l1.2-5.8-4.4-4 5.9-.6z';
 
-  document.getElementById('tab-library').innerHTML = icon('book') + '<span class="hidden lg:inline">My Library</span><span class="lg:hidden">Library</span>';
-  document.getElementById('tab-add').innerHTML = icon('plus') + '<span class="hidden lg:inline">Add book</span><span class="lg:hidden">Add</span>';
+  document.getElementById('tab-library').innerHTML = icon('bookOpen') + '<span>Home</span>';
+  document.getElementById('tab-shelf').innerHTML = icon('book') + '<span>My Library</span>';
   document.getElementById('tab-friends').innerHTML = icon('users') + '<span>Friends</span>';
   document.getElementById('tab-search').innerHTML = icon('search') + '<span>Search</span>';
   document.getElementById('tab-inbox').innerHTML = icon('bell') + '<span>Inbox</span><span id="inbox-badge" class="hidden bg-rust-500 text-paper rounded-full px-1.5 py-0.5 text-[10px] font-mono">0</span>';
-  document.getElementById('tab-profile').innerHTML = icon('user') + '<span>Profile</span>';
-  document.getElementById('tab-admin').innerHTML = icon('users') + '<span>Admin</span>';
-  document.getElementById('tab-mobile-library').innerHTML = icon('book', 'w-5 h-5') + '<span>Library</span>';
-  document.getElementById('tab-mobile-add').innerHTML = icon('plus', 'w-5 h-5') + '<span>Add</span>';
+  document.getElementById('tab-mobile-library').innerHTML = icon('bookOpen', 'w-5 h-5') + '<span>Home</span>';
+  document.getElementById('tab-mobile-shelf').innerHTML = icon('book', 'w-5 h-5') + '<span>Library</span>';
   document.getElementById('tab-mobile-friends').innerHTML = icon('users', 'w-5 h-5') + '<span>Friends</span>';
   document.getElementById('tab-mobile-search').innerHTML = icon('search', 'w-5 h-5') + '<span>Search</span>';
   document.getElementById('tab-mobile-inbox').innerHTML = icon('bell', 'w-5 h-5') + '<span>Inbox <span id="mobile-inbox-badge" class="hidden inline-flex items-center justify-center min-w-4 h-4 ml-0.5 bg-rust-500 text-paper rounded-full px-1 text-[9px] font-mono">0</span></span>';
-  document.getElementById('tab-mobile-profile').innerHTML = icon('user', 'w-5 h-5') + '<span>Profile</span>';
-  document.getElementById('tab-mobile-admin').innerHTML = icon('users', 'w-5 h-5') + '<span>Admin</span>';
   document.getElementById('start-scan-btn').innerHTML = icon('camera') + '<span>Scan</span>';
+  document.getElementById('edit-start-scan-btn').innerHTML = icon('camera', 'w-4 h-4') + '<span>Scan</span>';
   document.getElementById('copy-share-button').innerHTML = icon('link', 'w-5 h-5') + '<span class="hidden xl:inline">Share</span>';
   document.querySelector('[data-action="open-help"]').innerHTML = icon('help', 'w-5 h-5') + '<span class="hidden xl:inline">Help</span>';
   document.getElementById('sign-out-button').innerHTML = icon('logOut', 'hidden sm:block w-4 h-4') + '<span>Sign out</span>';
   document.getElementById('owner-controls').querySelector('button').innerHTML = icon('link') + '<span>Copy share link</span>';
   document.getElementById('ticker-previous').innerHTML = icon('arrowLeft', 'w-4 h-4');
   document.getElementById('ticker-next').innerHTML = icon('arrowRight', 'w-4 h-4');
+  document.querySelector('[data-action="open-add-book"]').innerHTML = icon('plus', 'w-4 h-4') + '<span>Add books</span>';
+  document.querySelector('[data-action="back-to-shelf"]').innerHTML = icon('arrowLeft', 'w-4 h-4') + '<span>Back to My Library</span>';
   document.getElementById('add-book-slot').appendChild(document.getElementById('admin-panel'));
+  document.getElementById('shelf-slot').appendChild(document.getElementById('own-shelf-section'));
 
   // --- TEXT ESCAPING (prevents stored XSS from user-supplied titles/names/etc.) ---
   function esc(str) {
@@ -757,12 +788,15 @@
     const steps = [
       { done: String(userProfile.bio || '').trim().length >= 12, title: 'Add a short introduction', detail: 'Help real-life readers recognise your shelf.', action: 'onboarding-profile', button: 'Add intro' },
       { done: Object.keys(myBooksCache).length > 0 || Number(userProfile.bookCount || 0) > 0, title: 'Add your first book', detail: 'A shelf starts with one book you are happy to share.', action: 'onboarding-add-book', button: 'Add a book' },
-      { done: confirmedFriends.length > 0 || Number(userProfile.friendCount || 0) > 0, title: 'Connect with a reader', detail: 'Find someone you know, then browse each other’s shelves.', action: 'onboarding-find-friends', button: 'Find readers' }
+      { done: Array.isArray(userProfile.circleTags) && userProfile.circleTags.length > 0, title: 'Join a circle', detail: 'Choose a school, locality, club, or reading-interest circle.', action: 'onboarding-join-circle', button: 'Choose circles' },
+      { done: confirmedFriends.length > 0 || Number(userProfile.friendCount || 0) > 0, title: 'Connect with a reader', detail: 'Find someone you know in real life, then connect your shelves.', action: 'onboarding-find-friends', button: 'Find readers' },
+      { done: Number(readerStatsCache.totalBorrowed || 0) > 0 || borrowedBooksCache.length > 0, title: 'Borrow your first book', detail: 'Find an available book from a confirmed friend and request it.', action: 'onboarding-borrow-book', button: 'Find a book' },
+      { done: Number(userProfile.totalLent || 0) > 0 || Object.keys(activeLoanBooksCache).length > 0, title: 'Lend your first book', detail: 'Keep a book available so a confirmed friend can request it.', action: 'onboarding-lend-book', button: 'View my shelf' }
     ];
     const complete = steps.filter(step => step.done).length;
     panel.classList.toggle('hidden', complete === steps.length);
     if (complete === steps.length) { panel.innerHTML = ''; return; }
-    panel.innerHTML = `<div class="flex items-start justify-between gap-4"><div><p class="font-mono text-[11px] uppercase tracking-widest text-rust-600">Getting started</p><h2 class="font-display text-xl text-ink-950 mt-1">Make your shelf useful</h2><p class="text-xs text-ink-500 mt-1">${complete} of ${steps.length} simple steps complete.</p></div><span class="shrink-0 rounded-full bg-gold-100 px-2.5 py-1 text-xs font-semibold text-ink-700">${complete}/${steps.length}</span></div><div class="grid gap-2 mt-4 sm:grid-cols-3">${steps.map(step => `<div class="rounded-lg border ${step.done ? 'border-sage-200 bg-sage-50/50' : 'border-ink-200 bg-white/60'} p-3"><div class="flex items-start justify-between gap-2"><div class="min-w-0"><p class="text-xs font-semibold text-ink-800">${esc(step.title)}</p><p class="text-[11px] leading-relaxed text-ink-500 mt-1">${esc(step.detail)}</p></div>${step.done ? `<span class="shrink-0 text-ink-700">${icon('check', 'w-4 h-4')}</span>` : ''}</div>${step.done ? `<p class="mt-3 text-[11px] font-semibold text-ink-600">Done</p>` : `<button data-action="${step.action}" class="mt-3 text-xs font-semibold text-rust-600 hover:text-rust-700">${esc(step.button)}</button>`}</div>`).join('')}</div>`;
+    panel.innerHTML = `<div class="flex items-start justify-between gap-4"><div><p class="font-mono text-[11px] uppercase tracking-widest text-rust-600">Getting started</p><h2 class="font-display text-xl text-ink-950 mt-1">Make your shelf useful</h2><p class="text-xs text-ink-500 mt-1">${complete} of ${steps.length} simple steps complete.</p></div><span class="shrink-0 rounded-full bg-gold-100 px-2.5 py-1 text-xs font-semibold text-ink-700">${complete}/${steps.length}</span></div><div class="grid gap-2 mt-4 sm:grid-cols-2 lg:grid-cols-3">${steps.map((step, index) => `<div data-onboarding-step="${index + 1}" class="rounded-lg border ${step.done ? 'border-sage-200 bg-sage-50/50' : 'border-ink-200 bg-white/60'} p-3"><div class="flex items-start justify-between gap-2"><div class="min-w-0"><p class="text-xs font-semibold text-ink-800">${esc(step.title)}</p><p class="text-[11px] leading-relaxed text-ink-500 mt-1">${esc(step.detail)}</p></div>${step.done ? `<span class="shrink-0 text-ink-700">${icon('check', 'w-4 h-4')}</span>` : ''}</div>${step.done ? `<p class="mt-3 text-[11px] font-semibold text-ink-600">Done</p>` : `<button data-action="${step.action}" class="mt-3 inline-flex min-h-10 items-center rounded-lg bg-ink-800/10 px-3 text-xs font-semibold text-ink-800 hover:bg-ink-800/20">${esc(step.button)}</button>`}</div>`).join('')}</div>`;
   }
 
   function closeReaderProfileModal() {
@@ -772,7 +806,7 @@
 
   function openHelp() {
     CloudHelp.open({
-      admin: !!currentUser && !document.getElementById('tab-admin').classList.contains('hidden'),
+      admin: !!currentUser && currentUserIsAdmin,
       navigate: async (target, anchor) => {
         closeHelp();
         if (target === 'profile') await openReaderProfile('self');
@@ -997,6 +1031,7 @@
   });
   fillOptions(document.getElementById('search-genre-filter'), GENRES, 'Any genre');
   fillOptions(document.getElementById('friend-shelf-genre-filter'), GENRES, 'Any genre');
+  fillOptions(document.getElementById('my-shelf-genre-filter'), GENRES, 'Any genre');
 
   function starPickerHtml(prefix) {
     return [1,2,3,4,5].map(n => `<button type="button" onclick="setRating('${prefix}', ${n})" data-n="${n}" class="rating-btn text-ink-300 hover:text-gold-500 transition-colors"><svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5"><path d="${STAR_PATH}"/></svg></button>`).join('');
@@ -1047,9 +1082,7 @@
   }
 
   function bookImgFallback(imgEl) {
-    imgEl.style.display = 'none';
-    const fallback = imgEl.nextElementSibling;
-    if (fallback) fallback.classList.remove('hidden');
+    imgEl.remove();
   }
 
   const MAX_COVER_SOURCE_BYTES = 12 * 1024 * 1024;
@@ -1430,6 +1463,7 @@
   let currentUser = null;
   let userProfile = null;
   let currentUserIsAdmin = false;
+  let readerStatsCache = {};
   let confirmedFriends = [];
   let friendshipDocs = {};        // friendUid -> friendship document id (needed to unfriend)
   let pendingSentRequests = [];   // outgoing requests the user can still cancel
@@ -1559,6 +1593,7 @@
     searchCache.clear();
     ratingCache.clear();
     activeFriendShelf = null;
+    readerStatsCache = {};
     if (currentUser?.uid !== user?.uid) AdminDashboard.reset();
     if (user) {
       isSigningOut = false;
@@ -1645,15 +1680,9 @@
     if (photo) { navPhoto.src = photo; navPhoto.classList.remove('hidden'); navFallback.classList.add('hidden'); }
     else { navPhoto.classList.add('hidden'); navFallback.classList.remove('hidden'); }
     document.getElementById('app-content').classList.remove('hidden');
-    switchTab('library');
+    switchTab('library', { historyMode: 'replace' });
     const circleSettings = await guard(() => lendingFunctions.httpsCallable('getCircleSettings')(), { context: 'Checking account role' });
     currentUserIsAdmin = circleSettings !== FAILED && Boolean(circleSettings.data?.isAdmin);
-    document.getElementById('tab-admin').classList.toggle('hidden', !currentUserIsAdmin);
-    // Admin remains directly available on desktop. On phones it opens from the
-    // authorised reader's Profile, keeping the six primary touch targets usable.
-    document.getElementById('tab-mobile-admin').classList.add('hidden');
-    document.getElementById('mobile-nav').classList.add('grid-cols-6');
-    document.getElementById('mobile-nav').classList.remove('grid-cols-7');
     await loadFriendsList();
     fetchMyBooks();
     fetchBorrowedBooks();
@@ -1662,19 +1691,21 @@
     initCloudTicker();
     renderMyReaderScore();
     if (inviteTarget && inviteTarget !== currentUser.uid) {
-      window.history.replaceState({}, '', window.location.pathname);
+      window.history.replaceState({ cloudLibraryView: 'library' }, '', `${window.location.pathname}#library`);
       setTimeout(() => openReaderProfile(inviteTarget), 250);
     }
   }
 
   // --- 3. TABS NAVIGATION ---
-  const PRIMARY_TABS = ['library', 'add', 'friends', 'search', 'inbox', 'profile'];
-  const PAGE_VIEWS = [...PRIMARY_TABS, 'friend-shelf', 'history', 'admin'];
+  const PRIMARY_TABS = ['library', 'shelf', 'friends', 'search', 'inbox'];
+  const PAGE_VIEWS = [...PRIMARY_TABS, 'add', 'profile', 'friend-shelf', 'history', 'admin'];
 
-  function switchTab(tabName) {
+  function switchTab(tabName, { historyMode = 'push' } = {}) {
+    if (!PAGE_VIEWS.includes(tabName)) return;
+    const previousView = PAGE_VIEWS.find(view => !document.getElementById(`view-${view}`).classList.contains('hidden'));
     PAGE_VIEWS.forEach(t => {
       document.getElementById(`view-${t}`).classList.add('hidden');
-      if (PRIMARY_TABS.includes(t) || t === 'admin') {
+      if (PRIMARY_TABS.includes(t)) {
         document.getElementById(`tab-${t}`).classList.remove('active');
         document.getElementById(`tab-${t}`).classList.add('text-ink-500');
         document.getElementById(`tab-mobile-${t}`).classList.remove('active');
@@ -1684,19 +1715,47 @@
       }
     });
     document.getElementById(`view-${tabName}`).classList.remove('hidden');
-    const activeTab = PRIMARY_TABS.includes(tabName) || tabName === 'admin' ? tabName : (tabName === 'history' ? 'library' : 'friends');
-    document.getElementById(`tab-${activeTab}`).classList.add('active');
-    document.getElementById(`tab-${activeTab}`).classList.remove('text-ink-500');
-    const mobileActiveTab = activeTab === 'admin' ? 'profile' : activeTab;
-    document.getElementById(`tab-mobile-${mobileActiveTab}`).classList.add('active');
-    document.getElementById(`tab-mobile-${mobileActiveTab}`).classList.remove('text-ink-500');
-    document.getElementById(`tab-${activeTab}`).setAttribute('aria-current', 'page');
-    document.getElementById(`tab-mobile-${mobileActiveTab}`).setAttribute('aria-current', 'page');
+    const activeTab = PRIMARY_TABS.includes(tabName) ? tabName : tabName === 'add' ? 'shelf' : tabName === 'friend-shelf' ? 'friends' : null;
+    if (activeTab) {
+      document.getElementById(`tab-${activeTab}`).classList.add('active');
+      document.getElementById(`tab-${activeTab}`).classList.remove('text-ink-500');
+      document.getElementById(`tab-mobile-${activeTab}`).classList.add('active');
+      document.getElementById(`tab-mobile-${activeTab}`).classList.remove('text-ink-500');
+      document.getElementById(`tab-${activeTab}`).setAttribute('aria-current', 'page');
+      document.getElementById(`tab-mobile-${activeTab}`).setAttribute('aria-current', 'page');
+    }
 
-    const titles = { library: 'My Library', add: 'Add a book', friends: 'Friends', search: 'Search Libraries', inbox: 'Inbox', profile: 'Reader profile', admin: 'Admin console', 'friend-shelf': 'Friend shelf', history: 'Borrowing history' };
+    const titles = { library: 'Home', shelf: 'My Library', add: 'Add books', friends: 'Friends', search: 'Search Libraries', inbox: 'Inbox', profile: 'Reader profile', admin: 'Admin console', 'friend-shelf': 'Friend shelf', history: 'Borrowing history' };
     document.getElementById('header-title').textContent = titles[tabName] || 'CloudLibrary';
     if (tabName === 'friends') renderFriendsView();
+
+    if (currentUser && historyMode !== 'none') {
+      const state = { ...(window.history.state || {}), cloudLibraryView: tabName };
+      const url = new URL(window.location.href);
+      url.hash = tabName;
+      if (historyMode === 'replace' || !window.history.state?.cloudLibraryView) {
+        window.history.replaceState(state, '', url);
+      } else if (previousView !== tabName) {
+        window.history.pushState(state, '', url);
+      }
+    }
   }
+
+  window.addEventListener('popstate', event => {
+    if (!currentUser) return;
+    closeReaderProfileModal();
+    document.getElementById('help-modal').classList.add('hidden');
+    const view = PAGE_VIEWS.includes(event.state?.cloudLibraryView) ? event.state.cloudLibraryView : 'library';
+    switchTab(view, { historyMode: 'none' });
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  });
+
+  window.goHome = function () {
+    closeReaderProfileModal();
+    document.getElementById('help-modal').classList.add('hidden');
+    switchTab('library');
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  };
 
   window.navigatePrimary = function (tabName, button) {
     if (tabName === 'profile') {
@@ -1709,20 +1768,18 @@
         key: 'navigation:admin', label: 'Loading…', linked: false
       });
     }
-    // Library, Add, Friends, Search, and Inbox switch immediately, so a loading
+    // Primary pages switch immediately, so a loading
     // indicator would add noise rather than useful acknowledgement.
     return switchTab(tabName);
   };
 
   // --- 4. BOOK CARD RENDERING (shared across my-library / friend-library / search) ---
-  function bookCoverHtml(book) {
+  function bookCoverHtml(book, compact = false) {
     const url = safeUrl(book.coverUrl);
     if (!url) return '';
-    const initial = (book.title || '?').trim().charAt(0).toUpperCase();
-    const colorClass = GENRE_COLORS[book.genre] || 'bg-ink-400';
-    const placeholder = `<div aria-hidden="true" class="hidden h-[4.5rem] w-12 shrink-0 items-center justify-center rounded-md ${colorClass} font-display text-lg text-paper sm:h-20 sm:w-14">${esc(initial)}</div>`;
-    const img = `<img src="${esc(url)}" alt="Cover of ${esc(book.title || 'this book')}" loading="lazy" onerror="bookImgFallback(this)" class="h-[4.5rem] w-12 shrink-0 rounded-md border border-ink-200 object-cover shadow-sm sm:h-20 sm:w-14">`;
-    return img + placeholder;
+    const sizeClass = compact ? 'h-20 w-14' : 'h-[4.5rem] w-12 sm:h-20 sm:w-14';
+    const img = `<img src="${esc(url)}" alt="Cover of ${esc(book.title || 'this book')}" loading="lazy" onerror="bookImgFallback(this)" class="${sizeClass} shrink-0 rounded-md border border-ink-200 object-cover shadow-sm">`;
+    return img;
   }
 
   function bookMetaChips(book) {
@@ -1768,17 +1825,15 @@
   }
 
   function renderBookCard(book, actionsHtml, ownerLabel, mode) {
-    const hasCover = Boolean(safeUrl(book.coverUrl));
-    const fullWidthClass = hasCover ? 'col-span-2' : '';
-    const ownerLoanClass = mode === 'owner' ? 'loan-owner-actions' : '';
+    const fullWidthClass = '';
+    const ownerLoanClass = '';
     const borrowerClass = mode === 'borrower' ? 'borrower-book-actions' : '';
-    const actionLayoutClass = ownerLoanClass || borrowerClass ? '' : 'flex flex-wrap';
+    const actionLayoutClass = borrowerClass ? '' : 'flex flex-wrap';
     const borrowerOverdue = mode === 'borrower' && timestampMillis(book.loanDueAt) && timestampMillis(book.loanDueAt) < Date.now();
     const toneClass = mode === 'borrower' ? `borrowed-book-card${borrowerOverdue ? ' overdue-book-card' : ''}` : '';
     return `
-      <div class="book-card ${toneClass} app-panel grid ${hasCover ? 'grid-cols-[3rem_minmax(0,1fr)] sm:grid-cols-[3.5rem_minmax(0,1fr)]' : 'grid-cols-1'} gap-x-2.5 gap-y-1 rounded-lg border border-ink-200 p-2.5 shadow-sm">
-        ${hasCover ? bookCoverHtml(book) : ''}
-        <div class="min-w-0">
+      <div data-book-id="${esc(book.id)}" class="book-card ${toneClass} app-panel rounded-lg border border-ink-200 p-2.5 shadow-sm">
+        <div class="flex min-w-0 items-start gap-2.5">${bookCoverHtml(book)}<div class="min-w-0 flex-1">
           <div class="book-card-heading flex items-start justify-between gap-2">
             <div class="min-w-0">
               <h3 class="truncate font-display text-sm leading-snug text-ink-950 sm:text-base" title="${esc(book.title)}">${esc(book.title)}</h3>
@@ -1791,7 +1846,7 @@
           <div class="mt-1 flex flex-wrap gap-1">${bookMetaChips(book)}</div>
           ${starsRow(book.rating)}
           ${book.description ? `<p class="mt-1.5 line-clamp-2 text-xs leading-snug text-ink-600">${esc(book.description)}</p>` : ''}
-        </div>
+        </div></div>
         ${loanDetailsHtml(book, mode, fullWidthClass)}
         <div class="book-card-actions ${ownerLoanClass} ${borrowerClass} ${actionLayoutClass} ${fullWidthClass} mt-0.5 min-w-0 items-center gap-1.5">${actionsHtml}</div>
       </div>`;
@@ -1884,6 +1939,8 @@
       // Reserve a ticker slot for discovery, even when a reader has a busy inbox.
       if (suggestionItem) items.push(suggestionItem);
       const personal = readerStats.exists ? readerStats.data() : {};
+      readerStatsCache = personal;
+      renderOnboarding();
       const community = networkStats.exists ? networkStats.data() : {};
       renderCommunityStats(community);
       if (Number(personal.totalBorrowed || 0)) items.push({ type: 'your-borrowing-total', totalBorrowed: personal.totalBorrowed });
@@ -2015,8 +2072,36 @@
       ? `<button data-action="mark-returned" data-id="${esc(book.id)}" class="${actionClass} bg-ink-600/10 text-ink-700 hover:bg-ink-600/20">${icon('handshake','w-3 h-3')}Confirm returned</button>` : '';
     const reminderBtn = book.status === 'Lent Out' && book.borrowerId
       ? `<button data-action="send-reminder" data-id="${esc(book.id)}" class="${actionClass} bg-gold-100 text-[#7a5a12] hover:bg-gold-300/60">${icon('mail','w-3 h-3')}Reminder</button>` : '';
-    const editButton = `<button data-action="edit-book" data-id="${esc(book.id)}" class="${actionClass} bg-ink-800/10 text-ink-700 hover:bg-ink-800/20">${icon('pencil','w-3 h-3')}Edit</button>`;
+    const editButton = `<button data-action="edit-book" data-id="${esc(book.id)}" class="inline-flex min-h-10 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold text-ink-600 hover:bg-ink-800/10 hover:text-ink-800" title="Edit book" aria-label="Edit ${esc(book.title || 'book')}">${icon('pencil','w-4 h-4')}<span>Edit</span></button>`;
     return `${returnBtn}${editButton}${reminderBtn}`;
+  }
+
+  function seriesCarouselHtml(books, actionRenderer, carouselId, mode = '') {
+    const slides = books.map(book => `
+      <article data-book-id="${esc(book.id)}" class="series-book-slide p-3" aria-label="${esc(book.title || 'Book')}">
+        <div class="flex min-w-0 gap-2.5">
+          ${bookCoverHtml(book, true)}
+          <div class="min-w-0 flex-1">
+            <div class="mb-1 flex items-start justify-between gap-1.5">
+              <span class="font-mono text-[10px] font-semibold uppercase tracking-wide text-rust-600">Book ${esc(book.seriesNumber || '-')}</span>
+              ${statusBadge(book.status, mode === 'borrower' ? 'Borrowed' : book.status)}
+            </div>
+            <h4 class="line-clamp-3 break-words font-display text-sm font-semibold leading-snug text-ink-950" title="${esc(book.title || '')}">${esc(book.title || 'Untitled book')}</h4>
+            <p class="mt-0.5 line-clamp-2 break-words text-xs leading-snug text-ink-600">${esc(book.author || 'Author not listed')}</p>
+          </div>
+        </div>
+        <div class="mt-2 flex min-w-0 flex-wrap gap-1.5">${actionRenderer(book)}</div>
+      </article>`).join('');
+    const controls = books.length > 1 ? `<div class="flex shrink-0 gap-1"><button type="button" data-action="series-prev" data-carousel="${esc(carouselId)}" class="inline-flex min-h-10 min-w-10 items-center justify-center rounded-lg text-ink-600 hover:bg-ink-100" aria-label="Previous book in series" title="Previous book">${icon('arrowLeft', 'w-4 h-4')}</button><button type="button" data-action="series-next" data-carousel="${esc(carouselId)}" class="inline-flex min-h-10 min-w-10 items-center justify-center rounded-lg text-ink-600 hover:bg-ink-100" aria-label="Next book in series" title="Next book">${icon('arrowRight', 'w-4 h-4')}</button></div>` : '';
+    return `<div class="border-t border-ink-200"><div class="flex min-h-10 items-center justify-between gap-2 border-b border-ink-100 px-3"><span class="text-xs font-semibold text-ink-600">${books.length} ${books.length === 1 ? 'book' : 'books'}</span>${controls}</div><div id="${esc(carouselId)}" class="series-carousel-track" role="region" tabindex="0" aria-label="Books in this series">${slides}</div></div>`;
+  }
+
+  function scrollSeriesCarousel(id, direction) {
+    const track = document.getElementById(id);
+    if (!track) return;
+    const slide = track.querySelector('.series-book-slide');
+    const distance = slide ? slide.getBoundingClientRect().width : Math.max(220, track.clientWidth * .8);
+    track.scrollBy({ left: distance * direction, behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
   }
 
   function renderOwnShelf(books) {
@@ -2029,12 +2114,13 @@
       grouped.set(key, [...(grouped.get(key) || []), book]);
     });
     const standalone = books.filter(book => !String(book.seriesName || '').trim());
-    [...grouped.entries()].sort(([a], [b]) => a.localeCompare(b)).forEach(([seriesName, seriesBooks]) => {
+    [...grouped.entries()].sort(([a], [b]) => a.localeCompare(b)).forEach(([seriesName, seriesBooks], seriesIndex) => {
       const available = seriesBooks.filter(book => book.status === 'Available').length;
       const orderedBooks = seriesBooks.sort((a, b) => Number(a.seriesNumber || 0) - Number(b.seriesNumber || 0) || String(a.title).localeCompare(String(b.title)));
       const details = document.createElement('details');
       details.className = 'series-stack own-series-stack app-panel border border-ink-200 shadow-sm rounded-xl overflow-hidden';
-      details.innerHTML = `<summary class="flex min-h-10 cursor-pointer list-none items-center justify-between gap-3 px-3 py-2"><span class="min-w-0"><span class="block font-display text-sm text-ink-950 sm:text-base">${esc(seriesName)}</span><span class="text-xs text-ink-500">${orderedBooks.length} books · ${available} available</span></span><span data-series-toggle class="shrink-0 text-xs font-semibold text-ink-700">View series ↓</span></summary><div class="series-table-wrap border-t border-ink-200"><table class="w-full min-w-[680px] table-fixed text-left text-xs"><colgroup><col class="w-10"><col><col class="w-24"><col class="w-[15rem]"></colgroup><thead class="bg-ink-800/5 text-ink-600"><tr><th class="px-3 py-2 font-semibold">#</th><th class="px-3 py-2 font-semibold">Book</th><th class="px-3 py-2 font-semibold">Status</th><th class="px-3 py-2 font-semibold">Actions</th></tr></thead><tbody>${orderedBooks.map((book, index) => `<tr data-series-row class="${index >= 10 ? 'hidden ' : ''}border-t border-ink-100 align-top"><td class="px-3 py-2 text-ink-500">${esc(book.seriesNumber || '-')}</td><td class="px-3 py-2"><p class="break-words font-display font-semibold text-ink-800">${esc(book.title)}</p><p class="mt-0.5 text-ink-500">${esc(book.author || '')}</p></td><td class="px-3 py-2">${statusBadge(book.status)}</td><td class="px-3 py-2"><div class="loan-owner-actions gap-1.5">${ownBookActions(book)}</div></td></tr>`).join('')}</tbody></table>${orderedBooks.length > 10 ? `<div class="sticky left-0 border-t border-ink-200 bg-white/90 p-2 text-center"><button type="button" data-action="show-series-more" class="min-h-10 rounded-lg px-3 text-xs font-semibold text-ink-700 hover:bg-ink-100">Show 10 more</button></div>` : ''}</div>`;
+      details.open = true;
+      details.innerHTML = `<summary class="flex min-h-10 cursor-pointer list-none items-center justify-between gap-3 px-3 py-2"><span class="min-w-0"><span class="block font-display text-sm text-ink-950 sm:text-base">${esc(seriesName)}</span><span class="text-xs text-ink-500">${orderedBooks.length} books · ${available} available</span></span><span data-series-toggle class="shrink-0 text-xs font-semibold text-ink-700">Hide series ↑</span></summary>${seriesCarouselHtml(orderedBooks, ownBookActions, `series-carousel-own-${seriesIndex}`, 'owner')}`;
       details.addEventListener('toggle', () => {
         const label = details.querySelector('[data-series-toggle]');
         if (label) label.textContent = details.open ? 'Hide series ↑' : 'View series ↓';
@@ -2049,6 +2135,28 @@
 
   function rebuildMyBooksCache() {
     myBooksCache = { ...myShelfBooksCache, ...activeLoanBooksCache };
+  }
+
+  function renderFilteredOwnShelf() {
+    const search = String(document.getElementById('my-shelf-search')?.value || '').trim().toLocaleLowerCase();
+    const status = document.getElementById('my-shelf-status-filter')?.value || '';
+    const genre = document.getElementById('my-shelf-genre-filter')?.value || '';
+    const sort = document.getElementById('my-shelf-sort')?.value || 'recent';
+    const allBooks = Object.values(myBooksCache);
+    const books = allBooks.filter(book => {
+      const words = [book.title, book.author, book.seriesName, book.seriesNumber ? `book ${book.seriesNumber}` : ''].join(' ').toLocaleLowerCase();
+      return (!search || words.includes(search)) && (!status || book.status === status) && (!genre || book.genre === genre);
+    });
+    const textOrder = key => (a, b) => String(a[key] || '').localeCompare(String(b[key] || ''), undefined, { sensitivity: 'base' });
+    if (sort === 'title') books.sort(textOrder('title'));
+    else if (sort === 'author') books.sort((a, b) => textOrder('author')(a, b) || textOrder('title')(a, b));
+    else if (sort === 'series') books.sort((a, b) => textOrder('seriesName')(a, b) || Number(a.seriesNumber || 0) - Number(b.seriesNumber || 0) || textOrder('title')(a, b));
+    else books.sort((a, b) => timestampMillis(b.createdAt) - timestampMillis(a.createdAt));
+    renderOwnShelf(books);
+    const trueEmpty = allBooks.length === 0;
+    document.getElementById('empty-state').classList.toggle('hidden', !trueEmpty);
+    document.getElementById('shelf-filter-empty').classList.toggle('hidden', trueEmpty || books.length > 0);
+    document.getElementById('my-shelf-results-count').textContent = trueEmpty ? '' : `${books.length} of ${allBooks.length} loaded`;
   }
 
   async function fetchMyBooks(loadMore = false) {
@@ -2077,10 +2185,7 @@
       myShelfHasMore = snapshot.size > SHELF_PAGE_SIZE;
       myBooksLoaded = true;
       rebuildMyBooksCache();
-      const books = Object.values(myShelfBooksCache);
-      document.getElementById('empty-state').classList.toggle('hidden', books.length > 0);
-      if (books.length) renderOwnShelf(books);
-      else document.getElementById('books-grid').innerHTML = '';
+      renderFilteredOwnShelf();
       renderOnboarding();
       renderMyReaderScore();
     }
@@ -2116,8 +2221,10 @@
     activeLoansLoaded = true;
     rebuildMyBooksCache();
     renderLentOutBooks(Object.values(activeLoanBooksCache));
+    renderFilteredOwnShelf();
     renderMyReaderScore();
     renderLibraryAttention();
+    renderOnboarding();
   }
 
   function renderLentOutBooks(books) {
@@ -2156,6 +2263,7 @@
         grid.insertAdjacentHTML('beforeend', renderBookCard(book, actions, null, 'borrower'));
       });
       empty.classList.toggle('hidden', borrowedBooksCache.length > 0);
+      renderOnboarding();
       renderLibraryAttention();
     }, 'borrowed books');
   }
@@ -2870,10 +2978,15 @@
       if (key) grouped.set(key, [...(grouped.get(key) || []), book]);
     });
     const standalone = books.filter(book => !String(book.seriesName || '').trim());
-    grid.innerHTML = [...grouped.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([seriesName, seriesBooks]) => {
+    grid.innerHTML = [...grouped.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([seriesName, seriesBooks], seriesIndex) => {
       const available = seriesBooks.filter(book => book.status === 'Available').length;
-      return `<details class="series-stack app-panel overflow-hidden rounded-lg border border-ink-200 shadow-sm"><summary class="flex min-h-10 cursor-pointer list-none items-center justify-between gap-3 px-3 py-2"><span class="min-w-0"><span class="block truncate font-display text-sm text-ink-950">${esc(seriesName)}</span><span class="text-xs text-ink-500">${seriesBooks.length} books · ${available} available</span></span><span class="text-xs font-semibold text-ink-700">View series</span></summary><div class="series-table-wrap border-t border-ink-200"><table class="w-full min-w-[620px] table-fixed text-left text-xs"><colgroup><col class="w-10"><col><col class="w-24"><col class="w-32"></colgroup><thead class="bg-ink-800/5 text-ink-500"><tr><th class="px-3 py-2 font-semibold">#</th><th class="px-3 py-2 font-semibold">Book</th><th class="px-3 py-2 font-semibold">Status</th><th class="px-3 py-2 font-semibold">Actions</th></tr></thead><tbody>${seriesBooks.sort((a, b) => Number(a.seriesNumber || 0) - Number(b.seriesNumber || 0) || String(a.title).localeCompare(String(b.title))).map(book => `<tr class="border-t border-ink-100 align-top"><td class="px-3 py-2 text-ink-500">${esc(book.seriesNumber || '-')}</td><td class="px-3 py-2"><p class="break-words font-semibold text-ink-800">${esc(book.title)}</p><p class="mt-0.5 text-ink-500">${esc(book.author || '')}</p></td><td class="px-3 py-2">${statusBadge(book.status)}</td><td class="px-3 py-2"><div class="flex flex-wrap gap-1.5">${friendBookActions(book)}</div></td></tr>`).join('')}</tbody></table></div></details>`;
+      const orderedBooks = seriesBooks.sort((a, b) => Number(a.seriesNumber || 0) - Number(b.seriesNumber || 0) || String(a.title).localeCompare(String(b.title)));
+      return `<details open class="series-stack app-panel overflow-hidden rounded-lg border border-ink-200 shadow-sm"><summary class="flex min-h-10 cursor-pointer list-none items-center justify-between gap-3 px-3 py-2"><span class="min-w-0"><span class="block font-display text-sm text-ink-950">${esc(seriesName)}</span><span class="text-xs text-ink-500">${orderedBooks.length} books · ${available} available</span></span><span data-series-toggle class="shrink-0 text-xs font-semibold text-ink-700">Hide series</span></summary>${seriesCarouselHtml(orderedBooks, friendBookActions, `series-carousel-friend-${seriesIndex}`)}</details>`;
     }).join('') + standalone.sort((a, b) => String(a.title).localeCompare(String(b.title))).map(renderFriendBook).join('');
+    grid.querySelectorAll('details.series-stack').forEach(details => details.addEventListener('toggle', () => {
+      const label = details.querySelector('[data-series-toggle]');
+      if (label) label.textContent = details.open ? 'Hide series' : 'View series';
+    }));
     document.getElementById('friend-shelf-load-more').classList.toggle('hidden', !activeFriendShelf.hasMore);
   }
 
@@ -3122,6 +3235,68 @@
       </div>`;
   }
 
+  function inboxReaderLink(uid, name) {
+    const label = name || 'A reader';
+    return uid
+      ? `<button type="button" data-action="open-reader-profile" data-uid="${esc(uid)}" class="inbox-entity-link">${esc(label)}</button>`
+      : `<span class="font-semibold text-ink-700">${esc(label)}</span>`;
+  }
+
+  function inboxBookLink(req) {
+    const title = req.title || 'Untitled book';
+    return req.bookId
+      ? `<button type="button" data-action="open-inbox-book" data-id="${esc(req.bookId)}" data-owner="${esc(req.ownerId || '')}" data-name="${esc(req.ownerName || '')}" data-title="${esc(title)}" class="inbox-entity-link">${esc(title)}</button>`
+      : `<span class="font-semibold text-ink-700">${esc(title)}</span>`;
+  }
+
+  function focusVisibleBook(bookId) {
+    const visibleView = PAGE_VIEWS.map(view => document.getElementById(`view-${view}`)).find(view => view && !view.classList.contains('hidden'));
+    const card = visibleView?.querySelector(`[data-book-id="${CSS.escape(bookId)}"]`);
+    if (!card) return false;
+    const stack = card.closest('details');
+    if (stack) stack.open = true;
+    card.classList.add('book-link-target');
+    card.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+    setTimeout(() => card.classList.remove('book-link-target'), 1800);
+    return true;
+  }
+
+  async function openInboxBook(bookId, ownerId, ownerName, title) {
+    if (!bookId) return false;
+    if (ownerId === currentUser.uid) {
+      if (!myBooksCache[bookId]) {
+        const snapshot = await guard(() => db.collection('books').doc(bookId).get(), { context: 'Opening this book' });
+        if (snapshot === FAILED) return false;
+        if (snapshot.exists && snapshot.data().ownerId === currentUser.uid) {
+          myShelfBooksCache[bookId] = { id: snapshot.id, ...snapshot.data() };
+          rebuildMyBooksCache();
+        }
+      }
+      switchTab('shelf');
+      document.getElementById('my-shelf-search').value = '';
+      document.getElementById('my-shelf-status-filter').value = '';
+      document.getElementById('my-shelf-genre-filter').value = '';
+      renderFilteredOwnShelf();
+      if (focusVisibleBook(bookId)) return true;
+    } else if (ownerId && confirmedFriends.includes(ownerId)) {
+      await viewFriendLibrary(ownerId, ownerName || 'Friend');
+      if (!activeFriendShelf?.books.some(book => book.id === bookId)) {
+        const snapshot = await guard(() => db.collection('books').doc(bookId).get(), { context: 'Opening this book' });
+        if (snapshot === FAILED) return false;
+        if (snapshot.exists && snapshot.data().ownerId === ownerId) {
+          activeFriendShelf.books.push({ id: snapshot.id, ...snapshot.data() });
+          renderFriendShelfBooks();
+        }
+      }
+      if (focusVisibleBook(bookId)) return true;
+    }
+    switchTab('search');
+    searchCache.clear();
+    document.getElementById('global-search-input').value = title || '';
+    await performGlobalSearch();
+    return true;
+  }
+
   function listenToInbox() {
     inboxUnsubscribers.forEach(unsub => unsub && unsub());
     inboxUnsubscribers = [
@@ -3210,9 +3385,10 @@
 
       if (req.type === 'return-request') {
         const isOwner = req.ownerId === currentUser.uid;
+        const book = inboxBookLink(req);
         const body = isOwner
-          ? `<span class="text-rust-600 font-semibold">${esc(req.requesterName || 'The borrower')}</span> says "${esc(req.title)}" has been returned. Confirm after you have the physical book.`
-          : `You asked <span class="text-rust-600 font-semibold">${esc(req.ownerName || 'the owner')}</span> to confirm the return of "${esc(req.title)}".`;
+          ? `${inboxReaderLink(req.requesterId, req.requesterName || 'The borrower')} says ${book} has been returned. Confirm after you have the physical book.`
+          : `You asked ${inboxReaderLink(req.ownerId, req.ownerName || 'the owner')} to confirm the return of ${book}.`;
         const actions = isOwner && req.status === 'pending' ? `<button data-action="mark-returned" data-id="${esc(req.bookId)}" class="bg-ink-600/10 text-ink-700 hover:bg-ink-600/20 px-3 py-1.5 rounded-lg text-xs font-semibold">Confirm returned</button>` : '';
         inboxBody.insertAdjacentHTML('beforeend', inboxCard('handshake', 'Return handoff', body, actions, req.status, req.confirmedAt || req.createdAt));
         return;
@@ -3225,16 +3401,16 @@
             ? `<button data-action="cancel-reminder" data-id="${esc(req.id)}" class="text-rust-600 bg-rust-600/10 hover:bg-rust-600/20 px-3 py-1.5 rounded-lg text-xs font-semibold">Cancel reminder</button>`
             : '';
         const body = req.requesterId === currentUser.uid
-          ? `<span class="text-rust-600 font-semibold">${esc(req.ownerName || 'The owner')}</span> reminded you to return "${esc(req.title)}".`
-          : `Reminder sent to <span class="text-rust-600 font-semibold">${esc(req.requesterName || 'the borrower')}</span> for "${esc(req.title)}".`;
+          ? `${inboxReaderLink(req.ownerId, req.ownerName || 'The owner')} reminded you to return ${inboxBookLink(req)}.`
+          : `Reminder sent to ${inboxReaderLink(req.requesterId, req.requesterName || 'the borrower')} for ${inboxBookLink(req)}.`;
         inboxBody.insertAdjacentHTML('beforeend', inboxCard('mail', 'Return reminder', body, actions, req.status, req.createdAt));
         return;
       }
 
       if (req.type === 'wishlist-match') {
         const body = req.requesterId === currentUser.uid
-          ? `<span class="text-rust-600 font-semibold">${esc(req.ownerName || 'A friend')}</span> added "${esc(req.title)}" to their shelf.`
-          : `Your new book "${esc(req.title)}" matched ${esc(req.requesterName || 'a friend')}'s wishlist.`;
+          ? `${inboxReaderLink(req.ownerId, req.ownerName || 'A friend')} added ${inboxBookLink(req)} to their shelf.`
+          : `Your new book ${inboxBookLink(req)} matched ${inboxReaderLink(req.requesterId, req.requesterName || 'a friend')}'s saved books.`;
         const actions = req.requesterId === currentUser.uid
           ? `<button data-action="view-shelf" data-uid="${esc(req.ownerId)}" data-name="${esc(req.ownerName || 'Friend')}" class="bg-ink-600/10 text-ink-700 hover:bg-ink-600/20 px-3 py-1.5 rounded-lg text-xs font-semibold">View shelf</button>`
           : '';
@@ -3252,14 +3428,14 @@
         const actions = req.status === 'pending' ? `
           <button data-action="approve-borrow" data-id="${esc(req.id)}" data-book="${esc(req.bookId || '')}" class="bg-ink-600/10 text-ink-700 hover:bg-ink-600/20 p-2 rounded-lg" title="Approve">${icon('check','w-4 h-4')}</button>
           <button data-action="deny-borrow" data-id="${esc(req.id)}" class="bg-rust-600/10 text-rust-600 hover:bg-rust-600/20 p-2 rounded-lg" title="Deny">${icon('x','w-4 h-4')}</button>` : '';
-        inboxBody.insertAdjacentHTML('beforeend', inboxCard('book', 'Borrow request', `<span class="text-rust-600 font-semibold">${esc(req.requesterName)}</span> requested to borrow "${esc(req.title)}".`, actions, req.status, req.createdAt));
+        inboxBody.insertAdjacentHTML('beforeend', inboxCard('book', 'Borrow request', `${inboxReaderLink(req.requesterId, req.requesterName)} requested to borrow ${inboxBookLink(req)}.`, actions, req.status, req.createdAt));
       } else {
         const owner = req.ownerName || 'The owner';
         const body = req.status === 'pending'
-          ? `Your request for "${esc(req.title)}" is waiting for <span class="text-rust-600 font-semibold">${esc(owner)}</span>.`
+          ? `Your request for ${inboxBookLink(req)} is waiting for ${inboxReaderLink(req.ownerId, owner)}.`
           : req.denialReason === 'book-unavailable'
-            ? `"${esc(req.title)}" is currently with another reader. You can try again when it is returned.`
-          : `<span class="text-rust-600 font-semibold">${esc(owner)}</span> marked your request for "${esc(req.title)}" as ${esc(req.status)}.`;
+            ? `${inboxBookLink(req)} is currently with another reader. You can try again when it is returned.`
+          : `${inboxReaderLink(req.ownerId, owner)} marked your request for ${inboxBookLink(req)} as ${esc(req.status)}.`;
         const updateIcon = req.status === 'pending' ? 'clock' : (req.status === 'approved' || req.status === 'returned' ? 'check' : (req.status === 'denied' || req.status === 'lost' || req.status === 'cancelled' ? 'x' : 'book'));
         inboxBody.insertAdjacentHTML('beforeend', inboxCard(updateIcon, 'Borrow update', body, '', req.status, req.createdAt));
       }
@@ -3278,6 +3454,10 @@
   });
   ['friend-shelf-status-filter', 'friend-shelf-genre-filter'].forEach(id => {
     document.getElementById(id).addEventListener('change', renderFriendShelfBooks);
+  });
+  document.getElementById('my-shelf-search').addEventListener('input', renderFilteredOwnShelf);
+  ['my-shelf-status-filter', 'my-shelf-genre-filter', 'my-shelf-sort'].forEach(id => {
+    document.getElementById(id).addEventListener('change', renderFilteredOwnShelf);
   });
   document.getElementById('my-shelf-load-more').addEventListener('click', () => fetchMyBooks(true));
   document.getElementById('friend-shelf-load-more').addEventListener('click', loadMoreFriendShelf);
@@ -3346,9 +3526,12 @@
       case 'borrow': return sendBorrowRequest(d.id, d.title, d.owner);
       case 'add-friend': return sendFriendRequest(d.owner, d.name);
       case 'view-shelf': closeReaderProfileModal(); return viewFriendLibrary(d.uid, d.name);
+      case 'open-inbox-book': return openInboxBook(d.id, d.owner, d.name, d.title);
       case 'back-to-friends': return switchTab('friends');
       case 'view-history': return switchTab('history');
       case 'back-to-library': return switchTab('library');
+      case 'back-to-shelf': return switchTab('shelf');
+      case 'open-add-book': return switchTab('add');
       case 'unfriend': return unfriend(d.uid, d.name);
       case 'cancel-request': return cancelSentRequest(d.id, d.name);
       case 'accept-friend': return respondFriendRequest(d.id, 'accepted');
@@ -3364,7 +3547,7 @@
       case 'search-book': switchTab('search'); searchCache.clear(); document.getElementById('global-search-input').value = d.query || ''; return performGlobalSearch();
       case 'go-search': switchTab('search'); return document.getElementById('global-search-input').focus();
       case 'delete-account': return deleteAccount();
-      case 'view-my-shelf': return switchTab('library');
+      case 'view-my-shelf': return switchTab('shelf');
       case 'edit-profile-introduction': return openReaderProfile('self', true);
       case 'manage-circles': return manageCircles();
       case 'join-circle': return changeCircle('join-circle', d.id);
@@ -3382,16 +3565,13 @@
       case 'open-reader-profile': return openReaderProfile(d.uid);
       case 'close-reader-profile': return closeReaderProfileModal();
       case 'onboarding-profile': return openReaderProfile('self', true);
-      case 'onboarding-add-book': switchTab('add'); return setTimeout(() => document.getElementById('title')?.focus(), 0);
+      case 'onboarding-add-book': switchTab('add'); return setTimeout(() => document.getElementById('isbn')?.focus(), 0);
+      case 'onboarding-join-circle': return openReaderProfile('self').then(() => manageCircles());
       case 'onboarding-find-friends': switchTab('search'); return setTimeout(() => document.getElementById('global-search-input')?.focus(), 0);
-      case 'show-series-more': {
-        const hiddenRows = [...(btn.closest('details')?.querySelectorAll('[data-series-row].hidden') || [])];
-        hiddenRows.slice(0, 10).forEach(row => row.classList.remove('hidden'));
-        const remaining = hiddenRows.length - Math.min(10, hiddenRows.length);
-        if (remaining > 0) btn.textContent = `Show ${Math.min(10, remaining)} more`;
-        else btn.parentElement?.remove();
-        return;
-      }
+      case 'onboarding-borrow-book': switchTab('search'); document.getElementById('search-status-filter').value = 'Available'; return setTimeout(() => document.getElementById('global-search-input')?.focus(), 0);
+      case 'onboarding-lend-book': switchTab('shelf'); document.getElementById('my-shelf-status-filter').value = 'Available'; renderFilteredOwnShelf(); return setTimeout(() => document.getElementById('my-shelf-search')?.focus(), 0);
+      case 'series-prev': return scrollSeriesCarousel(d.carousel, -1);
+      case 'series-next': return scrollSeriesCarousel(d.carousel, 1);
     }
   }
 
@@ -3479,12 +3659,13 @@
     for (const name of fields) {
       const input = document.getElementById(prefix + name);
       const photoSelected = name === 'coverUrl' && (prefix ? editCoverFile : inlineCoverFile);
-      if (input && !input.value.trim() && metadata[name] && !photoSelected) { input.value = metadata[name]; input.dispatchEvent(new Event('input', { bubbles: true })); filled++; }
+      const hasUsefulMetadata = !BookTools.catalogFieldNeedsValue(name, metadata[name]);
+      if (input && BookTools.catalogFieldNeedsValue(name, input.value) && hasUsefulMetadata && !photoSelected) { input.value = metadata[name]; input.dispatchEvent(new Event('input', { bubbles: true })); filled++; }
     }
     const genre = document.getElementById(prefix + 'genre');
     const subjects = (metadata.subjects || []).join(' ').toLowerCase();
     const genres = [['Sci-Fi & Fantasy', /fantasy|science fiction/], ['Mystery & Thriller', /mystery|detective|thriller/], ['Biography & Memoir', /biograph|memoir/], ['Poetry', /poetry|poems/], ['History', /history/], ['Non-Fiction', /non.?fiction/], ['Fiction', /fiction/]];
-    if (!genre.value) {
+    if (BookTools.catalogFieldNeedsValue('genre', genre.value)) {
       const match = genres.find(([, pattern]) => pattern.test(subjects));
       if (match) { genre.value = match[0]; filled++; }
     }
@@ -3505,7 +3686,7 @@
         const metadata = await lookupISBNMetadata(isbn);
         if (currentUser?.uid !== userId || BookTools.validISBN(input.value) !== isbn || (prefix && document.getElementById('edit-id').value !== editId)) return false;
         const filled = fillCatalogFields(metadata, prefix);
-        toast(filled ? 'Missing details filled. Check the title, series, number and genre before saving.' : metadata.title ? 'Existing details kept. Clear a field before looking up a replacement.' : 'No catalog match. You can still type details or use a cover photo.', filled ? 'success' : 'info');
+        toast(filled ? 'Book details filled. Check the title, series, number and genre before saving.' : metadata.title ? 'Existing details kept. Clear a field before looking up a replacement.' : 'No catalog match. You can still type details or use a cover photo.', filled ? 'success' : 'info');
         return true;
       } catch (error) {
         toast(error.message, 'error');
@@ -3592,6 +3773,7 @@
   // --- 9. BARCODE SCANNER ---
   let html5QrcodeScanner = null;
   let scanInProgress = false;
+  let scannerPrefix = '';
   async function stopScanner() {
     if (!html5QrcodeScanner) return;
     try { await html5QrcodeScanner.stop(); } catch (err) { console.warn('Scanner stop failed', err); }
@@ -3599,9 +3781,10 @@
     html5QrcodeScanner = null;
   }
 
-  document.getElementById('start-scan-btn').addEventListener('click', async () => {
+  async function startISBNScanner(prefix = '') {
     if (scanInProgress) return;
     await stopScanner();
+    scannerPrefix = prefix;
     document.getElementById('scanner-modal').classList.remove('hidden');
     document.getElementById('scan-status').textContent = 'Point the ISBN barcode at the guide.';
     html5QrcodeScanner = new Html5Qrcode("reader");
@@ -3622,33 +3805,38 @@
       const isbn = BookTools.validISBN(String(decodedText || ''));
       if (!isbn) { document.getElementById('scan-status').textContent = 'This is not an ISBN. Aim at the barcode beginning 978 or 979.'; return; }
       scanInProgress = true;
+      const targetPrefix = scannerPrefix;
       await stopScanner();
       document.getElementById('scan-status').textContent = 'Looking up book…';
       try {
-        document.getElementById('isbn').value = isbn;
-        await fillFromISBN();
+        document.getElementById(targetPrefix + 'isbn').value = isbn;
+        await fillFromISBN(targetPrefix);
       } catch (err) {
         console.error('Book lookup failed', err);
-        document.getElementById('isbn').value = isbn;
-        toast('ISBN scanned, but the book lookup failed. You can still add it manually.', 'info');
+        document.getElementById(targetPrefix + 'isbn').value = isbn;
+        toast('ISBN scanned, but the book lookup failed. You can still save it and enter details manually.', 'info');
       }
       document.getElementById('scanner-modal').classList.add('hidden');
       scanInProgress = false;
+      scannerPrefix = '';
       }, () => {});
     } catch (err) {
       console.error('Scanner start failed', err);
       document.getElementById('scan-status').textContent = 'Camera could not start. Check camera permission and try again.';
       toast('Could not start the ISBN scanner. Check camera permission.', 'error');
     }
-  });
+  }
+  document.getElementById('start-scan-btn').addEventListener('click', () => startISBNScanner());
+  document.getElementById('edit-start-scan-btn').addEventListener('click', () => startISBNScanner('edit-'));
   document.getElementById('close-scan-btn').addEventListener('click', async () => {
     await stopScanner();
     scanInProgress = false;
+    scannerPrefix = '';
     document.getElementById('scanner-modal').classList.add('hidden');
   });
 
   // The signed-out page makes no database reads. That keeps casual visits free.
 </script>
-<script src="assets/book-form-layout.js?v=20260910-isbn-cover-2"></script>
+<script src="assets/book-form-layout.js?v=20260912-series-isbn-1"></script>
 </body>
 </html>
