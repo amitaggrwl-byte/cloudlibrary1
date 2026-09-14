@@ -206,6 +206,11 @@ _No unreleased changes._
 
 ### Deployment
 
+- Published commit `930b0cf` to GitHub `main`, Firebase production Hosting, and
+  the `family-beta` channel, then verified both hosted pages served the new
+  mobile-field, account-draft, and wrapped-title assets. The beta expires
+  14 October 2026; Functions, database rules, indexes, and Storage rules were
+  unchanged and were not redeployed.
 - Released the complete tested project to Firebase production Hosting, all
   Functions, Firestore rules and indexes, and Storage rules for project
   `cloudlibrary-7b9ac`.
