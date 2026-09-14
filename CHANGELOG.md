@@ -58,6 +58,28 @@ _No unreleased changes._
 
 ### Changed
 
+- Refined the responsive login page with “The book you want may already be with
+  friends nearby,” the new CloudLibrary brand lines, and the existing no-ads and
+  privacy promise retained as supporting context. The concise borrowing message
+  now replaces the longer new-versus-returning-reader explanation.
+- Added a space-efficient brand signature beneath the application wordmark and
+  a small edit affordance to the existing reader-profile ribbon.
+- Fixed ticker stories disappearing on smaller screens by suppressing the long
+  category label across phone widths and allowing the story text to wrap across
+  three compact lines.
+- Clarified that global search covers books, readers, and circles, and labelled
+  availability and genre as book-specific filters.
+- Distinguished ISBN catalogue no-match, timeout, and connection failures, with
+  next-step guidance that preserves manual entry and retry paths. Cover-text
+  catalogue searches now identify timeouts separately as well.
+- Prevented successful ISBN scans from selecting a form textbox or triggering
+  mobile browser zoom while preserving the automatic move to Check details.
+- Standardized editable inputs, text areas, and dropdowns at a mobile-safe text
+  size across phone orientations, without changing buttons or desktop controls.
+- Moved unfinished-book draft restoration behind sign-in and scoped drafts to
+  each reader, preventing login-page notices and cross-account form carryover.
+- Allowed complete book titles and author names to wrap on lending cards, and
+  complete saved-book titles to wrap without colliding with their actions.
 - Compressed the unfinished new-reader checklist into lightly tinted action
   cards and moved finished tasks into a single collapsed, reviewable summary so
   completed setup no longer pushes useful Home content down the page.

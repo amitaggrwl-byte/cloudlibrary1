@@ -95,7 +95,7 @@
     setStep(3);
   };
   finalBack.onclick = () => setStep(2);
-  document.addEventListener('cloudlibrary:isbn-success', () => setStep(2));
+  document.addEventListener('cloudlibrary:isbn-success', event => setStep(2, event.detail?.focus !== false));
   setStep(1, false);
 
   const addPanel = get('admin-panel');
@@ -173,7 +173,7 @@
   form.addEventListener('invalid', event => event.target.closest('details')?.setAttribute('open', ''), true);
   form.addEventListener('reset', () => setTimeout(() => {
     setStep(1, false);
-    get('isbn').focus();
+    if (!get('view-add').classList.contains('hidden')) get('isbn').focus();
     get('publishedYear').setCustomValidity('');
   }, 0));
 })();

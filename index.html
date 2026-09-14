@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/app.css?v=20260912-series-isbn-1">
+<link rel="stylesheet" href="/assets/app.css?v=20260914-mobile-fields-1">
 
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script src="assets/book-tools.js?v=20260912-series-isbn-1"></script>
@@ -74,8 +74,11 @@
   .attention-item { display: grid; grid-template-columns: 2rem minmax(0,1fr) 5.5rem; height: 5.5rem; }
   .attention-action { width: 5.5rem; background: #f7ecc9; border-color: #e6c765; color: #1f342c; }
   .attention-action:hover { background: #e6c765; }
-  @media (max-width: 420px) {
+  @media (max-width: 640px) {
     .ticker-item > .font-mono:first-child { display: none; }
+    #cloud-ticker-content { min-height: 3.25rem; }
+    .ticker-item { max-height: 3.25rem; overflow: hidden; text-overflow: clip; white-space: normal; }
+    .ticker-item button { min-height: 0; }
   }
 
   ::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -176,20 +179,20 @@
 
     <div class="relative z-10 animate-fade-up">
       <div class="flex items-center gap-3 mb-8"><img src="/assets/brand/cloudlibrary-mark.svg" alt="" class="brand-mark" aria-hidden="true"><span class="brand-wordmark text-2xl">Cloud<span class="brand-library">Library</span></span></div>
-      <p class="font-mono text-xs uppercase tracking-[0.25em] text-ink-300 mb-6">A shared library for real-world friends</p>
-      <h1 class="font-display text-5xl lg:text-6xl leading-[1.05] max-w-md">The next great book may already be nearby.</h1>
-      <p class="mt-5 text-ink-300 max-w-sm text-[15px] leading-relaxed">Build a shelf, discover readers you know, and keep good books moving.</p>
+      <p class="font-mono text-xs uppercase tracking-[0.25em] text-ink-300 mb-6">Est. by readers, kept by friends</p>
+      <h1 class="max-w-[21rem] font-display text-4xl leading-[1.05] lg:max-w-lg lg:text-6xl">The book you want may already be with friends nearby.</h1>
+      <p class="mt-5 max-w-sm text-[15px] italic leading-relaxed text-ink-300">Every book on this network is for loan from someone who loves it.</p>
     </div>
 
     <div class="relative z-10 grid grid-cols-3 gap-3 mt-12 border-t border-ink-700 pt-8 max-w-md"><div class="h-16 rounded-sm bg-rust-500"></div><div class="h-24 rounded-sm bg-gold-500 -mt-8"></div><div class="h-20 rounded-sm bg-ink-500 -mt-4"></div></div>
   </div>
 
   <div class="login-form-pane relative flex items-center justify-center p-6 md:p-10">
-    <div class="md:hidden absolute inset-x-0 top-0 h-52 bg-ink-950 overflow-hidden"><div class="relative z-10 px-7 pt-7 text-paper"><div class="flex items-center gap-3"><img src="/assets/brand/cloudlibrary-mark.svg" alt="" class="brand-mark" aria-hidden="true"><span class="brand-wordmark text-2xl">Cloud<span class="brand-library">Library</span></span></div><p class="mt-3 text-sm font-medium text-ink-200">Share books with friends nearby.</p></div><div class="absolute bottom-0 left-7 right-7 flex items-end gap-2 h-20 opacity-90"><span class="h-14 w-8 rounded-t-sm bg-rust-500"></span><span class="h-20 w-9 rounded-t-sm bg-gold-500"></span><span class="h-16 w-8 rounded-t-sm bg-ink-500"></span><span class="h-12 w-7 rounded-t-sm bg-rust-300"></span><span class="h-16 w-9 rounded-t-sm bg-paper/80"></span><span class="h-14 w-8 rounded-t-sm bg-gold-300"></span></div></div>
+    <div class="md:hidden absolute inset-x-0 top-0 h-52 bg-ink-950 overflow-hidden"><div class="relative z-10 px-7 pt-7 text-paper"><div class="flex items-center gap-3"><img src="/assets/brand/cloudlibrary-mark.svg" alt="" class="brand-mark" aria-hidden="true"><span class="brand-wordmark text-2xl">Cloud<span class="brand-library">Library</span></span></div><p class="mt-3 max-w-[17rem] font-display text-base leading-tight text-paper">The book you want may already be with friends nearby.</p><p class="mt-1.5 font-mono text-[10px] uppercase tracking-widest text-ink-300">Est. by readers, kept by friends</p></div><div class="absolute bottom-0 left-7 right-7 flex h-20 items-end gap-2 opacity-25"><span class="h-14 w-8 rounded-t-sm bg-rust-500"></span><span class="h-20 w-9 rounded-t-sm bg-gold-500"></span><span class="h-16 w-8 rounded-t-sm bg-ink-500"></span><span class="h-12 w-7 rounded-t-sm bg-rust-300"></span><span class="h-16 w-9 rounded-t-sm bg-paper/80"></span><span class="h-14 w-8 rounded-t-sm bg-gold-300"></span></div></div>
     <div class="login-card relative z-10 mt-32 md:mt-0 w-full max-w-sm bg-white/95 md:-ml-10 md:bg-white p-8 rounded-2xl border border-ink-200 shadow-2xl shadow-ink-950/10 animate-fade-up">
       <div class="hidden md:flex items-center gap-3 mb-6"><img src="/assets/brand/cloudlibrary-mark.svg" alt="" class="brand-mark" aria-hidden="true"><div><p class="font-mono text-xs uppercase tracking-widest text-rust-600">CloudLibrary</p><p class="text-sm text-ink-500 mt-1">A library between friends</p></div></div>
       <h2 id="login-title" class="font-display text-3xl text-ink-950 mb-2">Open your shelf.</h2>
-      <p id="login-copy" class="text-ink-500 text-sm mb-8 leading-relaxed">New readers can make a shelf in a minute. Returning readers pick up where they left off.</p>
+      <p id="login-copy" class="text-ink-500 text-sm mb-8 leading-relaxed">Some books are better borrowed than bought.</p>
       <button onclick="signIn(this)" class="w-full flex items-center justify-center gap-3 bg-ink-950 hover:bg-ink-900 text-paper font-semibold py-3.5 px-4 rounded-xl transition-colors">
         <svg viewBox="0 0 48 48" class="w-5 h-5"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59A14.5 14.5 0 0 1 9.5 24c0-1.59.27-3.13.76-4.59l-7.98-6.19A23.94 23.94 0 0 0 0 24c0 3.87.92 7.53 2.56 10.78z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.46-9.9l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
         Continue with Google
@@ -201,7 +204,10 @@
         </select>
         <p class="mt-2 text-xs leading-relaxed text-ink-500">Demo mode uses local Firebase emulators only.</p>
       </div>
-      <p class="text-[13px] text-ink-500 mt-6 text-center leading-relaxed">No ads. No public contact details. Just books shared with people you know.</p>
+      <div class="mt-6 text-center text-ink-500">
+        <p class="text-[13px] italic leading-relaxed md:hidden">Every book on this network is for loan from someone who loves it.</p>
+        <p class="mt-2 text-[12px] leading-relaxed">No ads. No public contact details. Just books shared with people you know.</p>
+      </div>
     </div>
   </div>
 </div>
@@ -232,7 +238,7 @@
     <p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-1">Help</p>
     <h2 class="font-display text-2xl text-ink-950">Need a hand?</h2>
     <details class="mt-3 text-sm border border-ink-200 rounded-lg p-3"><summary class="cursor-pointer font-semibold">Administration</summary><p class="mt-2">Administrators use the Admin tab to answer feedback and manage circles. Feedback starts with Awaiting reply; choose Answered, Resolved or All feedback to find other items. Previous and Next load ten items per page. The text filter searches the current page; status and circle-category filters search the full list. Reply drafts stay in place during page changes in this session. Circle actions keep your filters and open sections. Refresh a list to see recent changes. Community health has a separate Refresh button. Maintenance can rebuild book search, rebuild reader and circle search, or recount totals. Each repair shows progress and its last completed run; normal edits update search automatically.</p></details>
-    <details class="mt-3 text-sm border border-ink-200 rounded-lg p-3"><summary class="cursor-pointer font-semibold">Scan an ISBN or find missing details</summary><ol class="mt-2 list-decimal pl-5 space-y-2"><li>ISBN is the first field in Add and Edit because it is the quickest way to identify a book. Scan the barcode or enter the 10/13-digit number, then choose Find details.</li><li>Title, author, cover, year, genre and available series details fill empty fields. Catalogs do not always know the series or its book number; check these yourself.</li><li>Your existing text and chosen cover photo are kept. Clear a field first to replace it from the catalog.</li><li>Use the single Cover photo box to upload from your device or paste a secure image URL.</li><li>For many books, scan, review and save each copy, or use the list and series helper for a whole set.</li></ol></details>
+    <details class="mt-3 text-sm border border-ink-200 rounded-lg p-3"><summary class="cursor-pointer font-semibold">Scan an ISBN or find missing details</summary><ol class="mt-2 list-decimal pl-5 space-y-2"><li>ISBN is the first field in Add and Edit because it is the quickest way to identify a book. Scan the barcode or enter the 10/13-digit number, then choose Find details.</li><li>Title, author, cover, year, genre and available series details fill empty fields. Catalogs do not always know the series or its book number; check these yourself.</li><li>If no book matches, choose <strong>Enter or check details</strong> to add it manually, or replace the ISBN and try another book. If the request times out, keep the ISBN and retry.</li><li>Your existing text and chosen cover photo are kept. Clear a field first to replace it from the catalog.</li><li>Use the single Cover photo box to upload from your device or paste a secure image URL.</li><li>For many books, scan, review and save each copy, or use the list and series helper for a whole set.</li></ol></details>
     <details class="mt-2 text-sm border border-ink-200 rounded-lg p-3"><summary class="cursor-pointer font-semibold">Find a book from its cover photo</summary><ol class="mt-2 list-decimal pl-5 space-y-2"><li>Take or choose a clear, straight photo of the front cover.</li><li>Open Find details from a cover photo and select Read cover text. The optional reader downloads when first used and processes the photo on your device.</li><li>Correct any misread words. Keep the title and author, removing slogans or award labels.</li><li>Select Find matching books. These words go to Google Books or Open Library to look for up to five matches.</li><li>Choose the correct book, check the filled fields, and save. Decorative lettering may not be recognised; ISBN lookup is usually more dependable.</li></ol></details>
     <details class="mt-2 text-sm border border-ink-200 rounded-lg p-3"><summary class="cursor-pointer font-semibold">Search by series and book number</summary><p class="mt-2">Try Magic Tree House 10 or Magic Tree House 10th book. The requested number appears first when found; other matching books are labelled as alternatives. Small spelling mistakes are tolerated, but an unrelated title will not match. Load more results continues through further batches. If nothing appears, check the spelling, try fewer words, or clear the genre and availability filters. Saved edits update search automatically after the search index catches up; run Search again to refresh results.</p></details>
     <div class="mt-4 space-y-2 text-sm text-ink-600 leading-relaxed"><details open class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">About CloudLibrary</summary><p class="mt-2">A small, real-life book-sharing community created by Amit Agarwal. Readers discover books, connect with people they know, and keep lending simple.</p></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Add one book</summary><ol class="mt-2 space-y-1 list-decimal pl-5"><li>Enter a title and author.</li><li>Optionally add series details, a rating, or a note.</li><li>Use ISBN Scan when the barcode is clear, then check the result before saving.</li><li>A cover photo is compressed on your device before upload. Camera photos up to 12 MB are accepted; the compact cover is usually about 300 KB.</li></ol></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Add a list or a series</summary><ol class="mt-2 space-y-1 list-decimal pl-5"><li>Build a review list, with one book per line: <span class="font-mono text-xs">Book title | Author</span>.</li><li>For a series, use <span class="font-mono text-xs">Series | # | Book title | Author</span>, or enter its name, author, and number range in the Series helper.</li><li><strong>Add series to list</strong> only creates editable entries. Check or rename each placeholder title.</li><li><strong>Add reviewed books to my shelf</strong> is the only button that saves books. You can add up to 100 at once.</li></ol></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Borrowing a book</summary><p class="mt-2">Only confirmed friends can lend to one another. Readers can hold up to three active books, keep up to five pending requests, and ask at most two friends for the same title at once. A loan is due after 14 days.</p></details><details class="mt-2 text-sm border border-ink-200 rounded-lg p-3"><summary class="cursor-pointer font-semibold">Returning a book</summary><p class="mt-2">The owner may send a reminder. Once the physical book is back with the owner, the borrower selects <strong>Request return</strong> and the owner selects <strong>Confirm returned</strong>. The score uses the borrower's request time, so a delayed owner confirmation cannot create a late penalty.</p></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Saved books</summary><p class="mt-2">Use <strong>Save</strong> on a book in Search or a friend's shelf. Saved books remain on My Library and open Search again when selected.</p></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Reader score and ledger</summary><ul class="mt-2 space-y-1 list-disc pl-5"><li>Everyone starts at 3.0.</li><li>Each listed book adds 0.15, up to 1.5 points.</li><li>An on-time return after 48 hours adds 0.5. Every fifth consecutive qualifying return adds another 0.5.</li><li>A late return loses 0.5; more than 30 days late loses 1.0; a lost book loses 2.0.</li><li>A return within the first 48 hours records a 0.0 ledger entry and does not build a streak.</li><li>Scores stay between 0 and 10. Friends, messages, reminders and declined requests do not affect them.</li></ul></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Circles</summary><p class="mt-2">Circles are approved groups such as a school, grade, locality, club, genre, or fan group. Search for a circle name to discover readers who have joined it. Open Profile, choose Edit introduction, and use the small cross on a circle to remove it. Administrators create and archive circles.</p></details><details class="rounded-lg border border-ink-200 bg-white/50 px-3 py-2"><summary class="cursor-pointer font-semibold text-ink-800">Privacy and feedback</summary><p class="mt-2">Email addresses are never shown. Profiles display only library-facing details. Send a bug, question, or idea below; administrator replies arrive in Inbox.</p></details></div>
@@ -245,7 +251,7 @@
   <!-- Navigation Bar -->
   <nav aria-label="CloudLibrary navigation and account" class="app-navigation bg-white p-3 sm:p-4 rounded-xl border border-ink-200 shadow-sm">
     <div class="nav-account-row flex items-center justify-between gap-3">
-      <button type="button" onclick="goHome(this)" title="Go to Home" aria-label="CloudLibrary, go to Home" class="flex min-h-11 shrink-0 items-center gap-2.5 rounded-lg text-left"><img id="brand-mark" src="/assets/brand/cloudlibrary-mark.svg" alt="" class="brand-mark shrink-0" aria-hidden="true"><span class="brand-wordmark block whitespace-nowrap pb-px text-[21px] sm:text-2xl text-ink-950">Cloud<span class="brand-library">Library</span></span></button>
+      <button type="button" onclick="goHome(this)" title="Go to Home" aria-label="CloudLibrary, go to Home" class="flex min-h-11 shrink-0 items-center gap-2.5 rounded-lg text-left"><img id="brand-mark" src="/assets/brand/cloudlibrary-mark.svg" alt="" class="brand-mark shrink-0" aria-hidden="true"><span class="min-w-0"><span class="brand-wordmark block whitespace-nowrap pb-px text-[21px] leading-none text-ink-950 sm:text-2xl">Cloud<span class="brand-library">Library</span></span><span id="brand-tagline" class="mt-0.5 block whitespace-nowrap font-mono text-[8px] uppercase leading-none tracking-wider text-ink-500 sm:text-[9px]">Est. by readers, kept by friends</span></span></button>
       <div id="nav-account-controls" class="flex min-w-0 flex-1 flex-wrap items-center justify-end gap-1 sm:gap-3">
         <button type="button" data-action="open-reader-profile" data-uid="self" id="user-info" title="View your reader profile" aria-label="View your reader profile" class="flex min-h-11 items-center gap-1.5 min-w-0 rounded-lg text-left text-ink-700 hover:text-ink-950"><img id="nav-profile-photo" alt="" referrerpolicy="no-referrer" class="hidden w-7 h-7 rounded-full object-cover border border-ink-200"><span id="nav-profile-fallback" class="w-7 h-7 rounded-full bg-ink-800 text-paper font-display text-xs flex items-center justify-center"></span><span id="nav-profile-name" class="max-w-[86px] sm:max-w-[130px] truncate text-xs sm:text-sm font-semibold"></span></button>
         <button type="button" id="copy-share-button" onclick="copyShareLink()" title="Copy share link" aria-label="Copy share link" class="header-utility"></button>
@@ -491,17 +497,17 @@
   <div id="view-search" class="hidden space-y-4">
     <div class="app-panel p-6 rounded-xl border border-ink-200 shadow-sm">
       <p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-1">Discover</p>
-      <h2 class="font-display text-xl text-ink-950 mb-4">Search libraries &amp; books</h2>
+      <h2 class="font-display text-xl text-ink-950 mb-4">Search books, readers &amp; circles</h2>
       <form id="global-search-form" class="grid grid-cols-2 gap-2 md:flex">
-        <input type="text" id="global-search-input" placeholder="Search by book, author, reader, shelf, or circle…" class="col-span-2 min-w-0 md:flex-1 bg-paper border border-ink-200 rounded-lg p-3 text-ink-950 focus:outline-none focus:ring-2 focus:ring-ink-700">
-        <select id="search-status-filter" class="min-w-0 bg-paper border border-ink-200 rounded-lg px-3 py-2 text-sm text-ink-700">
-          <option value="">Any availability</option>
+        <input type="text" id="global-search-input" placeholder="Title, author, series, reader, shelf, or circle…" class="col-span-2 min-w-0 md:flex-1 bg-paper border border-ink-200 rounded-lg p-3 text-ink-950 focus:outline-none focus:ring-2 focus:ring-ink-700">
+        <select id="search-status-filter" aria-label="Filter books by availability" class="min-w-0 bg-paper border border-ink-200 rounded-lg px-3 py-2 text-sm text-ink-700">
+          <option value="">Book availability</option>
           <option value="Available">Available</option>
           <option value="Reading">Reading</option>
           <option value="Lent Out">Lent out</option>
         </select>
-        <select id="search-genre-filter" class="min-w-0 bg-paper border border-ink-200 rounded-lg px-3 py-2 text-sm text-ink-700">
-          <option value="">Any genre</option>
+        <select id="search-genre-filter" aria-label="Filter books by genre" class="min-w-0 bg-paper border border-ink-200 rounded-lg px-3 py-2 text-sm text-ink-700">
+          <option value="">Book genre</option>
         </select>
         <button type="submit" class="col-span-2 md:col-auto bg-ink-950 hover:bg-ink-900 text-paper font-semibold py-3 px-6 rounded-lg transition-colors">Search</button>
       </form>
@@ -730,7 +736,7 @@
       const score = await loadUserRating(currentUser.uid);
       const booksListed = Math.max(Number(userProfile.bookCount || 0), Object.keys(myShelfBooksCache).length);
       const lentOutNow = activeLoansLoaded ? Object.keys(activeLoanBooksCache).length : 0;
-      panel.innerHTML = `<div class="flex items-center gap-2.5"><div class="shrink-0">${avatarHtml(userProfile, userProfile.libraryName, 'w-10 h-10')}</div><div class="min-w-0 flex-1"><p class="font-mono text-[10px] uppercase tracking-widest text-rust-600">Your reader profile</p><h2 class="truncate font-display text-base leading-tight text-ink-950 sm:text-lg"><button type="button" data-action="open-reader-profile" data-uid="self" title="Open your reader profile" class="max-w-full truncate text-left hover:underline">${esc(userProfile.libraryName)}</button></h2><p class="mt-0.5 text-xs text-ink-600"><span class="font-semibold text-[#8a6414]">${score.toFixed(1)}/10 score</span><span aria-hidden="true"> · </span>${booksListed} book${booksListed === 1 ? '' : 's'}<span aria-hidden="true"> · </span>${lentOutNow} lent now<span aria-hidden="true"> · </span>${confirmedFriends.length} friend${confirmedFriends.length === 1 ? '' : 's'}</p></div></div>`;
+      panel.innerHTML = `<div class="relative flex items-center gap-2.5"><div class="shrink-0">${avatarHtml(userProfile, userProfile.libraryName, 'w-10 h-10')}</div><div class="min-w-0 flex-1 pr-7"><p class="font-mono text-[10px] uppercase tracking-widest text-rust-600">Your reader profile</p><h2 class="truncate font-display text-base leading-tight text-ink-950 sm:text-lg"><button type="button" data-action="open-reader-profile" data-uid="self" title="Open your reader profile" class="max-w-full truncate text-left hover:underline">${esc(userProfile.libraryName)}</button></h2><p class="mt-0.5 text-xs text-ink-600"><span class="font-semibold text-[#8a6414]">${score.toFixed(1)}/10 score</span><span aria-hidden="true"> · </span>${booksListed} book${booksListed === 1 ? '' : 's'}<span aria-hidden="true"> · </span>${lentOutNow} lent now<span aria-hidden="true"> · </span>${confirmedFriends.length} friend${confirmedFriends.length === 1 ? '' : 's'}</p></div><button type="button" data-action="open-reader-profile" data-uid="self" title="Edit reader profile" aria-label="Edit reader profile" class="absolute right-0 top-0 inline-flex h-7 w-7 items-center justify-center rounded-md text-rust-600 hover:bg-rust-100">${icon('pencil', 'h-3.5 w-3.5')}</button></div>`;
       renderOnboarding();
     } catch (err) {
       console.warn('Could not load reader score', err);
@@ -1135,7 +1141,7 @@
   [['genre',GENRES,'Genre…'],['condition',CONDITIONS,'Condition…'],['edit-genre',GENRES,'Genre'],['edit-condition',CONDITIONS,'Condition'],['quick-genre',GENRES,'Genre…'],['quick-condition',CONDITIONS,'Condition…']].forEach(([id, values, ph]) => {
     fillOptions(document.getElementById(id), values, ph);
   });
-  fillOptions(document.getElementById('search-genre-filter'), GENRES, 'Any genre');
+  fillOptions(document.getElementById('search-genre-filter'), GENRES, 'Book genre');
   fillOptions(document.getElementById('friend-shelf-genre-filter'), GENRES, 'Any genre');
   fillOptions(document.getElementById('my-shelf-genre-filter'), GENRES, 'Any genre');
 
@@ -1154,15 +1160,28 @@
     });
   }
 
-  const BOOK_DRAFT_KEY = 'cloudlibrary-book-draft-v1';
+  const LEGACY_BOOK_DRAFT_KEY = 'cloudlibrary-book-draft-v1';
+  const BOOK_DRAFT_KEY_PREFIX = 'cloudlibrary-book-draft-v2';
   const BOOK_DRAFT_FIELDS = ['title', 'author', 'seriesName', 'seriesNumber', 'genre', 'condition', 'isbn', 'publishedYear', 'coverUrl', 'description', 'rating-add', 'status'];
+  const currentBookDraftKey = () => currentUser?.uid ? `${BOOK_DRAFT_KEY_PREFIX}:${currentUser.uid}` : '';
   function saveBookDraft() {
+    const key = currentBookDraftKey();
+    if (!key) return;
     const draft = Object.fromEntries(BOOK_DRAFT_FIELDS.map(id => [id, document.getElementById(id).value]));
-    localStorage.setItem(BOOK_DRAFT_KEY, JSON.stringify(draft));
+    localStorage.setItem(key, JSON.stringify(draft));
   }
   function restoreBookDraft() {
+    const form = document.getElementById('book-form');
+    form.reset();
+    inlineCoverFile = null;
+    addCoverUrl = '';
+    setCoverPreview('', '');
+    document.getElementById('cover-file-label').textContent = 'Take or add cover photo';
+    document.getElementById('clear-cover-photo').classList.add('hidden');
+    const key = currentBookDraftKey();
+    if (!key) return;
     try {
-      const draft = JSON.parse(localStorage.getItem(BOOK_DRAFT_KEY) || 'null');
+      const draft = JSON.parse(localStorage.getItem(key) || 'null');
       if (!draft || !Object.values(draft).some(Boolean)) return;
       BOOK_DRAFT_FIELDS.forEach(id => { if (draft[id] != null) document.getElementById(id).value = draft[id]; });
       if (['seriesName', 'seriesNumber', 'isbn', 'publishedYear', 'description'].some(id => draft[id])) {
@@ -1171,11 +1190,11 @@
       if (draft.coverUrl) setTimeout(() => setCoverPreview('', safeUrl(draft.coverUrl)), 0);
       setRating('add', Number(draft['rating-add']) || 0);
       toast('Your unfinished book entry was restored.', 'info');
-    } catch (err) { localStorage.removeItem(BOOK_DRAFT_KEY); }
+    } catch (err) { localStorage.removeItem(key); }
   }
   document.getElementById('book-form').addEventListener('input', saveBookDraft);
   document.getElementById('book-form').addEventListener('change', saveBookDraft);
-  restoreBookDraft();
+  localStorage.removeItem(LEGACY_BOOK_DRAFT_KEY);
 
   function starsRow(rating) {
     rating = Number(rating) || 0;
@@ -1789,6 +1808,7 @@
     else { navPhoto.classList.add('hidden'); navFallback.classList.remove('hidden'); }
     document.getElementById('app-content').classList.remove('hidden');
     switchTab('library', { historyMode: 'replace' });
+    restoreBookDraft();
     const circleSettings = await guard(() => lendingFunctions.httpsCallable('getCircleSettings')(), { context: 'Checking account role' });
     currentUserIsAdmin = circleSettings !== FAILED && Boolean(circleSettings.data?.isAdmin);
     await loadFriendsList();
@@ -1919,7 +1939,7 @@
     const borrowerHtml = book.borrowerId
       ? `<button type="button" data-action="open-reader-profile" data-uid="${esc(book.borrowerId)}" class="loan-party-link inline p-0 text-[11px] font-semibold ${overdue ? 'text-red-700' : 'text-rust-700'} hover:underline">to ${esc(borrower)}</button>`
       : `<span class="text-[11px] font-semibold ${overdue ? 'text-red-700' : 'text-rust-700'}">to ${esc(borrower)}</span>`;
-    return `<div class="flex shrink-0 flex-col items-end gap-0.5 text-right">${badge}<div class="flex max-w-full items-center gap-1 whitespace-nowrap">${borrowerHtml}${date}</div></div>`;
+    return `<div class="flex min-w-0 flex-wrap items-center gap-x-1 gap-y-0.5 text-left">${badge}<div class="flex min-w-0 flex-wrap items-center gap-1">${borrowerHtml}${date}</div></div>`;
   }
 
   function loanDetailsHtml(book, mode, widthClass = '') {
@@ -1947,13 +1967,13 @@
     return `
       <div data-book-id="${esc(book.id)}" class="book-card ${toneClass} app-panel rounded-lg border border-ink-200 p-2.5 shadow-sm">
         <div class="flex min-w-0 items-start gap-2.5">${bookCoverHtml(book)}<div class="min-w-0 flex-1">
-          <div class="book-card-heading flex items-start justify-between gap-2">
+          <div class="book-card-heading min-w-0">
             <div class="min-w-0">
-              <h3 class="truncate font-display text-sm leading-snug text-ink-950 sm:text-base" title="${esc(book.title)}">${esc(book.title)}</h3>
-              <p class="truncate text-xs text-ink-600" title="${esc(book.author)}">${esc(book.author)}</p>
+              <h3 class="break-words font-display text-sm leading-snug text-ink-950 sm:text-base" title="${esc(book.title)}">${esc(book.title)}</h3>
+              <p class="break-words text-xs leading-snug text-ink-600" title="${esc(book.author)}">${esc(book.author)}</p>
               ${book.seriesName ? `<p class="mt-0.5 text-xs font-semibold text-rust-700">${esc(book.seriesName)}${book.seriesNumber ? ` · Book ${esc(book.seriesNumber)}` : ''}</p>` : ''}
             </div>
-            ${mode === 'owner' && book.status === 'Lent Out' ? ownerLoanStatusHtml(book) : statusBadge(book.status, mode === 'borrower' ? 'Borrowed' : book.status)}
+            <div class="mt-1 min-w-0">${mode === 'owner' && book.status === 'Lent Out' ? ownerLoanStatusHtml(book) : statusBadge(book.status, mode === 'borrower' ? 'Borrowed' : book.status)}</div>
           </div>
           ${ownerLabel ? `<p class="text-xs text-rust-600 font-semibold mt-1">${ownerLabel}</p>` : ''}
           <div class="mt-1 flex flex-wrap gap-1">${bookMetaChips(book)}</div>
@@ -2538,7 +2558,7 @@
       const res = await guard(() => bookRef.set(book), { context: 'Adding a book', success: `"${fields.title}" added to your shelf.` });
       if (res === FAILED) return;
       e.target.reset();
-      localStorage.removeItem(BOOK_DRAFT_KEY);
+      localStorage.removeItem(currentBookDraftKey());
       inlineCoverFile = null;
       addCoverUrl = '';
       setCoverPreview('', '');
@@ -2744,7 +2764,7 @@
       const owner = book.ownerId
         ? `<button type="button" data-action="open-reader-profile" data-uid="${esc(book.ownerId)}" class="font-semibold text-rust-700 hover:underline">${esc(ownerName)}</button>`
         : `<span class="font-semibold text-rust-700">${esc(ownerName)}</span>`;
-      return `<div class="saved-book-card flex min-w-0 items-center gap-2 rounded-lg border border-ink-200 bg-paper/70 p-2">${cover}<div class="saved-book-details min-w-0 flex-1"><button data-action="search-book" data-query="${esc(book.title || '')}" title="${esc(book.title || 'Untitled book')}" class="inline-flex min-h-10 max-w-full items-center truncate whitespace-nowrap text-left font-display text-sm font-semibold text-ink-900 hover:text-rust-700">${esc(book.title || 'Untitled book')}</button><p class="truncate whitespace-nowrap text-xs text-ink-600">${esc(book.author || '')}${book.seriesName ? ` · ${esc(book.seriesName)}` : ''}</p><p class="truncate whitespace-nowrap text-[11px] text-ink-500">Saved from ${owner}</p></div><button data-action="delete-saved-book" data-id="${esc(book.id)}" class="saved-book-remove inline-flex min-h-10 shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-md px-1.5 text-[11px] font-semibold text-rust-700 hover:bg-rust-100" title="Remove saved book" aria-label="Remove ${esc(book.title || 'book')} from saved books">${icon('bookmark','w-3 h-3 fill-current')}<span>Remove</span></button></div>`;
+      return `<div class="saved-book-card flex min-w-0 items-center gap-2 rounded-lg border border-ink-200 bg-paper/70 p-2">${cover}<div class="saved-book-details min-w-0 flex-1"><button data-action="search-book" data-query="${esc(book.title || '')}" title="${esc(book.title || 'Untitled book')}" class="flex min-h-10 w-full max-w-full items-center whitespace-normal break-words text-left font-display text-sm font-semibold leading-snug text-ink-900 hover:text-rust-700">${esc(book.title || 'Untitled book')}</button><p class="truncate whitespace-nowrap text-xs text-ink-600">${esc(book.author || '')}${book.seriesName ? ` · ${esc(book.seriesName)}` : ''}</p><p class="truncate whitespace-nowrap text-[11px] text-ink-500">Saved from ${owner}</p></div><button data-action="delete-saved-book" data-id="${esc(book.id)}" class="saved-book-remove inline-flex min-h-10 shrink-0 items-center justify-center gap-1 whitespace-nowrap rounded-md px-1.5 text-[11px] font-semibold text-rust-700 hover:bg-rust-100" title="Remove saved book" aria-label="Remove ${esc(book.title || 'book')} from saved books">${icon('bookmark','w-3 h-3 fill-current')}<span>Remove</span></button></div>`;
     }).join('');
   }
   function fetchSavedBooks() {
@@ -3760,24 +3780,41 @@
   };
 
   const isbnCatalogCache = new Map();
+  function catalogRequestError(code, message) {
+    const error = new Error(message);
+    error.code = code;
+    return error;
+  }
   async function catalogJSON(url) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 10000);
     try {
       const response = await fetch(url, { signal: controller.signal });
-      if (!response.ok) throw new Error('Catalog unavailable');
+      if (response.status === 404) throw catalogRequestError('catalog-not-found', 'No matching catalogue record.');
+      if (!response.ok) throw catalogRequestError('catalog-unavailable', 'The book catalogue could not be reached.');
       return await response.json();
+    } catch (error) {
+      if (typeof error?.code === 'string' && error.code.startsWith('catalog-')) throw error;
+      if (error?.name === 'AbortError') throw catalogRequestError('catalog-timeout', 'The book catalogue took too long to respond. Please try again.');
+      throw catalogRequestError('catalog-unavailable', 'The book catalogue could not be reached. Check your connection and try again.');
     } finally { clearTimeout(timeout); }
   }
   async function lookupISBNMetadata(isbn) {
     if (isbnCatalogCache.has(isbn)) return isbnCatalogCache.get(isbn);
     let metadata = {};
     let reachedCatalog = false;
+    let sawNoMatch = false;
+    let timedOut = false;
     try {
       const data = await catalogJSON(`https://www.googleapis.com/books/v1/volumes?q=isbn:${encodeURIComponent(isbn)}&maxResults=1`);
       reachedCatalog = true;
       if (data.items?.[0]) metadata = BookTools.googleMetadata(data.items[0].volumeInfo);
-    } catch (error) { console.warn('Primary ISBN catalog unavailable'); }
+      else sawNoMatch = true;
+    } catch (error) {
+      sawNoMatch ||= error?.code === 'catalog-not-found';
+      timedOut ||= error?.code === 'catalog-timeout';
+      console.warn('Primary ISBN catalog unavailable', error?.code || 'catalog-unavailable');
+    }
     // The edition endpoint includes series information when contributed to the
     // catalogue. Missing series metadata is left for the reader to confirm.
     try {
@@ -3804,8 +3841,15 @@
         }));
         metadata.author = authors.filter(Boolean).join(', ');
       }
-    } catch (error) { console.warn('Secondary ISBN catalog unavailable'); }
-    if (!reachedCatalog) throw new Error('Book catalogs are unavailable. Try again shortly.');
+    } catch (error) {
+      sawNoMatch ||= error?.code === 'catalog-not-found';
+      timedOut ||= error?.code === 'catalog-timeout';
+      console.warn('Secondary ISBN catalog unavailable', error?.code || 'catalog-unavailable');
+    }
+    if (!reachedCatalog && !sawNoMatch) {
+      if (timedOut) throw catalogRequestError('catalog-timeout', 'The book catalogue took too long to respond. Please try again.');
+      throw catalogRequestError('catalog-unavailable', 'The book catalogue could not be reached. Check your connection and try again.');
+    }
     if (metadata.title) isbnCatalogCache.set(isbn, metadata);
     return metadata;
   }
@@ -3830,7 +3874,7 @@
     if (coverInput?.value) setCoverPreview(prefix, safeUrl(coverInput.value));
     return filled;
   }
-  async function fillFromISBN(prefix = '') {
+  async function fillFromISBN(prefix = '', options = {}) {
     const input = document.getElementById(prefix + 'isbn');
     const isbn = BookTools.validISBN(input.value);
     if (!isbn) { toast('Check the ISBN digits. Use the 10- or 13-digit number printed near the barcode.', 'info'); return; }
@@ -3845,9 +3889,12 @@
         const titleReady = !BookTools.catalogFieldNeedsValue('title', document.getElementById(prefix + 'title')?.value);
         const authorReady = !BookTools.catalogFieldNeedsValue('author', document.getElementById(prefix + 'author')?.value);
         if (!prefix && metadata.title && titleReady && authorReady) {
-          document.dispatchEvent(new CustomEvent('cloudlibrary:isbn-success'));
+          document.dispatchEvent(new CustomEvent('cloudlibrary:isbn-success', { detail: { focus: options.focusNext !== false } }));
         }
-        toast(filled ? 'Book details filled. Check the title, series, number and genre before saving.' : metadata.title ? 'Existing details kept. Clear a field before looking up a replacement.' : 'No catalog match. You can still type details or use a cover photo.', filled ? 'success' : 'info');
+        const noMatchMessage = prefix
+          ? 'No book matched this ISBN. Enter the missing details manually, or try a different ISBN.'
+          : 'No book matched this ISBN. Select Enter or check details to add it manually, or replace the ISBN and try another book.';
+        toast(filled ? 'Book details filled. Check the title, series, number and genre before saving.' : metadata.title ? 'Existing details kept. Clear a field before looking up a replacement.' : noMatchMessage, filled ? 'success' : 'info');
         return true;
       } catch (error) {
         toast(error.message, 'error');
@@ -3926,7 +3973,7 @@
           results.appendChild(choice);
         }
         if (!results.childElementCount) results.textContent = 'No match. Try just the title and author, or use ISBN lookup.';
-      } catch (error) { results.textContent = 'Catalog unavailable. Try again shortly or enter the details yourself.'; }
+      } catch (error) { results.textContent = error?.code === 'catalog-timeout' ? 'The book search took too long to respond. Please try again.' : 'The book catalogues could not be reached. Check your connection and try again.'; }
       finally { releaseActionFeedback(token); }
     });
   }
@@ -3970,8 +4017,11 @@
       await stopScanner();
       document.getElementById('scan-status').textContent = 'Looking up book…';
       try {
-        document.getElementById(targetPrefix + 'isbn').value = isbn;
-        await fillFromISBN(targetPrefix);
+        const targetInput = document.getElementById(targetPrefix + 'isbn');
+        targetInput.value = isbn;
+        targetInput.blur();
+        await fillFromISBN(targetPrefix, { focusNext: false });
+        targetInput.blur();
       } catch (err) {
         console.error('Book lookup failed', err);
         document.getElementById(targetPrefix + 'isbn').value = isbn;
@@ -3998,6 +4048,6 @@
 
   // The signed-out page makes no database reads. That keeps casual visits free.
 </script>
-<script src="assets/book-form-layout.js?v=20260912-series-isbn-1"></script>
+<script src="assets/book-form-layout.js?v=20260914-account-drafts-1"></script>
 </body>
 </html>

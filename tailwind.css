@@ -101,6 +101,22 @@
   }
 }
 
+/* Prevent mobile Safari from zooming when a reader enters or selects data. */
+@media (max-width: 899px) {
+  input:not([type]),
+  input[type="text"],
+  input[type="search"],
+  input[type="email"],
+  input[type="url"],
+  input[type="tel"],
+  input[type="password"],
+  input[type="number"],
+  textarea:not([readonly]):not([disabled]),
+  select:not([disabled]) {
+    font-size: 16px;
+  }
+}
+
 @media (min-width: 900px) {
   .shelf-toolbar {
     grid-template-columns: minmax(13rem, 1fr) repeat(3, minmax(0, 10rem));

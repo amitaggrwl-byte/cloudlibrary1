@@ -5,6 +5,7 @@ const fs = require('node:fs/promises');
 const path = require('node:path');
 const base = 'http://127.0.0.1:4174/?demo=1';
 const out = process.env.AUDIT_OUTPUT || '/tmp/cloudlibrary-ui-audit';
+const editableSelector = 'input:not([type]):not([readonly]):not([disabled]),input[type="text"]:not([readonly]):not([disabled]),input[type="search"]:not([readonly]):not([disabled]),input[type="email"]:not([readonly]):not([disabled]),input[type="url"]:not([readonly]):not([disabled]),input[type="tel"]:not([readonly]):not([disabled]),input[type="password"]:not([readonly]):not([disabled]),input[type="number"]:not([readonly]):not([disabled]),textarea:not([readonly]):not([disabled]),select:not([disabled])';
 (async()=>{
   await fs.mkdir(out,{recursive:true});
   const browser=await chromium.launch({headless:true,channel:'chrome'});
@@ -12,6 +13,11 @@ const out = process.env.AUDIT_OUTPUT || '/tmp/cloudlibrary-ui-audit';
   try {
     const context=await browser.newContext();
     const page=await context.newPage();
+    await page.addInitScript(() => {
+      const draft = JSON.stringify({description:'Saved for the signed-in reader'});
+      localStorage.setItem('cloudlibrary-book-draft-v1', draft);
+      localStorage.setItem('cloudlibrary-book-draft-v2:alex', draft);
+    });
     page.on('pageerror',error=>errors.push(error.message));
     await page.route('https://www.googleapis.com/books/v1/volumes?*',route=>route.fulfill({contentType:'application/json',body:JSON.stringify({items:[{volumeInfo:{title:'Scanned title',authors:['Scan Author'],imageLinks:{thumbnail:'https://example.com/scanned-cover.jpg'},publishedDate:'2018',categories:['Juvenile Fiction']}}]})}));
     await page.route('https://example.com/scanned-cover.jpg',route=>route.fulfill({contentType:'image/gif',body:Buffer.from('R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==','base64')}));
@@ -19,9 +25,17 @@ const out = process.env.AUDIT_OUTPUT || '/tmp/cloudlibrary-ui-audit';
     for(const [width,height] of [[1280,900],[390,844],[320,640],[844,390]]) {
       await page.setViewportSize({width,height});
       await page.goto(base);
+      assert.equal((await page.locator('#login-copy').textContent()).trim(),'Some books are better borrowed than bought.','Login copy should stay concise and reuse the approved message');
       assert.equal((await page.locator('#profile-modal button').textContent()).trim(),'Open CloudLibrary','First-profile completion should match the Home landing flow');
+      assert.equal(await page.getByText('Your unfinished book entry was restored.',{exact:true}).count(),0,'A book draft must not be announced before sign-in');
       await page.getByRole('button',{name:'Continue with Google'}).click();
       await page.locator('#app-content').waitFor({state:'visible',timeout:30000});
+      await page.getByText('Your unfinished book entry was restored.',{exact:true}).waitFor({state:'visible'});
+      assert.equal(await page.locator('#description').inputValue(),'Saved for the signed-in reader','Only the signed-in reader draft should be restored');
+      if(width<900) {
+        const undersized=await page.locator(editableSelector).evaluateAll(elements=>elements.filter(element=>Number.parseFloat(getComputedStyle(element).fontSize)<16).map(element=>element.id || element.getAttribute('aria-label') || element.tagName));
+        assert.deepEqual(undersized,[],`Editable controls below 16px at ${width}x${height}`);
+      }
       const viewNames = ['library','shelf','friends','search','inbox'];
       for(const name of viewNames) {
         const nav=page.locator(`#tab-${width<768?'mobile-':''}${name}`);
@@ -33,6 +47,8 @@ const out = process.env.AUDIT_OUTPUT || '/tmp/cloudlibrary-ui-audit';
         assert.ok(dimensions.scroll<=dimensions.width+1,`${name} overflows at ${width}`);
         if(name==='library') {
           await page.locator('#my-reader-score').waitFor({state:'visible'});
+          await page.getByRole('button',{name:'Edit reader profile',exact:true}).waitFor({state:'visible'});
+          assert.equal((await page.locator('#brand-tagline').textContent()).trim(),'Est. by readers, kept by friends','Header should retain the compact brand signature');
           assert.equal(await page.locator('#books-grid').isVisible(),false,'The complete shelf should not remain on Home');
           await page.locator('#onboarding-panel [data-onboarding-step="6"]').waitFor({state:'visible'});
           const onboardingTitles=await page.locator('#onboarding-panel [data-onboarding-title]').allTextContents();
@@ -71,6 +87,41 @@ const out = process.env.AUDIT_OUTPUT || '/tmp/cloudlibrary-ui-audit';
             const tickerSize=await page.locator('#cloud-ticker-card').evaluate(element=>({height:element.getBoundingClientRect().height,imageHeight:element.querySelector('img').getBoundingClientRect().height}));
             assert.ok(tickerSize.imageHeight<=32 && tickerSize.height<=76,'A ticker cover should stay compact');
           }
+          if(width<=390) {
+            await page.evaluate(()=>{document.getElementById('cloud-ticker-content').innerHTML=tickerItemHtml({type:'book-suggestion',title:'A Wrinkle in Time',coverUrl:'https://covers.openlibrary.org/b/olid/OL24381783M-M.jpg'});});
+            const mobileTicker=page.locator('#cloud-ticker-content');
+            await mobileTicker.getByRole('button',{name:'A Wrinkle in Time',exact:true}).waitFor({state:'visible'});
+            const tickerBounds=await mobileTicker.evaluate(element=>({contentWidth:element.getBoundingClientRect().width,itemWidth:element.firstElementChild.getBoundingClientRect().width,itemHeight:element.firstElementChild.getBoundingClientRect().height,itemScrollHeight:element.firstElementChild.scrollHeight}));
+            assert.ok(tickerBounds.itemWidth<=tickerBounds.contentWidth+1,'Mobile ticker story should remain within its content area');
+            assert.ok(tickerBounds.itemHeight<=52,'Mobile ticker story should stay within three compact lines');
+            assert.ok(tickerBounds.itemScrollHeight<=tickerBounds.itemHeight+1,'Mobile ticker story should not be clipped');
+          }
+          const longTitle='The Monk Who Sold His Ferrari: A Fable About Fulfilling Your Dreams and Reaching Your Destiny';
+          await page.evaluate(title=>{
+            const book={id:'long-title-layout-test',title,author:'Robin Sharma',status:'Lent Out',borrowerId:'bella',borrowerName:'BellaBooks',loanDueAt:new Date(Date.now()+86400000)};
+            document.getElementById('lent-out-panel').classList.remove('hidden');
+            document.getElementById('lent-out-books-grid').innerHTML=renderBookCard(book,ownBookActions(book),null,'owner');
+            window.__savedBooksBeforeLayoutTest=savedBooksCache;
+            savedBooksCache=[{id:'long-title-saved-test',bookId:'long-title-layout-test',title,author:'Robin Sharma',ownerId:'bella',ownerName:'BellaBooks'}];
+            renderSavedBooks();
+          },longTitle);
+          const lentTitle=page.locator('#lent-out-books-grid .book-card h3').first();
+          const lentTitleLayout=await lentTitle.evaluate(element=>({overflow:getComputedStyle(element).overflow,whiteSpace:getComputedStyle(element).whiteSpace,clientHeight:element.clientHeight,scrollHeight:element.scrollHeight,clientWidth:element.clientWidth,scrollWidth:element.scrollWidth}));
+          assert.equal(lentTitleLayout.overflow,'visible','Lent-book titles should not be clipped');
+          assert.equal(lentTitleLayout.whiteSpace,'normal','Lent-book titles should wrap');
+          assert.ok(lentTitleLayout.scrollHeight<=lentTitleLayout.clientHeight+1 && lentTitleLayout.scrollWidth<=lentTitleLayout.clientWidth+1,'A complete lent-book title should fit its card');
+          const savedTitle=page.locator('#saved-books-list .saved-book-card [data-action="search-book"]').first();
+          await savedTitle.evaluate((element,title)=>{element.textContent=title;},longTitle);
+          const savedTitleLayout=await savedTitle.evaluate(element=>({overflow:getComputedStyle(element).overflow,whiteSpace:getComputedStyle(element).whiteSpace,clientHeight:element.clientHeight,scrollHeight:element.scrollHeight,clientWidth:element.clientWidth,scrollWidth:element.scrollWidth}));
+          assert.equal(savedTitleLayout.overflow,'visible','Saved-book titles should not be clipped');
+          assert.equal(savedTitleLayout.whiteSpace,'normal','Saved-book titles should wrap');
+          assert.ok(savedTitleLayout.scrollHeight<=savedTitleLayout.clientHeight+1 && savedTitleLayout.scrollWidth<=savedTitleLayout.clientWidth+1,'A complete saved-book title should fit its card');
+          await page.evaluate(()=>{
+            renderLentOutBooks(Object.values(activeLoanBooksCache));
+            savedBooksCache=window.__savedBooksBeforeLayoutTest;
+            delete window.__savedBooksBeforeLayoutTest;
+            renderSavedBooks();
+          });
         }
         if(name==='shelf') {
           await page.getByRole('button',{name:'Add books',exact:true}).waitFor({state:'visible'});
@@ -88,6 +139,7 @@ const out = process.env.AUDIT_OUTPUT || '/tmp/cloudlibrary-ui-audit';
           await page.locator('#books-grid [data-book-id="alex-adventure"] button[data-action="edit-book"]').click();
           await page.locator('#edit-book-modal').waitFor({state:'visible'});
           await page.getByRole('button',{name:'Scan ISBN barcode'}).waitFor({state:'visible'});
+          assert.ok(Number.parseFloat(await page.locator('#edit-isbn').evaluate(element=>getComputedStyle(element).fontSize))>=(width<900?16:14),'Edit ISBN should use the intended viewport-safe text size');
           const editLayout=await page.locator('#edit-book-modal > div').evaluate(element=>({client:element.clientWidth,scroll:element.scrollWidth}));
           assert.ok(editLayout.scroll<=editLayout.client+1,`Edit ISBN controls overflow at ${width}`);
           await page.screenshot({path:path.join(out,`${width}-${height}-shelf-edit.png`)});
@@ -112,6 +164,7 @@ const out = process.env.AUDIT_OUTPUT || '/tmp/cloudlibrary-ui-audit';
             assert.equal(await page.locator('#edit-seriesName').inputValue(),'Magic Tree House','Scan should preserve useful existing metadata');
             assert.equal(await page.locator('#edit-coverUrl').inputValue(),'https://example.com/scanned-cover.jpg','Scanned ISBN should fill a missing cover');
             assert.equal(await page.locator('#isbn').inputValue(),'','Edit scan must not change Add ISBN');
+            assert.notEqual(await page.evaluate(()=>document.activeElement?.id),'edit-isbn','Edit scan should not focus the ISBN field');
             await page.evaluate(()=>{window.Html5Qrcode=window.__realHtml5Qrcode;delete window.__realHtml5Qrcode;delete window.__emitBarcode;});
           }
           await page.getByRole('button',{name:'Cancel',exact:true}).click();
@@ -122,16 +175,45 @@ const out = process.env.AUDIT_OUTPUT || '/tmp/cloudlibrary-ui-audit';
           for(const id of ['title','author','genre','condition','status']) assert.equal(await page.locator(`#${id}`).isVisible(),false,`${id} should not appear in Add step 1`);
           await page.screenshot({path:path.join(out,`${width}-${height}-add-step-1.png`),fullPage:true});
           assert.equal(await page.locator('#isbn').evaluate(element => Boolean(element.closest('details'))),false,'ISBN should stay in the main Add flow');
+          assert.ok(Number.parseFloat(await page.locator('#isbn').evaluate(element=>getComputedStyle(element).fontSize))>=(width<900?16:14),'Add ISBN should use the intended viewport-safe text size');
           assert.equal(await page.locator('#book-form').getByText('Cover photo',{exact:true}).count(),1,'Add form should show one cover section');
           assert.equal(await page.locator('#book-form').getByText(/Fills empty or unknown details/).count(),1,'Add form should explain ISBN autofill');
           assert.equal(await page.locator('#status option[value="Reading"]').textContent(),'Not for lending');
           if(width===1280) {
-            await page.locator('#isbn').fill('9780141346847');
             await page.locator('#title').evaluate(element=>{element.value='Book 7';});
             await page.locator('#author').evaluate(element=>{element.value='Unknown';});
-            await page.locator('#lookup-isbn').click();
+            await page.evaluate(()=>{
+              window.__realHtml5Qrcode=window.Html5Qrcode;
+              window.Html5Qrcode=class { async start(_camera,_options,onSuccess){window.__emitBarcode=onSuccess;} async stop(){} async clear(){} };
+            });
+            await page.locator('#start-scan-btn').click();
+            await page.locator('#scanner-modal').waitFor({state:'visible'});
+            await page.evaluate(()=>window.__emitBarcode('9780141346847'));
+            await page.locator('#scanner-modal').waitFor({state:'hidden'});
             await page.locator('#title').waitFor({state:'visible'});
             assert.equal(await page.locator('[data-add-step="2"]').isVisible(),true,'Successful ISBN lookup should advance Add to details');
+            assert.ok(!['isbn','title'].includes(await page.evaluate(()=>document.activeElement?.id)),'Add scan should advance without focusing a text field');
+            await page.evaluate(()=>{window.Html5Qrcode=window.__realHtml5Qrcode;delete window.__realHtml5Qrcode;delete window.__emitBarcode;});
+            const catalogMessages=await page.evaluate(async()=>{
+              const originalFetch=window.fetch;
+              const stack=document.getElementById('toast-stack');
+              const run=async(isbn,fetchImpl)=>{
+                stack.replaceChildren();
+                document.getElementById('isbn').value=isbn;
+                window.fetch=fetchImpl;
+                await fillFromISBN();
+                return stack.lastElementChild?.textContent || '';
+              };
+              try {
+                const noMatch=await run('9780439023481',async url=>String(url).includes('googleapis.com')
+                  ? new Response(JSON.stringify({items:[]}),{status:200,headers:{'Content-Type':'application/json'}})
+                  : new Response('',{status:404}));
+                const timeout=await run('9780061120084',async()=>{throw new DOMException('Timed out','AbortError');});
+                return {noMatch,timeout};
+              } finally { window.fetch=originalFetch; }
+            });
+            assert.equal(catalogMessages.noMatch,'No book matched this ISBN. Select Enter or check details to add it manually, or replace the ISBN and try another book.');
+            assert.equal(catalogMessages.timeout,'The book catalogue took too long to respond. Please try again.');
           } else {
             await page.getByRole('button',{name:'Enter or check details'}).click();
           }
@@ -157,6 +239,8 @@ const out = process.env.AUDIT_OUTPUT || '/tmp/cloudlibrary-ui-audit';
           await page.locator('#title').waitFor({state:'visible'});
           await page.getByRole('button',{name:'How to add a book'}).click();
           await page.locator('dialog[open]').waitFor();
+          const helpLayout=await page.locator('dialog[open]').evaluate(element=>({client:element.clientWidth,scroll:element.scrollWidth}));
+          assert.ok(helpLayout.scroll<=helpLayout.client+1,`Add help dialog overflows at ${width}`);
           await page.getByRole('button',{name:'Got it',exact:true}).click();
           await page.getByRole('button',{name:'Back to My Library',exact:true}).click();
           await page.locator('#view-shelf').waitFor({state:'visible'});
@@ -164,6 +248,12 @@ const out = process.env.AUDIT_OUTPUT || '/tmp/cloudlibrary-ui-audit';
           await page.goBack();
           await page.locator('#view-shelf').waitFor({state:'visible'});
           await page.evaluate(()=>{document.getElementById('book-form').reset();localStorage.clear();});
+        }
+        if(name==='search') {
+          assert.equal((await page.getByRole('heading',{name:'Search books, readers & circles',exact:true}).textContent()).trim(),'Search books, readers & circles','Search heading should explain its full scope');
+          assert.equal(await page.locator('#global-search-input').getAttribute('placeholder'),'Title, author, series, reader, shelf, or circle…','Search prompt should list searchable entities');
+          assert.equal(await page.locator('#search-status-filter option').first().textContent(),'Book availability','Availability should be clearly book-specific');
+          assert.equal(await page.locator('#search-genre-filter option').first().textContent(),'Book genre','Genre should be clearly book-specific');
         }
         if(name==='friends') {
           await page.getByRole('button',{name:'Find readers',exact:true}).waitFor({state:'visible'});
@@ -191,6 +281,8 @@ const out = process.env.AUDIT_OUTPUT || '/tmp/cloudlibrary-ui-audit';
           await page.locator('#reader-profile-modal').waitFor({state:'visible'});
           await page.waitForFunction(()=>document.getElementById('reader-profile-body')?.textContent.includes('DevReads'));
           assert.ok((await page.locator('#reader-profile-body').textContent()).includes('DevReads'),'Suggested reader should open the matching profile');
+          const profileModalLayout=await page.locator('#reader-profile-modal > div').evaluate(element=>({client:element.clientWidth,scroll:element.scrollWidth}));
+          assert.ok(profileModalLayout.scroll<=profileModalLayout.client+1,`Reader profile modal overflows at ${width}`);
           await page.getByRole('button',{name:'Close profile',exact:true}).click();
         }
         if(name==='inbox') {
@@ -213,10 +305,16 @@ const out = process.env.AUDIT_OUTPUT || '/tmp/cloudlibrary-ui-audit';
       await page.locator('#view-profile').waitFor({state:'visible'});
       await page.locator('#own-profile-page button[data-action="view-my-shelf"]').waitFor({state:'visible'});
       assert.equal(await page.locator('.tab-btn[aria-current="page"]').count(),0,'Profile should not highlight a primary destination');
+      assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),`Profile overflows at ${width}`);
       await page.screenshot({path:path.join(out,`${width}-${height}-profile.png`),fullPage:true});
       await page.getByRole('button',{name:'Admin tools',exact:true}).click();
       await page.locator('#view-admin').waitFor({state:'visible'});
       assert.equal(await page.locator('.tab-btn[aria-current="page"]').count(),0,'Admin should not highlight a primary destination');
+      assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),`Admin overflows at ${width}`);
+      if(width<900) {
+        const undersized=await page.locator(editableSelector).evaluateAll(elements=>elements.filter(element=>Number.parseFloat(getComputedStyle(element).fontSize)<16).map(element=>element.id || element.getAttribute('aria-label') || element.tagName));
+        assert.deepEqual(undersized,[],`Dynamic editable controls below 16px at ${width}x${height}`);
+      }
       await page.screenshot({path:path.join(out,`${width}-${height}-admin.png`),fullPage:true});
       await page.getByRole('button',{name:'Back to profile',exact:true}).click();
       await page.locator('#view-profile').waitFor({state:'visible'});
