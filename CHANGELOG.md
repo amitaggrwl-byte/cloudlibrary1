@@ -11,8 +11,25 @@ change must update this file in the same commit.
 
 ## Unreleased
 
+_No unreleased changes._
+
+## 14 September 2026
+
 ### Added
 
+- Added a prominent Find readers action to the Friends page.
+- Added compact book covers, new-reader avatars, established-reader suggestions,
+  and approved-circle suggestions to What’s happening. Circle discovery uses one
+  bounded six-record snapshot, while established-reader suggestions reuse the
+  already-loaded shared-circle profile results.
+- Added up to two unfinished new-reader steps to Today, after urgent loan and
+  Inbox items, with direct actions to the relevant page or section.
+- Added lightweight Readers you may know suggestions on Home and Search. One
+  bounded, session-cached profile query finds shared-circle readers, ranks them
+  locally, and excludes the current reader, confirmed friends, and pending
+  connections.
+- Added a circle-first discovery prompt for readers who have not joined a
+  circle, plus Help guidance explaining suggestions and their limits.
 - Added a dedicated My Library page for the complete owned shelf, with an Add
   books action, local title/author/series search, availability and genre
   filters, sorting, and cursor-based Load more.
@@ -41,6 +58,14 @@ change must update this file in the same commit.
 
 ### Changed
 
+- Compressed the unfinished new-reader checklist into lightly tinted action
+  cards and moved finished tasks into a single collapsed, reviewable summary so
+  completed setup no longer pushes useful Home content down the page.
+- Successful Add Book ISBN scans and lookups now advance directly from Find to
+  Check details when a usable title and author are available; Edit Book stays in
+  place after lookup.
+- Personal loan and availability activity records now retain the existing book
+  cover URL so the ticker can display it without another book read.
 - Split the previous My Library dashboard into a concise Home for reader status,
   attention, ticker, onboarding, current borrowing/lending, and saved books,
   plus a separate My Library destination for the complete shelf.
@@ -84,12 +109,30 @@ change must update this file in the same commit.
 
 ### Fixed
 
+- Preserved covers in saved-book availability ticker stories and replaced the
+  invalid demo cover placeholder with valid, cover-bearing book and activity
+  fixtures so ticker cover rendering can be reviewed in the local demo.
+- Deduplicated repeated ticker stories for the same book while preserving a
+  cover from any matching activity record, avoiding both blank duplicates and
+  additional Firestore reads.
 - Ensured the shared book/search helper always attaches to the browser window,
   even if an earlier third-party script exposes a Node-style `module` global;
   this prevents intermittent ISBN scan and search failures during page startup.
 
 ### Verification
 
+- Passed 17 book, search, scoring, and browser-export unit tests; 23 Firestore
+  Rules tests; and 17 callable Functions and integration tests before release.
+- Repassed the responsive browser audit across Home, My Library, Friends,
+  Search, and Inbox at 1280 x 900, 390 x 844, 320 x 640, and 844 x 390 with
+  no browser errors or horizontal overflow, including visible ticker covers and
+  compact completed onboarding tasks.
+- Added browser coverage for ISBN auto-advance, the Friends discovery action,
+  and ticker cover/avatar/circle rendering, plus emulator coverage that verifies
+  book covers survive public and participant loan-activity writes.
+- Added Firestore Rules coverage for the bounded shared-circle profile query
+  and responsive browser checks for setup-task priority, suggestion exclusions,
+  shared Home/Search results, and opening the suggested reader profile.
 - Verified the refreshed `family-beta` channel returns HTTP 200 with the
   expected cache, referrer, and camera-permission headers and serves the tested
   My Library, focused Add, onboarding, and browser-helper changes.
@@ -141,6 +184,11 @@ change must update this file in the same commit.
 
 ### Deployment
 
+- Released the complete tested project to Firebase production Hosting, all
+  Functions, Firestore rules and indexes, and Storage rules for project
+  `cloudlibrary-7b9ac`.
+- Refreshed the existing Firebase Hosting `family-beta` channel with the same
+  release; its preview expires 14 October 2026.
 - Refreshed the Firebase Hosting `family-beta` preview with the Home/My Library
   split, focused Add flow, default-open series, onboarding links, Inbox entity
   links, and startup reliability fix. The preview expires 13 October 2026.

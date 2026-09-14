@@ -13,7 +13,7 @@ beforeEach(async()=>{
   const batch=db.batch();
   for(const uid of ['owner','b','c']) batch.set(db.doc(`profiles/${uid}`),{libraryName:uid,bookCount:0,ratingAdjustment:0,ratingScore:3,friendCount:0,onTimeReturnStreak:0,bestOnTimeReturnStreak:0});
   for(const uid of ['b','c']) batch.set(db.doc(`friendships/${uid}__owner`),{user1:uid,user2:'owner',status:'accepted'});
-  for(let i=0;i<7;i++) batch.set(db.doc(`books/book${i}`),{title:`Book ${i}`,author:'Author',ownerId:'owner',ownerName:'Owner',status:'Available'});
+  for(let i=0;i<7;i++) batch.set(db.doc(`books/book${i}`),{title:`Book ${i}`,author:'Author',ownerId:'owner',ownerName:'Owner',status:'Available',coverUrl:i===0?'https://example.com/book-0.jpg':''});
   await batch.commit();
 });
 test('only one competing approval succeeds for the same copy',async()=>{
@@ -23,6 +23,18 @@ test('only one competing approval succeeds for the same copy',async()=>{
   assert.equal(results.filter(r=>r.status==='fulfilled').length,1);
   const states=await Promise.all([b,c].map(r=>db.doc(`requests/${r.requestId}`).get()));
   assert.deepEqual(states.map(s=>s.data().status).sort(),['approved','denied']);
+});
+test('loan ticker records retain the book cover for both participants',async()=>{
+  const request=await call('createBorrowRequest',{bookId:'book0'},'b');
+  await call('respondToBorrowRequest',{requestId:request.requestId,action:'approved'});
+  const [ownerActivity,readerActivity,publicActivity]=await Promise.all([
+    db.doc(`tickerActivities/borrowed-owner-${request.requestId}-owner`).get(),
+    db.doc(`tickerActivities/borrowed-reader-${request.requestId}-b`).get(),
+    db.doc('networkTicker/latest-book-borrowed').get()
+  ]);
+  assert.equal(ownerActivity.data().coverUrl,'https://example.com/book-0.jpg');
+  assert.equal(readerActivity.data().coverUrl,'https://example.com/book-0.jpg');
+  assert.equal(publicActivity.data().coverUrl,'https://example.com/book-0.jpg');
 });
 test('return handshake, positive ledger and repeat borrowing work',async()=>{
   const request=await call('createBorrowRequest',{bookId:'book0'},'b');

@@ -302,7 +302,8 @@
         <button id="ticker-next" type="button" onclick="nextTicker()" aria-label="Next library update" title="Next update" class="inline-flex min-h-10 min-w-10 items-center justify-center rounded-lg text-ink-600 hover:bg-ink-100"></button>
       </div>
     </div>
-    <section id="onboarding-panel" class="hidden app-panel rounded-xl border border-ink-200 p-4 shadow-sm"></section>
+    <section id="home-reader-suggestions" class="hidden app-panel rounded-xl border border-ink-200 p-3 shadow-sm sm:p-4" aria-labelledby="home-reader-suggestions-title"></section>
+    <section id="onboarding-panel" class="hidden app-panel rounded-xl border border-ink-200 p-3 shadow-sm sm:p-4"></section>
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
     <div id="admin-panel" class="app-panel h-fit rounded-xl border border-ink-200 p-3 shadow-sm sm:p-5">
       <div class="flex justify-between items-center mb-1">
@@ -451,8 +452,7 @@
   <!-- TAB 2: FRIENDS -->
   <div id="view-friends" class="hidden space-y-6">
     <div class="app-panel p-6 rounded-xl border border-ink-200 shadow-sm">
-      <p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-1">Connections</p>
-      <h2 class="font-display text-xl text-ink-950 mb-4">My friends' shelves</h2>
+      <div class="mb-4 flex flex-wrap items-end justify-between gap-3"><div><p class="font-mono text-[11px] uppercase tracking-widest text-rust-600 mb-1">Connections</p><h2 class="font-display text-xl text-ink-950">My friends' shelves</h2></div><button type="button" data-action="onboarding-find-friends" class="inline-flex min-h-11 items-center gap-2 rounded-lg bg-ink-800 px-3 text-xs font-semibold text-paper hover:bg-ink-900"><svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"></circle><path d="M20 20l-4.5-4.5"></path></svg>Find readers</button></div>
       <div id="friends-list-container" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
     </div>
 
@@ -506,6 +506,7 @@
         <button type="submit" class="col-span-2 md:col-auto bg-ink-950 hover:bg-ink-900 text-paper font-semibold py-3 px-6 rounded-lg transition-colors">Search</button>
       </form>
     </div>
+    <section id="search-reader-suggestions" class="hidden app-panel rounded-xl border border-ink-200 p-4 shadow-sm" aria-labelledby="search-reader-suggestions-title"></section>
     <div id="search-results-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
   </div>
 
@@ -620,6 +621,7 @@
     x: '<path d="M6 6l12 12M18 6L6 18"/>',
     arrowLeft: '<path d="M19 12H5"/><path d="M11 18l-6-6 6-6"/>',
     arrowRight: '<path d="M5 12h14"/><path d="m13 6 6 6-6 6"/>',
+    chevronDown: '<path d="m6 9 6 6 6-6"/>',
     help: '<circle cx="12" cy="12" r="9"/><path d="M9.8 9a2.4 2.4 0 1 1 3.4 2.2c-.8.4-1.2 1-1.2 1.8"/><path d="M12 17h.01"/>',
     logOut: '<path d="M10 5H5v14h5"/><path d="M14 8l4 4-4 4"/><path d="M9 12h9"/>',
     userMinus: '<circle cx="10" cy="8" r="3"/><path d="M3.5 20c.5-3.1 2.9-5.2 6.5-5.2 1.1 0 2.1.2 3 .6"/><path d="M17 12h5M19.5 9.5v5"/>'
@@ -777,26 +779,128 @@
       const detail = 'Review requests and return reminders.';
       items.push(`<div class="${itemClass} border-gold-300 bg-white/80"><span class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gold-100 text-ink-700">${icon('bell','w-4 h-4')}</span><div class="min-w-0"><p class="line-clamp-2 font-display text-sm font-semibold leading-snug text-ink-950" title="${esc(title)}">${esc(title)}</p><p class="mt-0.5 truncate whitespace-nowrap text-xs text-ink-600" title="${esc(detail)}">${esc(detail)}</p></div><button data-action="switch-inbox" class="${actionClass}">Open Inbox</button></div>`);
     }
+    getOnboardingSteps().filter(step => !step.done).slice(0, 2).forEach(step => {
+      items.push(`<div data-attention-setup-task="${esc(step.action)}" class="${itemClass} border-ink-200 bg-white/80"><span class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ink-800/10 text-ink-700">${icon(step.icon,'w-4 h-4')}</span><div class="min-w-0"><p class="line-clamp-2 font-display text-sm font-semibold leading-snug text-ink-950" title="${esc(step.title)}">${esc(step.title)}</p><p class="mt-0.5 truncate whitespace-nowrap text-xs text-ink-600" title="New-reader step · ${esc(step.detail)}">New-reader step · ${esc(step.detail)}</p></div><button data-action="${step.action}" class="${actionClass}">${esc(step.button)}</button></div>`);
+    });
     panel.classList.toggle('hidden', !items.length);
     count.textContent = items.length ? `${items.length} item${items.length === 1 ? '' : 's'}` : '';
     list.innerHTML = items.join('');
   }
 
+  function getOnboardingSteps() {
+    if (!userProfile || !currentUser) return [];
+    return [
+      { done: String(userProfile.bio || '').trim().length >= 12, title: 'Add a short introduction', detail: 'Help real-life readers recognise your shelf.', action: 'onboarding-profile', button: 'Add intro', icon: 'user' },
+      { done: Object.keys(myBooksCache).length > 0 || Number(userProfile.bookCount || 0) > 0, title: 'Add your first book', detail: 'A shelf starts with one book you are happy to share.', action: 'onboarding-add-book', button: 'Add a book', icon: 'book' },
+      { done: Array.isArray(userProfile.circleTags) && userProfile.circleTags.length > 0, title: 'Join a circle', detail: 'Choose a school, locality, club, or reading-interest circle.', action: 'onboarding-join-circle', button: 'Choose circles', icon: 'circles' },
+      { done: confirmedFriends.length > 0 || Number(userProfile.friendCount || 0) > 0, title: 'Connect with a reader', detail: 'Find someone you know in real life, then connect your shelves.', action: 'onboarding-find-friends', button: 'Find readers', icon: 'users' },
+      { done: Number(readerStatsCache.totalBorrowed || 0) > 0 || borrowedBooksCache.length > 0, title: 'Borrow your first book', detail: 'Find an available book from a confirmed friend and request it.', action: 'onboarding-borrow-book', button: 'Find a book', icon: 'bookOpen' },
+      { done: Number(userProfile.totalLent || 0) > 0 || Object.keys(activeLoanBooksCache).length > 0, title: 'Lend your first book', detail: 'Keep a book available so a confirmed friend can request it.', action: 'onboarding-lend-book', button: 'View my shelf', icon: 'handshake' }
+    ];
+  }
+
   function renderOnboarding() {
     const panel = document.getElementById('onboarding-panel');
     if (!panel || !userProfile || !currentUser) return;
-    const steps = [
-      { done: String(userProfile.bio || '').trim().length >= 12, title: 'Add a short introduction', detail: 'Help real-life readers recognise your shelf.', action: 'onboarding-profile', button: 'Add intro' },
-      { done: Object.keys(myBooksCache).length > 0 || Number(userProfile.bookCount || 0) > 0, title: 'Add your first book', detail: 'A shelf starts with one book you are happy to share.', action: 'onboarding-add-book', button: 'Add a book' },
-      { done: Array.isArray(userProfile.circleTags) && userProfile.circleTags.length > 0, title: 'Join a circle', detail: 'Choose a school, locality, club, or reading-interest circle.', action: 'onboarding-join-circle', button: 'Choose circles' },
-      { done: confirmedFriends.length > 0 || Number(userProfile.friendCount || 0) > 0, title: 'Connect with a reader', detail: 'Find someone you know in real life, then connect your shelves.', action: 'onboarding-find-friends', button: 'Find readers' },
-      { done: Number(readerStatsCache.totalBorrowed || 0) > 0 || borrowedBooksCache.length > 0, title: 'Borrow your first book', detail: 'Find an available book from a confirmed friend and request it.', action: 'onboarding-borrow-book', button: 'Find a book' },
-      { done: Number(userProfile.totalLent || 0) > 0 || Object.keys(activeLoanBooksCache).length > 0, title: 'Lend your first book', detail: 'Keep a book available so a confirmed friend can request it.', action: 'onboarding-lend-book', button: 'View my shelf' }
-    ];
-    const complete = steps.filter(step => step.done).length;
+    const steps = getOnboardingSteps();
+    const completedSteps = steps.filter(step => step.done);
+    const remainingSteps = steps.filter(step => !step.done);
+    const complete = completedSteps.length;
     panel.classList.toggle('hidden', complete === steps.length);
-    if (complete === steps.length) { panel.innerHTML = ''; return; }
-    panel.innerHTML = `<div class="flex items-start justify-between gap-4"><div><p class="font-mono text-[11px] uppercase tracking-widest text-rust-600">Getting started</p><h2 class="font-display text-xl text-ink-950 mt-1">Make your shelf useful</h2><p class="text-xs text-ink-500 mt-1">${complete} of ${steps.length} simple steps complete.</p></div><span class="shrink-0 rounded-full bg-gold-100 px-2.5 py-1 text-xs font-semibold text-ink-700">${complete}/${steps.length}</span></div><div class="grid gap-2 mt-4 sm:grid-cols-2 lg:grid-cols-3">${steps.map((step, index) => `<div data-onboarding-step="${index + 1}" class="rounded-lg border ${step.done ? 'border-sage-200 bg-sage-50/50' : 'border-ink-200 bg-white/60'} p-3"><div class="flex items-start justify-between gap-2"><div class="min-w-0"><p class="text-xs font-semibold text-ink-800">${esc(step.title)}</p><p class="text-[11px] leading-relaxed text-ink-500 mt-1">${esc(step.detail)}</p></div>${step.done ? `<span class="shrink-0 text-ink-700">${icon('check', 'w-4 h-4')}</span>` : ''}</div>${step.done ? `<p class="mt-3 text-[11px] font-semibold text-ink-600">Done</p>` : `<button data-action="${step.action}" class="mt-3 inline-flex min-h-10 items-center rounded-lg bg-ink-800/10 px-3 text-xs font-semibold text-ink-800 hover:bg-ink-800/20">${esc(step.button)}</button>`}</div>`).join('')}</div>`;
+    if (complete === steps.length) { panel.innerHTML = ''; renderLibraryAttention(); return; }
+    const remainingHtml = remainingSteps.map(step => {
+      const index = steps.indexOf(step) + 1;
+      return `<article data-onboarding-step="${index}" data-onboarding-done="false" class="rounded-lg border border-gold-300 bg-gold-100/60 p-3"><div class="flex items-start gap-2.5"><span class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-white/80 text-ink-700">${icon(step.icon, 'h-4 w-4')}</span><div class="min-w-0 flex-1"><p data-onboarding-title class="text-xs font-semibold text-ink-900">${esc(step.title)}</p><p class="mt-0.5 text-[11px] leading-snug text-ink-600">${esc(step.detail)}</p><button data-action="${step.action}" class="mt-2 inline-flex min-h-9 items-center rounded-lg bg-ink-800 px-3 text-xs font-semibold text-paper hover:bg-ink-900">${esc(step.button)}</button></div></div></article>`;
+    }).join('');
+    const completedHtml = complete ? `<details data-onboarding-completed class="group mt-2 rounded-lg border border-ink-200 bg-ink-50/80"><summary class="flex min-h-10 cursor-pointer list-none items-center gap-2 px-3 text-xs font-semibold text-ink-700 marker:content-none"><span class="inline-flex h-5 w-5 items-center justify-center rounded-full bg-ink-100 text-ink-700">${icon('check', 'h-3 w-3')}</span><span class="flex-1">${complete} completed</span><span class="text-[11px] font-normal text-ink-500">Review</span><span class="transition-transform group-open:rotate-180">${icon('chevronDown', 'h-4 w-4')}</span></summary><div class="grid gap-1.5 border-t border-ink-200 p-2 sm:grid-cols-2 lg:grid-cols-3">${completedSteps.map(step => {
+      const index = steps.indexOf(step) + 1;
+      return `<div data-onboarding-step="${index}" data-onboarding-done="true" class="flex min-h-9 items-center gap-2 rounded-md bg-white/70 px-2.5 py-2 text-ink-700"><span class="shrink-0 text-ink-600">${icon('check', 'h-3.5 w-3.5')}</span><span data-onboarding-title class="truncate text-[11px] font-medium" title="${esc(step.title)}">${esc(step.title)}</span></div>`;
+    }).join('')}</div></details>` : '';
+    panel.innerHTML = `<div class="flex items-center justify-between gap-3"><div class="min-w-0"><p class="font-mono text-[10px] uppercase tracking-widest text-rust-600">Getting started</p><h2 class="mt-0.5 font-display text-lg text-ink-950">Make your shelf useful</h2></div><span class="shrink-0 rounded-full bg-gold-100 px-2.5 py-1 text-[11px] font-semibold text-ink-700">${complete}/${steps.length}</span></div><div class="mt-3 grid gap-2 md:grid-cols-2">${remainingHtml}</div>${completedHtml}`;
+    renderLibraryAttention();
+  }
+
+  function sharedCircleNames(profile) {
+    const mine = new Set((userProfile?.circleTags || []).map(tag => String(tag).toLowerCase()));
+    return (profile.circleTags || []).filter(tag => mine.has(String(tag).toLowerCase()));
+  }
+
+  function readerSuggestionCard(profile) {
+    const name = profile.libraryName || 'Unnamed library';
+    const shared = sharedCircleNames(profile);
+    const reason = shared.length
+      ? `${shared.length} shared circle${shared.length === 1 ? '' : 's'}: ${shared.slice(0, 2).join(', ')}`
+      : 'Reader in your community';
+    return `<article data-suggested-reader="${esc(profile.id)}" class="flex min-w-0 items-center gap-3 rounded-lg border border-ink-200 bg-white/70 p-3"><div class="shrink-0">${avatarHtml(profile, name, 'h-10 w-10')}</div><div class="min-w-0 flex-1"><h3 class="truncate font-display text-base text-ink-950">${esc(name)}</h3><p class="mt-0.5 truncate text-[11px] text-ink-600" title="${esc(reason)}">${icon('circles','mr-1 inline h-3 w-3')}${esc(reason)}</p></div><button type="button" data-action="open-reader-profile" data-uid="${esc(profile.id)}" class="inline-flex min-h-10 shrink-0 items-center rounded-lg bg-ink-800/10 px-3 text-xs font-semibold text-ink-800 hover:bg-ink-800/20">View</button></article>`;
+  }
+
+  function renderReaderSuggestions() {
+    const home = document.getElementById('home-reader-suggestions');
+    const search = document.getElementById('search-reader-suggestions');
+    if (!home || !search || !currentUser || !userProfile) return;
+    const circles = Array.isArray(userProfile.circleTags) ? userProfile.circleTags.filter(Boolean) : [];
+    if (!circles.length) {
+      const content = `<div class="flex flex-wrap items-center justify-between gap-3"><div class="min-w-0"><p class="font-mono text-[10px] uppercase tracking-widest text-rust-600">Find your people</p><h2 class="mt-0.5 font-display text-lg text-ink-950">Start with a circle</h2><p class="mt-1 text-xs text-ink-600">Join a school, locality, grade, club, or reading-interest circle before looking for readers you know.</p></div><button type="button" data-action="onboarding-join-circle" class="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-lg bg-ink-800 px-3 text-xs font-semibold text-paper">${icon('circles','h-4 w-4')}Choose circles</button></div>`;
+      home.innerHTML = content;
+      search.innerHTML = content.replace('Find your people', 'Reader discovery');
+      home.classList.remove('hidden');
+      search.classList.remove('hidden');
+      return;
+    }
+    if (readerSuggestions.loading && !readerSuggestions.loaded) {
+      const loading = '<p class="text-sm text-ink-500">Finding readers from your circles…</p>';
+      home.innerHTML = loading;
+      search.innerHTML = loading;
+      home.classList.remove('hidden');
+      search.classList.remove('hidden');
+      return;
+    }
+    const profiles = readerSuggestions.profiles;
+    if (!profiles.length) {
+      home.classList.add('hidden');
+      const circle = circles[0];
+      search.innerHTML = `<div class="flex flex-wrap items-center justify-between gap-3"><div><p class="font-mono text-[10px] uppercase tracking-widest text-rust-600">Readers you may know</p><h2 id="search-reader-suggestions-title" class="mt-0.5 font-display text-lg text-ink-950">No new circle matches yet</h2><p class="mt-1 text-xs text-ink-600">Existing friends and pending requests are hidden. You can still search a circle by name.</p></div><button type="button" data-action="search-book" data-query="${esc(circle)}" class="inline-flex min-h-11 items-center gap-2 rounded-lg bg-ink-800/10 px-3 text-xs font-semibold text-ink-800">${icon('search','h-4 w-4')}Search ${esc(circle)}</button></div>`;
+      search.classList.remove('hidden');
+      return;
+    }
+    const heading = `<div class="mb-3 flex items-end justify-between gap-3"><div><p class="font-mono text-[10px] uppercase tracking-widest text-rust-600">From your circles</p><h2 class="mt-0.5 font-display text-lg text-ink-950">Readers you may know</h2></div><p class="hidden text-[11px] text-ink-500 sm:block">Connect only with people you recognise in real life.</p></div>`;
+    home.innerHTML = `${heading.replace('<h2 ', '<h2 id="home-reader-suggestions-title" ')}<div class="grid gap-2 md:grid-cols-3">${profiles.slice(0, 3).map(readerSuggestionCard).join('')}</div>`;
+    search.innerHTML = `${heading.replace('<h2 ', '<h2 id="search-reader-suggestions-title" ')}<div class="grid gap-2 sm:grid-cols-2">${profiles.map(readerSuggestionCard).join('')}</div>`;
+    home.classList.remove('hidden');
+    search.classList.remove('hidden');
+  }
+
+  async function loadReaderSuggestions(force = false) {
+    if (!currentUser || !userProfile) return;
+    const circles = Array.isArray(userProfile.circleTags) ? userProfile.circleTags.filter(Boolean).slice(0, 10) : [];
+    const key = `${currentUser.uid}|${circles.slice().sort().join('|')}|${Object.keys(relationshipStates).sort().join('|')}`;
+    if (!force && readerSuggestions.loading && readerSuggestions.key === key) { renderReaderSuggestions(); return; }
+    if (!force && readerSuggestions.loaded && readerSuggestions.key === key) { renderReaderSuggestions(); return; }
+    readerSuggestions = { key, profiles: [], loading: true, loaded: false };
+    renderReaderSuggestions();
+    if (!circles.length) {
+      readerSuggestions.loading = false;
+      readerSuggestions.loaded = true;
+      renderReaderSuggestions();
+      return;
+    }
+    try {
+      const snapshot = await db.collection('profiles').where('circleTags', 'array-contains-any', circles).limit(10).get();
+      if (!currentUser || readerSuggestions.key !== key) return;
+      readerSuggestions.profiles = snapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() }))
+        .filter(profile => profile.id !== currentUser.uid && !relationshipStates[profile.id])
+        .sort((a, b) => sharedCircleNames(b).length - sharedCircleNames(a).length || String(a.libraryName || '').localeCompare(String(b.libraryName || '')));
+    } catch (error) {
+      console.warn('Could not load reader suggestions', error);
+      readerSuggestions.profiles = [];
+    } finally {
+      if (readerSuggestions.key === key) {
+        readerSuggestions.loading = false;
+        readerSuggestions.loaded = true;
+        renderReaderSuggestions();
+      }
+    }
   }
 
   function closeReaderProfileModal() {
@@ -960,6 +1064,8 @@
     const profile = await guard(() => db.collection('profiles').doc(currentUser.uid).get(), { context: 'Refreshing your profile' });
     if (profile !== FAILED && profile.exists) userProfile = profile.data();
     renderMyReaderScore();
+    readerSuggestions = { key: '', profiles: [], loading: false, loaded: false };
+    loadReaderSuggestions(true);
     await manageCircles();
     return result;
   }
@@ -1493,6 +1599,7 @@
   let relationshipStates = {};
   let relationshipDocs = {};
   let relationshipSenders = {};
+  let readerSuggestions = { key: '', profiles: [], loading: false, loaded: false };
   let isSigningOut = false;
   let tickerItems = [];
   let tickerIndex = 0;
@@ -1594,6 +1701,7 @@
     ratingCache.clear();
     activeFriendShelf = null;
     readerStatsCache = {};
+    readerSuggestions = { key: '', profiles: [], loading: false, loaded: false };
     if (currentUser?.uid !== user?.uid) AdminDashboard.reset();
     if (user) {
       isSigningOut = false;
@@ -1684,6 +1792,7 @@
     const circleSettings = await guard(() => lendingFunctions.httpsCallable('getCircleSettings')(), { context: 'Checking account role' });
     currentUserIsAdmin = circleSettings !== FAILED && Boolean(circleSettings.data?.isAdmin);
     await loadFriendsList();
+    await loadReaderSuggestions();
     fetchMyBooks();
     fetchBorrowedBooks();
     fetchSavedBooks();
@@ -1728,6 +1837,10 @@
     const titles = { library: 'Home', shelf: 'My Library', add: 'Add books', friends: 'Friends', search: 'Search Libraries', inbox: 'Inbox', profile: 'Reader profile', admin: 'Admin console', 'friend-shelf': 'Friend shelf', history: 'Borrowing history' };
     document.getElementById('header-title').textContent = titles[tabName] || 'CloudLibrary';
     if (tabName === 'friends') renderFriendsView();
+    if (tabName === 'search') {
+      renderReaderSuggestions();
+      loadReaderSuggestions();
+    }
 
     if (currentUser && historyMode !== 'none') {
       const state = { ...(window.history.state || {}), cloudLibraryView: tabName };
@@ -1887,6 +2000,7 @@
       bookId: saved.bookId,
       title: book.title || saved.title || 'Saved book',
       seriesName: book.seriesName || saved.seriesName || '',
+      coverUrl: book.coverUrl || saved.coverUrl || '',
       ownerName: book.ownerName || saved.ownerName || 'a friend'
     };
   }
@@ -1909,7 +2023,12 @@
         // Existing books receive a bucket as they are next saved. Until then,
         // still offer one recent book rather than leaving this slot empty.
         .catch(() => db.collection('bookDiscovery').orderBy('updatedAt', 'desc').limit(1).get());
-      const [friendActivity, newReaders, readerStats, networkStats, latestAdded, latestBorrowed, latestAvailable, suggestion, availableSavedBook] = await Promise.all([
+      const circleSuggestionQuery = db.collection('circles').where('active', '==', true).limit(6).get()
+        .catch(err => {
+          console.warn('Circle suggestion could not load', err);
+          return { docs: [] };
+        });
+      const [friendActivity, newReaders, readerStats, networkStats, latestAdded, latestBorrowed, latestAvailable, suggestion, availableSavedBook, circleSuggestions] = await Promise.all([
         friendActivityQuery,
         db.collection('networkTicker').orderBy('createdAt', 'desc').limit(1).get(),
         db.collection('readerStats').doc(currentUser.uid).get(),
@@ -1921,23 +2040,48 @@
         loadAvailableSavedTickerItem().catch(err => {
           console.warn('Saved-book availability could not load', err);
           return null;
-        })
+        }),
+        circleSuggestionQuery
       ]);
       const isBookActivity = item => /^(public-book|book-added|book-available|book-reading|book-borrowed|wishlist-match)/.test(item.type || '');
       const suggestionItem = suggestion.docs.length ? { id: suggestion.docs[0].id, type: 'book-suggestion', ...suggestion.docs[0].data() } : null;
-      const items = [
+      const rawItems = [
         ...friendActivity.docs.map(doc => ({ id: doc.id, ...doc.data() })),
         ...newReaders.docs.map(doc => ({ id: doc.id, ...doc.data() })).filter(item => item.actorId !== currentUser.uid),
         ...[latestAdded, latestBorrowed, latestAvailable]
           .filter(doc => doc.exists)
           .map(doc => ({ id: doc.id, ...doc.data() }))
-      ].filter(item => !isBookActivity(item) || Boolean(item.bookId)).sort((a, b) => timestampMillis(b.createdAt) - timestampMillis(a.createdAt)).slice(0, 7);
+      ].filter(item => !isBookActivity(item) || Boolean(item.bookId)).sort((a, b) => timestampMillis(b.createdAt) - timestampMillis(a.createdAt));
+      const bookPositions = new Map();
+      const items = [];
+      rawItems.forEach(item => {
+        if (!isBookActivity(item)) { items.push(item); return; }
+        const existingIndex = bookPositions.get(item.bookId);
+        if (existingIndex === undefined) {
+          bookPositions.set(item.bookId, items.length);
+          items.push(item);
+          return;
+        }
+        if (!items[existingIndex].coverUrl && item.coverUrl) items[existingIndex].coverUrl = item.coverUrl;
+      });
+      items.length = Math.min(items.length, 7);
       if (availableSavedBook && !items.some(item => item.bookId === availableSavedBook.bookId && ['wishlist-match', 'saved-book-available'].includes(item.type))) {
         items.unshift(availableSavedBook);
         items.length = Math.min(items.length, 7);
       }
       // Reserve a ticker slot for discovery, even when a reader has a busy inbox.
       if (suggestionItem) items.push(suggestionItem);
+      const suggestedReader = readerSuggestions.profiles[0];
+      if (suggestedReader) {
+        items.push({
+          type: 'reader-suggestion', actorId: suggestedReader.id,
+          actorName: suggestedReader.libraryName || 'A reader', actorPhotoURL: suggestedReader.photoURL || '',
+          sharedCircles: sharedCircleNames(suggestedReader)
+        });
+      }
+      const joinedCircles = new Set((userProfile.circleTags || []).map(name => String(name).toLowerCase()));
+      const suggestedCircleDoc = circleSuggestions.docs.find(doc => !joinedCircles.has(String(doc.data().name || '').toLowerCase()));
+      if (suggestedCircleDoc) items.push({ type: 'circle-suggestion', circleId: suggestedCircleDoc.id, ...suggestedCircleDoc.data() });
       const personal = readerStats.exists ? readerStats.data() : {};
       readerStatsCache = personal;
       renderOnboarding();
@@ -1983,7 +2127,9 @@
     const actor = esc(item.actorName || 'A reader');
     const title = esc(item.title || 'a book');
     const series = item.seriesName ? ` · ${esc(item.seriesName)}` : '';
-    const bookLink = `<button data-action="search-book" data-query="${esc(item.seriesName || item.title || '')}" class="inline-flex min-h-10 items-center font-display text-xs text-ink-950 hover:text-rust-600 hover:underline sm:text-sm">${title}</button>${series ? `<span class="text-[11px] text-ink-500">${series}</span>` : ''}`;
+    const cover = safeUrl(item.coverUrl);
+    const bookThumb = cover ? `<img src="${esc(cover)}" alt="" aria-hidden="true" onerror="this.remove()" class="mr-2 inline-block h-8 w-6 rounded object-cover align-middle shadow-sm">` : '';
+    const bookLink = `${bookThumb}<button data-action="search-book" data-query="${esc(item.seriesName || item.title || '')}" class="inline-flex min-h-10 items-center font-display text-xs text-ink-950 hover:text-rust-600 hover:underline sm:text-sm">${title}</button>${series ? `<span class="text-[11px] text-ink-500">${series}</span>` : ''}`;
     const anonymousBookItem = (label, copy) => {
       return `<div class="ticker-item"><span class="font-mono text-[10px] uppercase tracking-widest text-rust-600 mr-2">${label}</span>${bookLink}<span class="text-ink-500"> ${copy}</span></div>`;
     };
@@ -2027,7 +2173,15 @@
       return anonymousBookItem('Book suggestion', 'might be your next discovery.');
     }
     if (item.type === 'member-joined') {
-      return `<div class="ticker-item"><span class="mr-2 font-mono text-[10px] uppercase tracking-widest text-rust-600">New reader</span><button data-action="open-reader-profile" data-uid="${esc(item.actorId)}" class="inline-flex min-h-10 items-center font-display text-sm text-ink-950 hover:underline">${actor}</button><span class="text-ink-500"> joined CloudLibrary.</span></div>`;
+      return `<div class="ticker-item"><span class="mr-2 font-mono text-[10px] uppercase tracking-widest text-rust-600">New reader</span><span class="mr-2 inline-block align-middle">${avatarHtml({ photoURL: item.actorPhotoURL || '' }, item.actorName || 'A reader', 'h-8 w-8')}</span><button data-action="open-reader-profile" data-uid="${esc(item.actorId)}" class="inline-flex min-h-10 items-center font-display text-sm text-ink-950 hover:underline">${actor}</button><span class="text-ink-500"> joined CloudLibrary.</span></div>`;
+    }
+    if (item.type === 'reader-suggestion') {
+      const shared = (item.sharedCircles || []).slice(0, 2).join(', ');
+      return `<div class="ticker-item"><span class="mr-2 font-mono text-[10px] uppercase tracking-widest text-rust-600">Reader to discover</span><span class="mr-2 inline-block align-middle">${avatarHtml({ photoURL: item.actorPhotoURL || '' }, item.actorName || 'A reader', 'h-8 w-8')}</span><button data-action="open-reader-profile" data-uid="${esc(item.actorId)}" class="inline-flex min-h-10 items-center font-display text-sm text-ink-950 hover:underline">${actor}</button><span class="text-ink-500">${shared ? ` shares ${esc(shared)} with you.` : ' may be someone you know.'}</span></div>`;
+    }
+    if (item.type === 'circle-suggestion') {
+      const circleName = esc(item.name || 'A reading circle');
+      return `<div class="ticker-item"><span class="mr-2 font-mono text-[10px] uppercase tracking-widest text-rust-600">Circle to explore</span><span class="mr-1 inline-flex h-8 w-8 items-center justify-center rounded-full bg-gold-100 align-middle text-ink-700">${icon('circles','h-4 w-4')}</span><button data-action="onboarding-join-circle" class="inline-flex min-h-10 items-center font-display text-sm text-ink-950 hover:text-rust-600 hover:underline">${circleName}</button>${item.category ? `<span class="text-ink-500"> · ${esc(item.category)}</span>` : ''}</div>`;
     }
     return `<div class="ticker-item"><span class="text-ink-500">A new CloudLibrary update is waiting for you.</span></div>`;
   }
@@ -2818,6 +2972,8 @@
       }
     });
     renderOnboarding();
+    renderLibraryAttention();
+    loadReaderSuggestions();
   }
 
   async function loadPendingSent() {
@@ -3686,6 +3842,11 @@
         const metadata = await lookupISBNMetadata(isbn);
         if (currentUser?.uid !== userId || BookTools.validISBN(input.value) !== isbn || (prefix && document.getElementById('edit-id').value !== editId)) return false;
         const filled = fillCatalogFields(metadata, prefix);
+        const titleReady = !BookTools.catalogFieldNeedsValue('title', document.getElementById(prefix + 'title')?.value);
+        const authorReady = !BookTools.catalogFieldNeedsValue('author', document.getElementById(prefix + 'author')?.value);
+        if (!prefix && metadata.title && titleReady && authorReady) {
+          document.dispatchEvent(new CustomEvent('cloudlibrary:isbn-success'));
+        }
         toast(filled ? 'Book details filled. Check the title, series, number and genre before saving.' : metadata.title ? 'Existing details kept. Clear a field before looking up a replacement.' : 'No catalog match. You can still type details or use a cover photo.', filled ? 'success' : 'info');
         return true;
       } catch (error) {

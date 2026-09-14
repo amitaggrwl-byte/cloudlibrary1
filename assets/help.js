@@ -45,6 +45,7 @@ window.CloudHelp = (() => {
       'An ISBN is an identification number for a particular edition of a book. It has 10 or 13 digits. Different editions or formats can have different ISBNs, even when the title is the same.',
       'Look on the back cover beside the barcode for the letters ISBN. You may also find it inside, on the page with the publishing details. It is not the price or a library sticker number.',
       'Choose Scan ISBN barcode and point your camera at the barcode, not the front-cover picture. Or type the ISBN into the field and choose Find details using ISBN. Hyphens and spaces are fine.',
+      'When the catalog finds a usable title and author while adding a book, CloudLibrary moves straight to Check the book details. Always review the result before continuing.',
       'For a book already on your shelf, choose Edit, then Scan beside ISBN. The lookup fills empty or unknown details and replaces generated titles such as Book 12; meaningful information already entered is kept. Review the result and choose Save changes.',
       'Check the title, author and cover that appear. Some books are missing from the catalog, so a valid ISBN may not find details.',
       'No ISBN, or a damaged barcode? You can still add the book by typing its title and author. You can also try Find details from a cover photo.'
@@ -54,12 +55,25 @@ window.CloudHelp = (() => {
       'Saving is private and does not notify the owner, reserve the copy or use a pending-request slot.',
       'Request to borrow sends a real request to a confirmed friend. Use it only when you are ready to arrange the physical exchange.'
     ], 'library'],
+    ['Finding books', 'What appears in What’s happening?', [
+      'The strip mixes recent books, available returns, anonymous borrowing highlights, community totals, book ideas, new readers, reader suggestions and approved circles to explore.',
+      'Book covers and reader pictures appear only when that image is already available. Missing images are not replaced with extra downloads.',
+      'Select a book name to search for it, a reader name to open their profile, or a circle suggestion to open your circle choices.',
+      'The strip loads a small snapshot when Home opens and rotates it on your device. It does not read the database again for every change of message.'
+    ], 'library'],
     ['Getting started', 'How do I find friends and start sharing?', [
       'Create your shelf and a short introduction in Profile.',
-      'Use Search to find a reader by shelf name or circle, then open their profile before sending a friend request.',
+      'Join circles that genuinely describe you. Home and Search can then suggest readers who share those circles. Existing friends and pending requests are not suggested.',
+      'You can also use Search to find a reader by shelf name or circle, then open their profile before sending a friend request.',
       'Confirm who the person is in real life. Wait for acceptance; confirmed friends can view each other\'s shelves and request available books.',
       'Circles help readers discover one another, but joining the same circle does not automatically make you friends.'
     ], 'friends'],
+    ['Getting started', 'How do reader suggestions work?', [
+      'CloudLibrary looks at up to ten signed-in reader profiles that share one or more of your circles, then shows the strongest local matches first.',
+      'The suggestions are refreshed after your circles or connections change. They are a discovery aid, not proof that you know the person.',
+      'Your own profile, confirmed friends and readers with a pending friend request are excluded.',
+      'If no suggestions appear, join a relevant circle or search for a shelf or circle name. A small community may not have a new match yet.'
+    ], 'search'],
     ['Friends and safety', 'What happens if I remove a friend?', [
       'The app asks for confirmation before removal. After removal, both readers lose access to each other\'s full shelves and cannot make new borrow requests.',
       'Removing a friend is not a way to end an active loan. Finish any physical return and app confirmation first.',

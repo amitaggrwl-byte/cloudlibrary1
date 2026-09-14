@@ -760,10 +760,10 @@ exports.respondToBorrowRequest = onCall(callableRuntime, async request => {
   if (result.action === 'approved') {
     await Promise.all([
       writeTickerActivities([result.ownerId], `borrowed-owner-${requestId}`, {
-        type: 'book-borrowed-owner', bookId: result.bookId, actorId: result.borrowerId, actorName: result.borrowerName, title: result.title, seriesName: result.seriesName || ''
+        type: 'book-borrowed-owner', bookId: result.bookId, actorId: result.borrowerId, actorName: result.borrowerName, title: result.title, seriesName: result.seriesName || '', coverUrl: result.coverUrl || ''
       }),
       writeTickerActivities([result.borrowerId], `borrowed-reader-${requestId}`, {
-        type: 'book-borrowed-reader', bookId: result.bookId, actorId: result.ownerId, actorName: result.ownerName, title: result.title, seriesName: result.seriesName || ''
+        type: 'book-borrowed-reader', bookId: result.bookId, actorId: result.ownerId, actorName: result.ownerName, title: result.title, seriesName: result.seriesName || '', coverUrl: result.coverUrl || ''
       }),
       writePublicBookActivity(`borrowed-${requestId}`, 'public-book-borrowed', result)
     ]).catch(err => console.error('Could not write borrow activity', err));
@@ -862,7 +862,7 @@ exports.closeLoan = onCall(callableRuntime, async request => {
     const friends = await acceptedFriendIds(result.ownerId);
     await writeTickerActivities(friends, `available-${bookId}-${result.requestId || 'returned'}`, {
       type: 'book-available', actorId: result.ownerId, actorName: result.ownerName,
-      bookId, ownerId: result.ownerId, title: result.title, seriesName: result.seriesName || ''
+      bookId, ownerId: result.ownerId, title: result.title, seriesName: result.seriesName || '', coverUrl: result.coverUrl || ''
     }).catch(err => console.error('Could not write return activity', err));
     await writePublicBookActivity(`available-${bookId}-${result.requestId || 'returned'}`, 'public-book-available', { ...result, bookId })
       .catch(err => console.error('Could not write public return activity', err));
@@ -917,7 +917,7 @@ exports.onBookCreated = onDocumentCreated({ ...runtime, document: 'books/{bookId
       writeTickerActivities(friendIds, `added-${event.params.bookId}`, {
         type: book.status === 'Available' ? 'book-added' : 'book-reading',
         actorId: book.ownerId, actorName: book.ownerName || 'A friend',
-        bookId: event.params.bookId, ownerId: book.ownerId, title: book.title || 'Untitled book', seriesName: book.seriesName || ''
+        bookId: event.params.bookId, ownerId: book.ownerId, title: book.title || 'Untitled book', seriesName: book.seriesName || '', coverUrl: book.coverUrl || ''
       }),
       writePublicBookActivity(`added-${event.params.bookId}`, 'public-book-added', { ...book, bookId: event.params.bookId })
   ]));

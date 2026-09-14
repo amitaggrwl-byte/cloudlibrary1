@@ -230,6 +230,23 @@ test('discovery searches are capped at ten documents', async () => {
   assert.ok(true);
 });
 
+test('signed-in readers can load a bounded shared-circle suggestion page', async () => {
+  await env.withSecurityRulesDisabled(async context => {
+    await context.firestore().collection('profiles').doc('circle-reader').set({ ...profile('CircleReader'),
+      circleTags: ['HXLS', 'Grade 5'], searchTokens: ['hxls', 'grade', '5']
+    });
+  });
+  const alice = env.authenticatedContext('alice').firestore();
+  await assertSucceeds(alice.collection('profiles').where('circleTags', 'array-contains-any', ['HXLS']).limit(10).get());
+  await assertFails(alice.collection('profiles').where('circleTags', 'array-contains-any', ['HXLS']).limit(11).get());
+});
+
+test('signed-in readers can load a bounded active-circle suggestion page', async () => {
+  const alice = env.authenticatedContext('alice').firestore();
+  await assertSucceeds(alice.collection('circles').where('active', '==', true).limit(6).get());
+  await assertFails(alice.collection('circles').where('active', '==', true).limit(51).get());
+});
+
 test('discovery cards are server-written and cannot carry private fields', async () => {
   const alice = env.authenticatedContext('alice').firestore();
   await assertFails(alice.collection('bookDiscovery').doc('private-card').set({

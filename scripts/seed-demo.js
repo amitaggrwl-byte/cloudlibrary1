@@ -19,7 +19,8 @@ const password = 'cloudlibrary-demo';
 const users = [
   ['alex', 'AlexReads', 'I like adventures, funny books, and big book series.'],
   ['bella', 'BellaBooks', 'I lend mysteries, facts, and stories with brave heroes.'],
-  ['carlos', 'CarlosShelf', 'I am looking for my next favorite book.']
+  ['carlos', 'CarlosShelf', 'I am looking for my next favorite book.'],
+  ['dev', 'DevReads', 'I enjoy adventure stories and swapping books with readers I know.']
 ];
 const circles = [
   ['hxls', 'HXLS', 'School'],
@@ -53,11 +54,12 @@ async function main() {
   users.forEach(([uid, libraryName, bio]) => {
     const circleTags = uid === 'alex'
       ? ['HXLS', 'Grade 5', 'Gurgaon']
-      : uid === 'bella' ? ['HXLS', 'Mystery Detectives'] : [];
+      : uid === 'bella' ? ['HXLS', 'Mystery Detectives']
+      : uid === 'dev' ? ['HXLS', 'Grade 5'] : [];
     batch.set(db.collection('profiles').doc(uid), {
       libraryName, shelfKey: libraryName.toLowerCase(), ownerName: libraryName,
       photoURL: '', bio, ratingScore: uid === 'alex' ? 4.2 : 3.4,
-      ratingAdjustment: 0, bookCount: uid === 'bella' || uid === 'alex' ? 3 : 0, timelyReturns: uid === 'alex' ? 2 : 0, friendCount: uid === 'carlos' ? 0 : 1,
+      ratingAdjustment: 0, bookCount: uid === 'bella' || uid === 'alex' ? 3 : 0, timelyReturns: uid === 'alex' ? 2 : 0, friendCount: uid === 'carlos' || uid === 'dev' ? 0 : 1,
       memberSince: FieldValue.serverTimestamp(), circleTags, searchTokens: tokens(libraryName, circleTags), updatedAt: FieldValue.serverTimestamp()
     });
     batch.set(db.collection('shelfNames').doc(libraryName.toLowerCase()), { ownerId: uid, createdAt: FieldValue.serverTimestamp() });
@@ -66,7 +68,7 @@ async function main() {
   circles.forEach(([id, name, category]) => {
     batch.set(db.collection('circles').doc(id), { name, category, active: true, createdAt: FieldValue.serverTimestamp() });
   });
-  [['alex', 'hxls'], ['alex', 'grade-5'], ['alex', 'gurgaon'], ['bella', 'hxls'], ['bella', 'mystery-detectives']].forEach(([userId, circleId]) => {
+  [['alex', 'hxls'], ['alex', 'grade-5'], ['alex', 'gurgaon'], ['bella', 'hxls'], ['bella', 'mystery-detectives'], ['dev', 'hxls'], ['dev', 'grade-5']].forEach(([userId, circleId]) => {
     const [, name, category] = circles.find(([id]) => id === circleId);
     batch.set(db.collection('circleMemberships').doc(`${userId}_${circleId}`), { userId, circleId, circleName: name, category, joinedAt: FieldValue.serverTimestamp() });
   });
@@ -80,15 +82,31 @@ async function main() {
     ['alex-tree-2', 'alex', 'AlexReads', 'The Knight at Dawn', 'Mary Pope Osborne', 'Available', 'Magic Tree House', 2],
     ['bella-loan', 'bella', 'BellaBooks', 'The Secret Garden', 'Frances Hodgson Burnett', 'Lent Out', '', null]
   ];
+  const demoCoverUrls = {
+    'alex-tree-1': 'https://covers.openlibrary.org/b/olid/OL24205233M-M.jpg',
+    'alex-tree-2': 'https://covers.openlibrary.org/b/olid/OL1711704M-M.jpg',
+    'bella-loan': 'https://covers.openlibrary.org/b/olid/OL24381783M-M.jpg'
+  };
   books.forEach(([id, ownerId, ownerName, title, author, status, seriesName, seriesNumber]) => {
-    const book = { ownerId, ownerName, title, author, seriesName, seriesNumber, genre: 'Fiction', isbn: '', publishedYear: null, condition: 'Good', coverUrl: '', description: '', rating: 4, status, createdAt: FieldValue.serverTimestamp() };
+    const coverUrl = demoCoverUrls[id] || '';
+    const book = { ownerId, ownerName, title, author, seriesName, seriesNumber, genre: 'Fiction', isbn: '', publishedYear: null, condition: 'Good', coverUrl, description: '', rating: 4, status, createdAt: FieldValue.serverTimestamp() };
     if (id === 'bella-loan') Object.assign(book, { borrowerId: 'alex', borrowerName: 'AlexReads', activeRequestId: 'demo-loan', lentAt: FieldValue.serverTimestamp(), loanDueAt: new Date(Date.now() + 10 * 86400000) });
     batch.set(db.collection('books').doc(id), book);
     batch.set(db.collection('bookDiscovery').doc(id), {
       bookId: id, ownerId, ownerName, title, author, seriesName, seriesNumber, genre: 'Fiction',
-      publishedYear: null, rating: 4, coverUrl: '', status, suggestionBucket: Math.random(),
+      publishedYear: null, rating: 4, coverUrl, status, suggestionBucket: Math.random(),
       searchTokens: tokens(title, author, seriesName, seriesNumber), updatedAt: FieldValue.serverTimestamp()
     });
+  });
+  batch.set(db.collection('tickerActivities').doc('alex-demo-reading'), {
+    recipientId: 'alex', type: 'book-reading', bookId: 'bella-loan', ownerId: 'bella',
+    actorId: 'bella', actorName: 'BellaBooks', title: 'The Secret Garden',
+    seriesName: '', coverUrl: demoCoverUrls['bella-loan'], createdAt: FieldValue.serverTimestamp()
+  });
+  batch.set(db.collection('networkTicker').doc('latest-book-added'), {
+    type: 'public-book-added', bookId: 'alex-tree-1', title: 'Dinosaurs Before Dark',
+    seriesName: 'Magic Tree House', coverUrl: demoCoverUrls['alex-tree-1'],
+    createdAt: FieldValue.serverTimestamp()
   });
   batch.set(db.collection('requests').doc('demo-loan'), { type: 'borrow', bookId: 'bella-loan', title: 'The Secret Garden', ownerId: 'bella', ownerName: 'BellaBooks', requesterId: 'alex', requesterName: 'AlexReads', status: 'approved', createdAt: FieldValue.serverTimestamp() });
   await batch.commit();

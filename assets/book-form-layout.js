@@ -95,6 +95,7 @@
     setStep(3);
   };
   finalBack.onclick = () => setStep(2);
+  document.addEventListener('cloudlibrary:isbn-success', () => setStep(2));
   setStep(1, false);
 
   const addPanel = get('admin-panel');

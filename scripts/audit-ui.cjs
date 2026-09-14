@@ -15,6 +15,7 @@ const out = process.env.AUDIT_OUTPUT || '/tmp/cloudlibrary-ui-audit';
     page.on('pageerror',error=>errors.push(error.message));
     await page.route('https://www.googleapis.com/books/v1/volumes?*',route=>route.fulfill({contentType:'application/json',body:JSON.stringify({items:[{volumeInfo:{title:'Scanned title',authors:['Scan Author'],imageLinks:{thumbnail:'https://example.com/scanned-cover.jpg'},publishedDate:'2018',categories:['Juvenile Fiction']}}]})}));
     await page.route('https://example.com/scanned-cover.jpg',route=>route.fulfill({contentType:'image/gif',body:Buffer.from('R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==','base64')}));
+    await page.route('https://covers.openlibrary.org/**',route=>route.fulfill({contentType:'image/gif',body:Buffer.from('R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==','base64')}));
     for(const [width,height] of [[1280,900],[390,844],[320,640],[844,390]]) {
       await page.setViewportSize({width,height});
       await page.goto(base);
@@ -34,11 +35,42 @@ const out = process.env.AUDIT_OUTPUT || '/tmp/cloudlibrary-ui-audit';
           await page.locator('#my-reader-score').waitFor({state:'visible'});
           assert.equal(await page.locator('#books-grid').isVisible(),false,'The complete shelf should not remain on Home');
           await page.locator('#onboarding-panel [data-onboarding-step="6"]').waitFor({state:'visible'});
-          const onboardingTitles=await page.locator('#onboarding-panel [data-onboarding-step] > div > div > p:first-child').allTextContents();
-          assert.deepEqual(onboardingTitles,[
+          const onboardingTitles=await page.locator('#onboarding-panel [data-onboarding-title]').allTextContents();
+          assert.deepEqual([...onboardingTitles].sort(),[
             'Add a short introduction','Add your first book','Join a circle',
             'Connect with a reader','Borrow your first book','Lend your first book'
-          ],'Getting-started tasks should keep the approved order');
+          ].sort(),'Getting-started should retain all approved tasks');
+          assert.equal(await page.locator('#onboarding-panel [data-onboarding-done="false"]').count(),1,'Only unfinished tasks should remain expanded');
+          const completedTasks=page.locator('#onboarding-panel [data-onboarding-completed]');
+          assert.equal(await completedTasks.getAttribute('open'),null,'Completed tasks should be collapsed by default');
+          assert.equal(await page.locator('#onboarding-panel [data-onboarding-done="true"]').first().isVisible(),false,'Completed task details should stay hidden until requested');
+          const setupTasks=page.locator('#library-attention-list [data-attention-setup-task]');
+          await setupTasks.first().waitFor({state:'visible'});
+          assert.ok(await setupTasks.count()<=2,'Today should show no more than two unfinished setup tasks');
+          assert.equal(await setupTasks.last().getAttribute('data-attention-setup-task'),'onboarding-lend-book','Today should include the next unfinished reader task');
+          await page.locator('#home-reader-suggestions [data-suggested-reader="dev"]').waitFor({state:'visible'});
+          assert.equal(await page.locator('#home-reader-suggestions [data-suggested-reader="bella"]').count(),0,'Existing friends should not be suggested');
+          assert.equal(await page.locator('#home-reader-suggestions [data-suggested-reader="carlos"]').count(),0,'Pending connections should not be suggested');
+          if(width===1280) {
+            const tickerMarkup=await page.evaluate(()=>({
+              book:tickerItemHtml({type:'book-suggestion',title:'Cover test',coverUrl:'https://covers.openlibrary.org/b/olid/OL24381783M-M.jpg'}),
+              reader:tickerItemHtml({type:'reader-suggestion',actorId:'dev',actorName:'DevReads',actorPhotoURL:'https://example.com/reader.jpg',sharedCircles:['HXLS']}),
+              circle:tickerItemHtml({type:'circle-suggestion',name:'Adventure Readers',category:'Club'})
+            }));
+            assert.match(tickerMarkup.book,/covers\.openlibrary\.org/,'Book ticker items should render their cover when present');
+            assert.match(tickerMarkup.reader,/reader\.jpg/,'Reader ticker items should render their profile photo when present');
+            assert.match(tickerMarkup.circle,/onboarding-join-circle/,'Circle ticker suggestions should open circle management');
+            assert.ok(await page.evaluate(()=>tickerItems.some(item=>item.includes('Reader to discover'))),'Ticker should include a cached established-reader suggestion');
+            assert.ok(await page.evaluate(()=>tickerItems.some(item=>item.includes('Circle to explore'))),'Ticker should include a joinable circle suggestion');
+            const secretGardenTickerItems=await page.evaluate(()=>tickerItems.filter(item=>item.includes('The Secret Garden')));
+            assert.equal(secretGardenTickerItems.length,1,'Duplicate activity for one book should collapse into one ticker story');
+            assert.match(secretGardenTickerItems[0],/covers\.openlibrary\.org/,'A duplicate cover should be retained on the book ticker story');
+            await page.evaluate(()=>{document.getElementById('cloud-ticker-content').innerHTML=tickerItemHtml({type:'book-suggestion',title:'The Secret Garden',coverUrl:'https://covers.openlibrary.org/b/olid/OL24381783M-M.jpg'});});
+            await page.locator('#cloud-ticker-content img').waitFor({state:'visible'});
+            await page.waitForTimeout(500);
+            const tickerSize=await page.locator('#cloud-ticker-card').evaluate(element=>({height:element.getBoundingClientRect().height,imageHeight:element.querySelector('img').getBoundingClientRect().height}));
+            assert.ok(tickerSize.imageHeight<=32 && tickerSize.height<=76,'A ticker cover should stay compact');
+          }
         }
         if(name==='shelf') {
           await page.getByRole('button',{name:'Add books',exact:true}).waitFor({state:'visible'});
@@ -48,11 +80,12 @@ const out = process.env.AUDIT_OUTPUT || '/tmp/cloudlibrary-ui-audit';
           const track=series.locator('.series-carousel-track');
           await track.waitFor({state:'visible'});
           assert.equal(await track.locator('.series-book-slide').count(),2,'Demo series should contain two books');
-          assert.equal(await track.locator('img').count(),0,'Books without cover images should not reserve cover space');
+          assert.equal(await track.locator('img').count(),2,'Series books with cover images should render both covers');
+          assert.equal(await page.locator('#books-grid [data-book-id="alex-adventure"] img').count(),0,'A book without a cover should not reserve image space');
           await series.getByRole('button',{name:'Next book in series'}).click();
           await page.waitForTimeout(400);
           assert.ok(await track.evaluate(element=>element.scrollLeft>0),'Series next control should scroll the carousel');
-          await series.locator('button[data-action="edit-book"]').first().click();
+          await page.locator('#books-grid [data-book-id="alex-adventure"] button[data-action="edit-book"]').click();
           await page.locator('#edit-book-modal').waitFor({state:'visible'});
           await page.getByRole('button',{name:'Scan ISBN barcode'}).waitFor({state:'visible'});
           const editLayout=await page.locator('#edit-book-modal > div').evaluate(element=>({client:element.clientWidth,scroll:element.scrollWidth}));
@@ -61,6 +94,8 @@ const out = process.env.AUDIT_OUTPUT || '/tmp/cloudlibrary-ui-audit';
           if(width===1280) {
             await page.locator('#edit-title').fill('Book #1');
             await page.locator('#edit-author').fill('Unknown author');
+            await page.locator('#edit-more-details > summary').click();
+            await page.locator('#edit-seriesName').fill('Magic Tree House');
             await page.evaluate(()=>{
               window.__realHtml5Qrcode=window.Html5Qrcode;
               window.Html5Qrcode=class { async start(_camera,_options,onSuccess){window.__emitBarcode=onSuccess;} async stop(){} async clear(){} };
@@ -95,8 +130,11 @@ const out = process.env.AUDIT_OUTPUT || '/tmp/cloudlibrary-ui-audit';
             await page.locator('#title').evaluate(element=>{element.value='Book 7';});
             await page.locator('#author').evaluate(element=>{element.value='Unknown';});
             await page.locator('#lookup-isbn').click();
+            await page.locator('#title').waitFor({state:'visible'});
+            assert.equal(await page.locator('[data-add-step="2"]').isVisible(),true,'Successful ISBN lookup should advance Add to details');
+          } else {
+            await page.getByRole('button',{name:'Enter or check details'}).click();
           }
-          await page.getByRole('button',{name:'Enter or check details'}).click();
           for(const id of ['title','author','genre','condition','publishedYear']) await page.locator(`#${id}`).waitFor({state:'visible'});
           await page.screenshot({path:path.join(out,`${width}-${height}-add-step-2.png`),fullPage:true});
           if(width===1280) {
@@ -128,6 +166,7 @@ const out = process.env.AUDIT_OUTPUT || '/tmp/cloudlibrary-ui-audit';
           await page.evaluate(()=>{document.getElementById('book-form').reset();localStorage.clear();});
         }
         if(name==='friends') {
+          await page.getByRole('button',{name:'Find readers',exact:true}).waitFor({state:'visible'});
           await page.locator('#view-friends button[data-action="view-shelf"]').first().click();
           await page.locator('#view-friend-shelf').waitFor({state:'visible'});
           const friendSeries=page.locator('#friend-shelf-books details.series-stack').first();
@@ -145,6 +184,14 @@ const out = process.env.AUDIT_OUTPUT || '/tmp/cloudlibrary-ui-audit';
           await page.screenshot({path:path.join(out,`${width}-${height}-friend-shelf.png`),fullPage:true});
           await page.locator('#view-friend-shelf button[data-action="back-to-friends"]').click();
           await page.locator('#view-friends').waitFor({state:'visible'});
+        }
+        if(name==='search') {
+          await page.locator('#search-reader-suggestions [data-suggested-reader="dev"]').waitFor({state:'visible'});
+          await page.locator('#search-reader-suggestions [data-suggested-reader="dev"] button[data-action="open-reader-profile"]').click();
+          await page.locator('#reader-profile-modal').waitFor({state:'visible'});
+          await page.waitForFunction(()=>document.getElementById('reader-profile-body')?.textContent.includes('DevReads'));
+          assert.ok((await page.locator('#reader-profile-body').textContent()).includes('DevReads'),'Suggested reader should open the matching profile');
+          await page.getByRole('button',{name:'Close profile',exact:true}).click();
         }
         if(name==='inbox') {
           const readerLink=page.locator('#inbox-body button[data-action="open-reader-profile"]').first();
